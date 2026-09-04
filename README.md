@@ -39,3 +39,5 @@ bash /tmp/bootstrap-aws-deployment.sh
 ```
 
 The script refuses to run outside AWS account `149086500999`, discovers the existing CloudFront and S3 resources from the `www.sozorock.com` alias, and creates only the bounded GitHub deployment role.
+
+After the one-time AWS trust setup, every approved push to `main` builds and tests the site, checks the target AWS account and CloudFront alias, backs up the current S3 release, publishes the new build, invalidates CloudFront, verifies the live domain, and restores the prior release automatically if verification fails.

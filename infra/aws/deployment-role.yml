@@ -37,17 +37,23 @@ Resources:
             Statement:
               - Sid: ListWebsiteBucket
                 Effect: Allow
-                Action: s3:ListBucket
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
                 Resource: !Sub arn:${AWS::Partition}:s3:::${S3BucketName}
               - Sid: ReplaceWebsiteObjects
                 Effect: Allow
                 Action:
                   - s3:DeleteObject
+                  - s3:GetObject
                   - s3:PutObject
                 Resource: !Sub arn:${AWS::Partition}:s3:::${S3BucketName}/*
               - Sid: InvalidateWebsiteDistribution
                 Effect: Allow
-                Action: cloudfront:CreateInvalidation
+                Action:
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:GetDistribution
+                  - cloudfront:GetInvalidation
                 Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistributionId}
               - Sid: ReadDeploymentStack
                 Effect: Allow
