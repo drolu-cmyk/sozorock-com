@@ -1,0 +1,180 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Temporary bounded DNS bridge for the SozoRockSchool production launch
+
+Parameters:
+  DnsRoleArn:
+    Type: String
+    Default: arn:aws:iam::149086500999:role/sozorock-com-dns-automation
+    AllowedPattern: "^arn:aws[a-zA-Z-]*:iam::149086500999:role/sozorock-com-dns-automation$"
+  DnsExternalId:
+    Type: String
+    Default: sozorock-com-production-dns-2026
+    NoEcho: true
+  HostedZoneId:
+    Type: String
+    Default: Z0336115123Y50GO08GTI
+    AllowedValues:
+      - Z0336115123Y50GO08GTI
+  ApexDomain:
+    Type: String
+    Default: sozorock.com
+    AllowedValues:
+      - sozorock.com
+  WwwDomain:
+    Type: String
+    Default: www.sozorock.com
+    AllowedValues:
+      - www.sozorock.com
+  CloudFrontDomain:
+    Type: String
+    Default: d14v3l4z5ufdrh.cloudfront.net
+    AllowedValues:
+      - d14v3l4z5ufdrh.cloudfront.net
+
+Resources:
+  DnsBridgeExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AssumeBoundedSozoRockDnsRole
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource: !Ref DnsRoleArn
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:${AWS::Partition}:logs:*:${AWS::AccountId}:*
+      Tags:
+        - Key: Application
+          Value: SozoRockSchool
+        - Key: Purpose
+          Value: TemporaryProductionDnsBridge
+
+  DnsBridgeLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    Properties:
+      LogGroupName: /aws/lambda/sozorock-com-dns-bridge
+      RetentionInDays: 7
+
+  DnsBridgeFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: DnsBridgeLogGroup
+    Properties:
+      FunctionName: sozorock-com-dns-bridge
+      Description: Performs only validated SozoRockSchool certificate and production DNS changes
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt DnsBridgeExecutionRole.Arn
+      Timeout: 900
+      MemorySize: 128
+      Environment:
+        Variables:
+          DNS_ROLE_ARN: !Ref DnsRoleArn
+          DNS_EXTERNAL_ID: !Ref DnsExternalId
+          HOSTED_ZONE_ID: !Ref HostedZoneId
+          APEX_DOMAIN: !Ref ApexDomain
+          WWW_DOMAIN: !Ref WwwDomain
+          CLOUDFRONT_DOMAIN: !Ref CloudFrontDomain
+      Code:
+        ZipFile: |
+          import os
+          import boto3
+
+          ZONE_ID = os.environ["HOSTED_ZONE_ID"]
+          APEX = os.environ["APEX_DOMAIN"].lower().rstrip(".") + "."
+          WWW = os.environ["WWW_DOMAIN"].lower().rstrip(".") + "."
+          CLOUDFRONT = os.environ["CLOUDFRONT_DOMAIN"].lower().rstrip(".") + "."
+
+          def normalized(value):
+              return str(value).lower().rstrip(".") + "."
+
+          def route53_client():
+              credentials = boto3.client("sts").assume_role(
+                  RoleArn=os.environ["DNS_ROLE_ARN"],
+                  RoleSessionName="sozorock-dns-bridge",
+                  ExternalId=os.environ["DNS_EXTERNAL_ID"],
+                  DurationSeconds=900,
+              )["Credentials"]
+              return boto3.client(
+                  "route53",
+                  aws_access_key_id=credentials["AccessKeyId"],
+                  aws_secret_access_key=credentials["SecretAccessKey"],
+                  aws_session_token=credentials["SessionToken"],
+              )
+
+          def validate_change(change):
+              if change.get("Action") != "UPSERT":
+                  raise ValueError("Only UPSERT DNS changes are permitted")
+              record = change.get("ResourceRecordSet", {})
+              name = normalized(record.get("Name", ""))
+              record_type = record.get("Type")
+              if record_type == "CNAME":
+                  values = [normalized(item.get("Value", "")) for item in record.get("ResourceRecords", [])]
+                  is_www = name == WWW and values == [CLOUDFRONT]
+                  is_acm = (
+                      name.startswith("_")
+                      and name.endswith("." + APEX)
+                      and values
+                      and all(value.endswith(".acm-validations.aws.") for value in values)
+                  )
+                  if not (is_www or is_acm):
+                      raise ValueError("CNAME is outside the approved production or ACM validation targets")
+              elif record_type in ("A", "AAAA"):
+                  alias = record.get("AliasTarget", {})
+                  if (
+                      name != APEX
+                      or alias.get("HostedZoneId") != "Z2FDTNDATAQYW2"
+                      or normalized(alias.get("DNSName", "")) != CLOUDFRONT
+                      or alias.get("EvaluateTargetHealth") is not False
+                  ):
+                      raise ValueError("Alias is outside the approved apex CloudFront target")
+              else:
+                  raise ValueError("Only CNAME, A, and AAAA records are permitted")
+
+          def handler(event, context):
+              operation = event.get("operation")
+              route53 = route53_client()
+              if operation == "get_zone":
+                  response = route53.get_hosted_zone(Id=ZONE_ID)
+                  return {"zone_name": response["HostedZone"]["Name"]}
+              if operation != "change_records":
+                  raise ValueError("Unsupported DNS bridge operation")
+              batch = event.get("change_batch", {})
+              changes = batch.get("Changes", [])
+              if not 1 <= len(changes) <= 10:
+                  raise ValueError("DNS change count is outside the permitted range")
+              for change in changes:
+                  validate_change(change)
+              response = route53.change_resource_record_sets(
+                  HostedZoneId=ZONE_ID,
+                  ChangeBatch=batch,
+              )
+              change_id = response["ChangeInfo"]["Id"]
+              route53.get_waiter("resource_record_sets_changed").wait(
+                  Id=change_id,
+                  WaiterConfig={"Delay": 5, "MaxAttempts": 120},
+              )
+              return {"change_id": change_id, "status": "INSYNC"}
+      Tags:
+        - Key: Application
+          Value: SozoRockSchool
+        - Key: Purpose
+          Value: TemporaryProductionDnsBridge
+
+Outputs:
+  FunctionName:
+    Description: Temporary function invoked by the production deployment script
+    Value: !Ref DnsBridgeFunction

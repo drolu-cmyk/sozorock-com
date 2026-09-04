@@ -50,6 +50,7 @@ role for only the `sozorock.com` hosted zone. In the hosting account, it then:
 
 - validates the known CloudFront distribution, S3 origin, and existing live object;
 - builds and tests the exact GitHub revision;
+- uses a temporary, tightly restricted Lambda bridge for the cross-account DNS changes when CloudShell is running with root credentials;
 - creates the least-privilege GitHub Actions OIDC deployment role;
 - backs up the current site and replaces it with SozoRockSchool;
 - restores the backup automatically if the canonical site cannot be verified;
@@ -70,6 +71,7 @@ and automatically restores the previous release if verification fails.
 The bounded IAM templates are:
 
 - `infra/aws/dns-automation-role.yml`
+- `infra/aws/dns-bridge.yml`
 - `infra/aws/deployment-role.yml`
 
 ## Read-only discovery

@@ -16,6 +16,7 @@ EXPECTED_ORIGIN_PATH="/meridian"
 SITE_PREFIX="meridian/"
 BACKUP_ROOT="deployment-backups/sozorock-com/"
 DEPLOY_STACK_NAME="sozorock-com-github-deploy"
+DNS_BRIDGE_STACK_NAME="sozorock-com-dns-bridge"
 OIDC_PROVIDER_ARN="arn:aws:iam::${EXPECTED_ACCOUNT_ID}:oidc-provider/token.actions.githubusercontent.com"
 REDIRECT_FUNCTION_NAME="sozorock-com-apex-redirect"
 SOURCE_REF="${SOZOROCK_RELEASE_REF:-main}"
@@ -65,53 +66,11 @@ if [[ "$bucket_name" != "$EXPECTED_BUCKET" || "$origin_path" != "$EXPECTED_ORIGI
   echo "Refusing to deploy: expected s3://${EXPECTED_BUCKET}${EXPECTED_ORIGIN_PATH}, found ${origin_domain}${origin_path}." >&2
   exit 1
 fi
-aws s3api head-bucket --bucket "$bucket_name" --no-cli-pager
+aws s3api head-bucket --bucket "$bucket_name" --no-cli-pager >/dev/null
 aws s3api head-object \
   --bucket "$bucket_name" \
   --key "${SITE_PREFIX}index.html" \
   --no-cli-pager >/dev/null
-
-dns_access_key_id=""
-dns_secret_access_key=""
-dns_session_token=""
-
-refresh_dns_credentials() {
-  local dns_credentials
-  dns_credentials="$(aws sts assume-role \
-    --role-arn "$DNS_ROLE_ARN" \
-    --role-session-name "sozorock-com-production-$(date -u +%H%M%S)" \
-    --external-id "$DNS_EXTERNAL_ID" \
-    --duration-seconds 3600 \
-    --output json \
-    --no-cli-pager)"
-  dns_access_key_id="$(jq -r '.Credentials.AccessKeyId // empty' <<<"$dns_credentials")"
-  dns_secret_access_key="$(jq -r '.Credentials.SecretAccessKey // empty' <<<"$dns_credentials")"
-  dns_session_token="$(jq -r '.Credentials.SessionToken // empty' <<<"$dns_credentials")"
-  if [[ -z "$dns_access_key_id" || -z "$dns_secret_access_key" || -z "$dns_session_token" ]]; then
-    echo "Could not obtain the scoped Route 53 role from AWS account ${DNS_ACCOUNT_ID}." >&2
-    exit 1
-  fi
-}
-
-dns_aws() {
-  AWS_ACCESS_KEY_ID="$dns_access_key_id" \
-  AWS_SECRET_ACCESS_KEY="$dns_secret_access_key" \
-  AWS_SESSION_TOKEN="$dns_session_token" \
-  AWS_DEFAULT_REGION="$AWS_REGION" \
-  AWS_PAGER="" \
-  aws "$@"
-}
-
-refresh_dns_credentials
-zone_name="$(dns_aws route53 get-hosted-zone \
-  --id "$HOSTED_ZONE_ID" \
-  --query 'HostedZone.Name' \
-  --output text \
-  --no-cli-pager)"
-if [[ "$zone_name" != "sozorock.com." ]]; then
-  echo "Refusing to deploy: cross-account DNS role did not resolve the authoritative sozorock.com zone." >&2
-  exit 1
-fi
 
 node_major="$(node -p 'Number(process.versions.node.split(".")[0])')"
 if (( node_major < 20 )); then
@@ -130,6 +89,74 @@ tar -xzf "$work_dir/source.tar.gz" -C "$source_dir" --strip-components=1
   npm run build
   npm run test:sites
 )
+
+aws cloudformation validate-template \
+  --region "$AWS_REGION" \
+  --template-body "file://${source_dir}/infra/aws/dns-bridge.yml" \
+  --no-cli-pager >/dev/null
+
+aws cloudformation deploy \
+  --region "$AWS_REGION" \
+  --stack-name "$DNS_BRIDGE_STACK_NAME" \
+  --template-file "$source_dir/infra/aws/dns-bridge.yml" \
+  --capabilities CAPABILITY_IAM \
+  --parameter-overrides \
+    DnsRoleArn="$DNS_ROLE_ARN" \
+    DnsExternalId="$DNS_EXTERNAL_ID" \
+    HostedZoneId="$HOSTED_ZONE_ID" \
+    ApexDomain="$APEX_DOMAIN" \
+    WwwDomain="$WWW_DOMAIN" \
+    CloudFrontDomain="$distribution_domain" \
+  --no-fail-on-empty-changeset \
+  --no-cli-pager
+
+dns_bridge_function="$(aws cloudformation describe-stacks \
+  --region "$AWS_REGION" \
+  --stack-name "$DNS_BRIDGE_STACK_NAME" \
+  --query 'Stacks[0].Outputs[?OutputKey==`FunctionName`].OutputValue' \
+  --output text \
+  --no-cli-pager)"
+if [[ -z "$dns_bridge_function" || "$dns_bridge_function" == "None" ]]; then
+  echo "The temporary DNS bridge was created without a callable function." >&2
+  exit 1
+fi
+
+invoke_dns_bridge() {
+  local payload_file="$1"
+  local response_file="$2"
+  local metadata_file="${response_file}.metadata"
+  local bridge_succeeded=0
+  for attempt in $(seq 1 12); do
+    if aws lambda invoke \
+      --region "$AWS_REGION" \
+      --function-name "$dns_bridge_function" \
+      --payload "fileb://${payload_file}" \
+      --output json \
+      --no-cli-pager \
+      --cli-read-timeout 900 \
+      --cli-connect-timeout 30 \
+      "$response_file" > "$metadata_file" \
+      && ! jq -e '.FunctionError != null' "$metadata_file" >/dev/null \
+      && jq -e 'type == "object" and (.errorMessage == null)' "$response_file" >/dev/null; then
+      bridge_succeeded=1
+      break
+    fi
+    sleep 5
+  done
+  if [[ "$bridge_succeeded" != "1" ]]; then
+    echo "The temporary DNS bridge rejected the requested operation." >&2
+    jq . "$response_file" >&2 || true
+    exit 1
+  fi
+}
+
+jq -n '{operation: "get_zone"}' > "$work_dir/get-zone-request.json"
+invoke_dns_bridge "$work_dir/get-zone-request.json" "$work_dir/get-zone-response.json"
+zone_name="$(jq -r '.zone_name // empty' "$work_dir/get-zone-response.json")"
+if [[ "$zone_name" != "sozorock.com." ]]; then
+  echo "Refusing to deploy: the DNS bridge did not resolve the authoritative sozorock.com zone." >&2
+  exit 1
+fi
 
 if ! aws iam get-open-id-connect-provider \
   --open-id-connect-provider-arn "$OIDC_PROVIDER_ARN" \
@@ -346,16 +373,12 @@ if [[ "$certificate_status" != "ISSUED" ]]; then
       }
   ' "$certificate_file" > "$work_dir/certificate-dns-change.json"
 
-  refresh_dns_credentials
-  certificate_change_id="$(dns_aws route53 change-resource-record-sets \
-    --hosted-zone-id "$HOSTED_ZONE_ID" \
-    --change-batch "file://${work_dir}/certificate-dns-change.json" \
-    --query 'ChangeInfo.Id' \
-    --output text \
-    --no-cli-pager)"
-  dns_aws route53 wait resource-record-sets-changed \
-    --id "$certificate_change_id" \
-    --no-cli-pager
+  jq '{operation: "change_records", change_batch: .}' \
+    "$work_dir/certificate-dns-change.json" \
+    > "$work_dir/certificate-dns-request.json"
+  invoke_dns_bridge \
+    "$work_dir/certificate-dns-request.json" \
+    "$work_dir/certificate-dns-response.json"
   aws acm wait certificate-validated \
     --region "$AWS_REGION" \
     --certificate-arn "$certificate_arn" \
@@ -496,16 +519,12 @@ jq -n \
     ]
   }' > "$work_dir/production-dns-change.json"
 
-refresh_dns_credentials
-dns_change_id="$(dns_aws route53 change-resource-record-sets \
-  --hosted-zone-id "$HOSTED_ZONE_ID" \
-  --change-batch "file://${work_dir}/production-dns-change.json" \
-  --query 'ChangeInfo.Id' \
-  --output text \
-  --no-cli-pager)"
-dns_aws route53 wait resource-record-sets-changed \
-  --id "$dns_change_id" \
-  --no-cli-pager
+jq '{operation: "change_records", change_batch: .}' \
+  "$work_dir/production-dns-change.json" \
+  > "$work_dir/production-dns-request.json"
+invoke_dns_bridge \
+  "$work_dir/production-dns-request.json" \
+  "$work_dir/production-dns-response.json"
 
 apex_verified=0
 for attempt in $(seq 1 60); do
@@ -528,6 +547,19 @@ if [[ "$apex_verified" != "1" ]]; then
   deployment_status="deployed_dns_propagating"
 fi
 
+dns_bridge_cleanup="retained"
+if aws cloudformation delete-stack \
+  --region "$AWS_REGION" \
+  --stack-name "$DNS_BRIDGE_STACK_NAME" \
+  --no-cli-pager; then
+  if aws cloudformation wait stack-delete-complete \
+    --region "$AWS_REGION" \
+    --stack-name "$DNS_BRIDGE_STACK_NAME" \
+    --no-cli-pager; then
+    dns_bridge_cleanup="deleted"
+  fi
+fi
+
 jq -n \
   --arg status "$deployment_status" \
   --arg hosting_account_id "$account_id" \
@@ -539,6 +571,7 @@ jq -n \
   --arg backup_uri "$backup_uri" \
   --arg certificate_arn "$certificate_arn" \
   --arg deploy_role_arn "$deploy_role_arn" \
+  --arg dns_bridge_cleanup "$dns_bridge_cleanup" \
   --arg source_ref "$SOURCE_REF" \
   --arg www_verified "$www_verified" \
   --arg apex_redirect_verified "$apex_verified" \
@@ -551,6 +584,7 @@ jq -n \
     storage: {bucket: $bucket, prefix: $site_prefix, backup: $backup_uri},
     certificate_arn: $certificate_arn,
     github_deploy_role_arn: $deploy_role_arn,
+    temporary_dns_bridge: $dns_bridge_cleanup,
     urls: {
       canonical: "https://www.sozorock.com",
       apex: "https://sozorock.com"
