@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   motion,
   useReducedMotion,
@@ -229,7 +229,7 @@ function HeroScene() {
                 scale: prefersReducedMotion ? 1 : panelScale,
               }}
             >
-              <h2>What you learn should change what you can do.</h2>
+              <h1>What you learn should change what you can do.</h1>
               <p>At work. In business. In life.</p>
             </motion.article>
             <motion.div
@@ -286,7 +286,7 @@ function HeroScene() {
 
 function CoursesSection() {
   return (
-    <section id="courses" className="srs-courses" aria-labelledby="courses-title">
+    <section id="courses" tabIndex={-1} className="srs-courses" aria-labelledby="courses-title">
       <div className="srs-section-shell">
         <div className="srs-section-intro">
           <p>Courses</p>
@@ -372,41 +372,15 @@ function OutcomesSection() {
 }
 
 function ApplySection() {
-  const [submitted, setSubmitted] = useState(false);
   return (
     <section id="apply" className="srs-application" aria-labelledby="apply-title">
       <div className="srs-section-shell">
         <div className="srs-application-heading">
           <p>Apply</p>
-          <h2 id="apply-title">Make the next move count.</h2>
-          <div>Choose the program that matches what you are ready to do next.</div>
+          <h2 id="apply-title">Plan your next step.</h2>
+          <div>Online applications are not available yet. Explore the four programs while admissions details are being prepared.</div>
         </div>
-        {submitted ? (
-          <motion.div className="srs-application-success" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} role="status">
-            <h3>Your interest is recorded.</h3>
-            <p>Thank you. The admissions team can now continue the conversation.</p>
-            <button type="button" onClick={() => setSubmitted(false)}>Submit another response</button>
-          </motion.div>
-        ) : (
-          <form
-            className="srs-application-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              setSubmitted(true);
-            }}
-          >
-            <label><span>Name</span><input name="name" autoComplete="name" required /></label>
-            <label><span>Email</span><input name="email" type="email" autoComplete="email" required /></label>
-            <label className="srs-program-select">
-              <span>Program</span>
-              <select name="program" defaultValue="" required>
-                <option value="" disabled>Choose a program</option>
-                {programs.map((program) => <option key={program.name} value={program.name}>{program.name}</option>)}
-              </select>
-            </label>
-            <button className="srs-submit-button" type="submit">Start my application</button>
-          </form>
-        )}
+        <a className="srs-apply-button" href="#courses">Explore courses</a>
       </div>
     </section>
   );
@@ -435,6 +409,7 @@ function LegalFooter() {
 export function SozoRockSchoolHomepage() {
   return (
     <div id="top" className="srs-page">
+      <a className="srs-skip-link" href="#courses">Skip to courses</a>
       <HeroScene />
       <CoursesSection />
       <ExperienceSection />

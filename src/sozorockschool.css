@@ -118,7 +118,7 @@
   backdrop-filter: blur(11px);
   transform-origin: left bottom;
 }
-.srs-glass-panel h2 {
+.srs-glass-panel h1 {
   max-width: 360px;
   margin: 0;
   color: #fff;
@@ -440,7 +440,7 @@
   .srs-stage-one,
   .srs-stage-two { padding-right: 18px; padding-bottom: 70px; padding-left: 18px; }
   .srs-glass-panel { min-height: 236px; padding: 24px; }
-  .srs-glass-panel h2 { font-size: clamp(1.9rem, 9vw, 2.55rem); }
+  .srs-glass-panel h1 { font-size: clamp(1.9rem, 9vw, 2.55rem); }
   .srs-glass-panel p { margin-top: 30px; }
   .srs-hero-programs ul { grid-template-columns: 1fr; gap: 7px; }
   .srs-hero-programs li { font-size: clamp(1.06rem, 5.3vw, 1.35rem); }
@@ -490,4 +490,12 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.srs-skip-link { position: fixed; top: 12px; left: 12px; z-index: 100; padding: 12px 18px; background: #fff; color: #071d17; transform: translateY(-200%); }
+.srs-skip-link:focus { transform: translateY(0); }
+.srs-application .srs-apply-button { display: inline-flex; margin-top: 40px; }
+@media (prefers-reduced-motion: reduce) {
+  .srs-hero { height: 100svh; }
+  .srs-stage-two, .srs-scroll-indicator { display: none; }
 }

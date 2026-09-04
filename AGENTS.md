@@ -16,3 +16,9 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Keep Applied AI Systems, Cybersecurity GRC, Cybersecurity Identity and Access Management, and AI Governance distinct and prominent.
 - Avoid people, classrooms, collaboration imagery, equipment, dashboard graphics, generic AI patterns, card grids, gradients, cream, purple, cyan, neon, numbering, and busy layouts.
 - Use concise, specific copy and carry one visual metaphor through the whole page without introducing a competing concept.
+
+## Deployment separation and simplification
+
+- This repository serves only www.sozorock.com and its sozorock.com redirect. Regional resources stay in us-east-1; DNS account is 149086500999 and hosting account is 791860731989.
+- Canada is a separate repository, AWS account, programme, and backend. Never route this site's applications to Canada or reuse its account configuration.
+- Prefer removing unsupported behavior over adding complexity. Never display a submission receipt without a confirmed durable backend write. Online intake stays unavailable until an independent US backend is implemented and verified.
