@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Least-privilege GitHub Actions deployment role for www.sozorock.com
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Description: Existing S3 bucket that serves www.sozorock.com
+  CloudFrontDistributionId:
+    Type: String
+    Description: Existing CloudFront distribution for www.sozorock.com
+  GitHubOidcProviderArn:
+    Type: String
+    Default: arn:aws:iam::149086500999:oidc-provider/token.actions.githubusercontent.com
+    Description: Existing GitHub Actions OIDC provider in this AWS account
+
+Resources:
+  SozoRockComGitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: sozorock-com-github-deploy
+      Description: Deploys the SozoRockSchool static build to S3 and refreshes CloudFront
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProviderArn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: repo:drolu-cmyk@271617784/sozorock-com@1356519279:environment:production
+      Policies:
+        - PolicyName: DeploySozoRockCom
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ListWebsiteBucket
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub arn:${AWS::Partition}:s3:::${S3BucketName}
+              - Sid: ReplaceWebsiteObjects
+                Effect: Allow
+                Action:
+                  - s3:DeleteObject
+                  - s3:PutObject
+                Resource: !Sub arn:${AWS::Partition}:s3:::${S3BucketName}/*
+              - Sid: InvalidateWebsiteDistribution
+                Effect: Allow
+                Action: cloudfront:CreateInvalidation
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistributionId}
+
+Outputs:
+  DeployRoleArn:
+    Description: Set this as the AWS_DEPLOY_ROLE_ARN GitHub Actions variable
+    Value: !GetAtt SozoRockComGitHubDeployRole.Arn
