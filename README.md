@@ -21,6 +21,15 @@ The static production site is generated in `dist/client`.
 
 `www.sozorock.com`, hosted in AWS `us-east-1` through Amazon S3 and CloudFront.
 
+Before changing production, run the read-only discovery for both `sozorock.com` and `www.sozorock.com` from AWS CloudShell:
+
+```bash
+curl --proto '=https' --tlsv1.2 --fail --silent --show-error \
+  https://raw.githubusercontent.com/drolu-cmyk/sozorock-com/main/scripts/discover-aws-hosting.sh \
+  --output /tmp/discover-aws-hosting.sh && \
+bash /tmp/discover-aws-hosting.sh
+```
+
 The production workflow uses short-lived GitHub OIDC credentials. It requires these repository Actions variables:
 
 - `AWS_DEPLOY_ROLE_ARN`
