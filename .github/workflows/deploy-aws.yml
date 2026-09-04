@@ -16,12 +16,16 @@ concurrency:
 
 env:
   AWS_REGION: us-east-1
-  EXPECTED_AWS_ACCOUNT_ID: "149086500999"
+  EXPECTED_AWS_ACCOUNT_ID: "791860731989"
   CANONICAL_URL: https://www.sozorock.com
+  AWS_DEPLOY_ROLE_ARN: arn:aws:iam::791860731989:role/sozorock-com-github-deploy
+  AWS_S3_BUCKET: sozorock-meridian-site
+  AWS_CLOUDFRONT_DISTRIBUTION_ID: E2YV5089958YRU
+  AWS_S3_PREFIX: meridian/
+  AWS_BACKUP_ROOT: deployment-backups/sozorock-com/
 
 jobs:
   deploy:
-    if: ${{ vars.AWS_DEPLOY_ROLE_ARN != '' && vars.AWS_S3_BUCKET != '' && vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != '' }}
     runs-on: ubuntu-latest
     environment: production
 
@@ -44,7 +48,7 @@ jobs:
       - name: Authenticate to AWS with OIDC
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
           role-session-name: sozorock-com-${{ github.run_id }}
           aws-region: ${{ env.AWS_REGION }}
           unset-current-credentials: true
@@ -55,25 +59,31 @@ jobs:
           set -euo pipefail
           account_id="$(aws sts get-caller-identity --query Account --output text)"
           test "$account_id" = "$EXPECTED_AWS_ACCOUNT_ID"
-          aws s3api head-bucket --bucket "$AWS_S3_BUCKET"
-          aliases="$(aws cloudfront get-distribution \
+          distribution="$(aws cloudfront get-distribution \
             --id "$AWS_CLOUDFRONT_DISTRIBUTION_ID" \
-            --query 'Distribution.DistributionConfig.Aliases.Items' \
             --output json)"
+          aliases="$(jq -c '.Distribution.DistributionConfig.Aliases.Items // []' <<<"$distribution")"
           jq -e --arg domain "${CANONICAL_URL#https://}" 'index($domain)' <<<"$aliases" >/dev/null
-        env:
-          AWS_S3_BUCKET: ${{ vars.AWS_S3_BUCKET }}
-          AWS_CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+          target_origin_id="$(jq -r '.Distribution.DistributionConfig.DefaultCacheBehavior.TargetOriginId' <<<"$distribution")"
+          origin_domain="$(jq -r --arg id "$target_origin_id" '[.Distribution.DistributionConfig.Origins.Items[] | select(.Id == $id)][0].DomainName' <<<"$distribution")"
+          origin_path="$(jq -r --arg id "$target_origin_id" '[.Distribution.DistributionConfig.Origins.Items[] | select(.Id == $id)][0].OriginPath // ""' <<<"$distribution")"
+          test "${origin_domain%%.s3*}" = "$AWS_S3_BUCKET"
+          test "${origin_path#/}/" = "$AWS_S3_PREFIX"
+          aws s3api list-objects-v2 \
+            --bucket "$AWS_S3_BUCKET" \
+            --prefix "$AWS_S3_PREFIX" \
+            --max-items 1 >/dev/null
 
       - name: Publish, verify, and roll back automatically
         id: release
         shell: bash
         env:
-          AWS_S3_BUCKET: ${{ vars.AWS_S3_BUCKET }}
-          DISTRIBUTION_ID: ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+          DISTRIBUTION_ID: ${{ env.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
           set -euo pipefail
-          backup_prefix="_deployment-backups/${GITHUB_RUN_ID}"
+          site_uri="s3://${AWS_S3_BUCKET}/${AWS_S3_PREFIX}"
+          backup_prefix="${AWS_BACKUP_ROOT}${GITHUB_RUN_ID}/"
+          backup_uri="s3://${AWS_S3_BUCKET}/${backup_prefix}"
           backup_complete=0
           verified=0
 
@@ -94,26 +104,25 @@ jobs:
             trap - EXIT
             if [[ "$backup_complete" = '1' && "$verified" != '1' ]]; then
               echo "Verification failed. Restoring the previous S3 release."
-              aws s3 sync "s3://${AWS_S3_BUCKET}/${backup_prefix}/" "s3://${AWS_S3_BUCKET}/" \
-                --delete \
-                --exclude '_deployment-backups/*'
+              aws s3 sync "$backup_uri" "$site_uri" --delete
               invalidate
             fi
             exit "$status"
           }
           trap rollback EXIT
 
-          aws s3 sync "s3://${AWS_S3_BUCKET}/" "s3://${AWS_S3_BUCKET}/${backup_prefix}/" \
-            --exclude '_deployment-backups/*'
+          aws s3api head-object \
+            --bucket "$AWS_S3_BUCKET" \
+            --key "${AWS_S3_PREFIX}index.html" >/dev/null
+          aws s3 sync "$site_uri" "$backup_uri"
           backup_complete=1
 
-          aws s3 sync dist/client/ "s3://${AWS_S3_BUCKET}/" \
+          aws s3 sync dist/client/ "$site_uri" \
             --delete \
             --exclude 'index.html' \
-            --exclude '_deployment-backups/*' \
             --cache-control 'public,max-age=3600'
 
-          aws s3 cp dist/client/index.html "s3://${AWS_S3_BUCKET}/index.html" \
+          aws s3 cp dist/client/index.html "${site_uri}index.html" \
             --cache-control 'no-cache,no-store,must-revalidate' \
             --content-type 'text/html; charset=utf-8'
 
@@ -134,7 +143,7 @@ jobs:
           done
 
           test "$verified" = '1'
-          aws s3 rm "s3://${AWS_S3_BUCKET}/${backup_prefix}/" --recursive
+          aws s3 rm "$backup_uri" --recursive
           trap - EXIT
           echo "verified=true" >> "$GITHUB_OUTPUT"
 

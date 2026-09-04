@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Scoped cross-account Route 53 role for the SozoRockSchool production domain
+
+Parameters:
+  HostingAccountId:
+    Type: String
+    Default: "791860731989"
+    AllowedPattern: "^[0-9]{12}$"
+    Description: AWS account that owns the www.sozorock.com CloudFront distribution
+  HostedZoneId:
+    Type: String
+    Default: Z0336115123Y50GO08GTI
+    AllowedPattern: "^Z[A-Z0-9]+$"
+    Description: Authoritative public Route 53 hosted zone for sozorock.com
+  ExternalId:
+    Type: String
+    Default: sozorock-com-production-dns-2026
+    NoEcho: true
+    Description: Required external ID for the cross-account role session
+
+Resources:
+  SozoRockComDnsAutomationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: sozorock-com-dns-automation
+      Description: Allows the SozoRockSchool hosting account to update only the sozorock.com hosted zone
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:${AWS::Partition}:iam::${HostingAccountId}:root
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Ref ExternalId
+      Policies:
+        - PolicyName: ManageSozoRockComDns
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadAndChangeOnlySozoRockComZone
+                Effect: Allow
+                Action:
+                  - route53:ChangeResourceRecordSets
+                  - route53:GetHostedZone
+                  - route53:ListResourceRecordSets
+                Resource: !Sub arn:${AWS::Partition}:route53:::hostedzone/${HostedZoneId}
+              - Sid: WaitForRoute53Changes
+                Effect: Allow
+                Action: route53:GetChange
+                Resource: !Sub arn:${AWS::Partition}:route53:::change/*
+      Tags:
+        - Key: Application
+          Value: SozoRockSchool
+        - Key: Domain
+          Value: sozorock.com
+
+Outputs:
+  DnsAutomationRoleArn:
+    Description: Role assumed by the SozoRockSchool hosting account during certificate and DNS setup
+    Value: !GetAtt SozoRockComDnsAutomationRole.Arn
+  HostedZoneId:
+    Description: Hosted zone this role can update
+    Value: !Ref HostedZoneId
