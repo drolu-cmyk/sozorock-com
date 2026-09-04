@@ -28,3 +28,14 @@ The production workflow uses short-lived GitHub OIDC credentials. It requires th
 - `AWS_CLOUDFRONT_DISTRIBUTION_ID`
 
 The least-privilege deployment role template is in `infra/aws/deployment-role.yml`.
+
+An AWS administrator can prepare the existing `www.sozorock.com` distribution from AWS CloudShell by running:
+
+```bash
+curl --proto '=https' --tlsv1.2 --fail --silent --show-error \
+  https://raw.githubusercontent.com/drolu-cmyk/sozorock-com/main/scripts/bootstrap-aws-deployment.sh \
+  --output /tmp/bootstrap-aws-deployment.sh && \
+bash /tmp/bootstrap-aws-deployment.sh
+```
+
+The script refuses to run outside AWS account `149086500999`, discovers the existing CloudFront and S3 resources from the `www.sozorock.com` alias, and creates only the bounded GitHub deployment role.

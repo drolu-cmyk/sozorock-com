@@ -49,8 +49,18 @@ Resources:
                 Effect: Allow
                 Action: cloudfront:CreateInvalidation
                 Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistributionId}
+              - Sid: ReadDeploymentStack
+                Effect: Allow
+                Action: cloudformation:DescribeStacks
+                Resource: !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/sozorock-com-github-deploy/*
 
 Outputs:
   DeployRoleArn:
     Description: Set this as the AWS_DEPLOY_ROLE_ARN GitHub Actions variable
     Value: !GetAtt SozoRockComGitHubDeployRole.Arn
+  S3BucketName:
+    Description: Existing S3 bucket serving www.sozorock.com
+    Value: !Ref S3BucketName
+  CloudFrontDistributionId:
+    Description: Existing CloudFront distribution serving www.sozorock.com
+    Value: !Ref CloudFrontDistributionId
