@@ -132,7 +132,7 @@ jobs:
           for attempt in $(seq 1 30); do
             page="$(curl --proto '=https' --tlsv1.2 --fail --silent --show-error \
               --max-time 20 "${CANONICAL_URL}/?release=${GITHUB_SHA}" || true)"
-            if grep -Fq '<title>SozoRockSchool — Build the Technology. Earn the Trust.</title>' <<<"$page" \
+            if grep -Fq '<title>SozoRockSchool — Learn it. Put it to work.</title>' <<<"$page" \
               && grep -Fq 'Applied AI Systems' <<<"$page" \
               && grep -Fq 'Cybersecurity Identity and Access Management' <<<"$page" \
               && grep -Fq 'AI Governance' <<<"$page"; then
