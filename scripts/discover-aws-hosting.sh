@@ -80,11 +80,22 @@ fi
 require_json "Route 53 website records lookup" "$work_dir/web-records.json"
 require_json "Route 53 nameserver lookup" "$work_dir/hosted-zone-nameservers.json"
 
-aws cloudfront list-distributions --output json > "$work_dir/distributions.json"
+aws cloudfront list-distributions \
+  --no-cli-pager \
+  --output json \
+  | jq -s '
+      if length == 0 or .[0] == null then
+        []
+      elif (.[0] | type) == "object" then
+        (.[0].DistributionList.Items // [])
+      else
+        error("unexpected CloudFront response type")
+      end
+    ' > "$work_dir/distributions.json"
 require_json "CloudFront distribution lookup" "$work_dir/distributions.json"
 
 jq --arg apex "$APEX_DOMAIN" --arg www "$WWW_DOMAIN" '
-  [.DistributionList.Items[]?
+  [.[]?
     | select(
         ((.Aliases.Items // []) | index($apex)) != null
         or ((.Aliases.Items // []) | index($www)) != null
