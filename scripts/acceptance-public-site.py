@@ -225,8 +225,8 @@ def main():
                 try:
                     open_home(page, base)
                     record["hero_bounds"] = hero_bounds(page)
-                    keyboard_menu(page, width<800)
                     capture_scroll(page, directory, label)
+                    keyboard_menu(page, width<800)
                     programs = program_journey(page, directory, label)
                     supporting_pages(page, base, directory, label, programs)
                     assert not errors, errors

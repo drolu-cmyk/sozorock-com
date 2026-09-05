@@ -34,3 +34,10 @@ h1,h2,h3,h4{font-weight:650}.school-hero h1{font-weight:650;font-size:clamp(48px
 :focus-visible,a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #fff;outline-offset:2px;box-shadow:0 0 0 6px var(--ink)}
 @media(max-width:860px){.school-hero-content{padding-top:96px}}
 @media(forced-colors:active){:focus-visible{outline-color:CanvasText;box-shadow:none}}
+ 
+
+/* Center each entrance using coordinates in the original artwork. */
+.school-door .door-scene img{width:400%;height:auto;aspect-ratio:1916/821;left:50%;top:50%;object-fit:initial;transform:translate(var(--scene-x),var(--scene-y))}
+.scene-ai{--scene-x:-51%;--scene-y:-20%}.scene-grc{--scene-x:-84%;--scene-y:-20%}.scene-iam{--scene-x:-52%;--scene-y:-58%}.scene-governance{--scene-x:-88%;--scene-y:-58%}
+.school-door:hover .door-scene img{transform:translate(var(--scene-x),var(--scene-y)) scale(1.025)}
+@media(prefers-reduced-motion:reduce){.school-door:hover .door-scene img{transform:translate(var(--scene-x),var(--scene-y))}}
