@@ -12,7 +12,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 
 The approved Open School direction supersedes the earlier laptop and document scenes. Use a full-bleed conceptual architectural school with four entrances, white overlay text, Plus Jakarta Sans headings, Source Sans 3 body, ink/steel and cobalt. Applied AI is cobalt, GRC teal, IAM silver and AI Governance terracotta. No tables, decorative connector lines, paper artifacts, fake dashboards, emoji icons, purple gradients or invented outcomes. Keep any scene animation optional and reduced-motion support complete. A generated still is not a Blender render or a video; describe the implemented medium accurately. Hero people are illustrative, not actual students. The director belongs in teaching/about content, never a hero CTA or footer attribution.
 
-This US site offers four 12-week Nano-Credentials, 3–6 hours/week, virtual delivery and human assessment. No tuition this intake; USD $10 enrollment fee after the learner accepts an offer. Credential issuance requires human authorization and a unique verification ID. No degree, academic credit, professional license, third-party certification or job guarantee. Keep program choices, deep-page links and selected-program application parameters consistent.
+This US site offers four 12-week Nano-Credentials, 3–6 hours/week, virtual delivery and human assessment. Introductory US pricing: USD $49 enrollment plus USD $250 tuition, USD $299 total per program for the first US intake. No application payment; intake remains closed until independently verified. Credential issuance requires human authorization and a unique verification ID. No degree, academic credit, professional license, third-party certification or job guarantee. Keep program choices, deep-page links and selected-program application parameters consistent.
 
 Review with four independent angles: visual originality, detail/contrast, typography, and responsive/accessibility. Verify real browser screenshots and interactions before handoff.
 
@@ -24,4 +24,6 @@ Review with four independent angles: visual originality, detail/contrast, typogr
 
 ## User corrections, September 5, 2026
 
-US is paid professional development. Never reuse Canada’s no-tuition or CAD $10 offer. Publish US tuition and enrollment fees before applications open; no amount is authorized yet. Identify the US operator as SozoRock Tech Inc., New York. Keep both products operationally separate. Preserve the approved architectural artwork; a CSS pan is not Blender. Do not invent learner quotes, enrollment totals or outcomes. Make homepage content readable without JavaScript.
+US is paid professional development. Never reuse Canada’s no-tuition or CAD $10 offer. The user authorized researched introductory pricing on September 5: USD $49 enrollment plus USD $250 tuition, USD $299 total per program. Publish the total clearly wherever enrollment pricing appears. Identify the US operator as SozoRock Tech Inc., New York. Keep both products operationally separate. Preserve the approved architectural artwork; a CSS pan is not Blender. Do not invent learner quotes, enrollment totals or outcomes. Make homepage content readable without JavaScript.
+
+Use the exact title Director of Learning, AI & Cybersecurity for Dr. Oluwabiyi Adeyemo in visible copy and metadata.

@@ -74,10 +74,13 @@ test('US production content is readable without JavaScript and has independent p
   assert.match(home, /<h1[^>]*id="hero-title"/);
   assert.match(home, /id="main"/);
   assert.match(home, /SozoRock Tech Inc\./);
+  assert.match(home, /USD \$299/);
+  assert.match(home, /\$49 enrollment/);
+  assert.match(home, /\$250 tuition/);
   assert.doesNotMatch(home, /<div id="root"><\/div>/);
   for (const name of (await readdir(root)).filter(name => name.endsWith('.html'))) {
     const html = await readFile(new URL(name, root), 'utf8');
-    assert.doesNotMatch(html, /USD \$10|No tuition this intake|Meridian/i, name);
+    assert.doesNotMatch(html, /USD \$10|No tuition this intake|Meridian|fees will be published/i, name);
     assert.match(html, /https:\/\/www\.sozorock\.com/, name);
     for (const [,data] of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
       assert.doesNotThrow(() => JSON.parse(data), name);

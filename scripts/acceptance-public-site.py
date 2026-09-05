@@ -61,7 +61,7 @@ def open_home(page, base):
     }""")
     metadata(page, "/")
     assert "meridian" not in page.locator("body").inner_text().lower(), "Retired branding"
-    for fact in ("Tuition and enrollment fees", "12 weeks", "100% virtual"):
+    for fact in ("USD $299", "$49 enrollment", "$250 tuition", "12 weeks", "100% virtual"):
         expect(page.locator(".school-hero")).to_contain_text(fact)
 
 
