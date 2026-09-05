@@ -81,11 +81,11 @@ def render(source, width, height, suffix, name):
     camera = bpy.context.object
     camera.name = 'Four-second looping projection camera'
     camera.data.type = 'ORTHO'
-    camera.data.ortho_scale = aspect*.982
+    camera.data.ortho_scale = max(aspect,1)*.982
     scene.camera = camera
     for frame,x,y in [(1,-.07,-.015),(49,.07,.015),(97,-.07,-.015)]:
         camera.location = (x,y,5)
-        camera.rotation_euler = (Vector((0,0,.07))-camera.location).to_track_quat('-Z','Y').to_euler()
+        camera.rotation_euler = (math.atan2(-y,4.93),math.atan2(x,4.93),0)
         camera.keyframe_insert('location',frame=frame)
         camera.keyframe_insert('rotation_euler',frame=frame)
     scene.render.image_settings.file_format = 'PNG'
