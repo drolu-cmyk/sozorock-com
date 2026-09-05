@@ -11,9 +11,6 @@ DNS_ROLE_ARN="arn:aws:iam::${DNS_ACCOUNT_ID}:role/sozorock-com-dns-automation"
 DNS_EXTERNAL_ID="sozorock-com-production-dns-2026"
 DISTRIBUTION_ID="E2YV5089958YRU"
 EXPECTED_DISTRIBUTION_DOMAIN="d14v3l4z5ufdrh.cloudfront.net"
-EXPECTED_BUCKET="sozorock-meridian-site"
-EXPECTED_ORIGIN_PATH="/meridian"
-SITE_PREFIX="meridian/"
 BACKUP_ROOT="deployment-backups/sozorock-com/"
 DEPLOY_STACK_NAME="sozorock-com-github-deploy"
 DNS_BRIDGE_STACK_NAME="sozorock-com-dns-bridge"
@@ -62,14 +59,25 @@ if [[ "$www_alias_present" != "true" ]]; then
   echo "Refusing to deploy: ${DISTRIBUTION_ID} does not own ${WWW_DOMAIN}." >&2
   exit 1
 fi
-if [[ "$bucket_name" != "$EXPECTED_BUCKET" || "$origin_path" != "$EXPECTED_ORIGIN_PATH" ]]; then
-  echo "Refusing to deploy: expected s3://${EXPECTED_BUCKET}${EXPECTED_ORIGIN_PATH}, found ${origin_domain}${origin_path}." >&2
+[[ "$origin_domain" == *.s3*.amazonaws.com ]] || exit 1
+SITE_PREFIX="${origin_path#/}"
+if [[ -z "$SITE_PREFIX" ]]; then
+  echo "Refusing a root origin: the release backup must be outside the website prefix." >&2
   exit 1
 fi
-aws s3api head-bucket --bucket "$bucket_name" --no-cli-pager >/dev/null
+SITE_PREFIX="${SITE_PREFIX%/}/"
+[[ "$SITE_PREFIX" != "$BACKUP_ROOT"* && "$BACKUP_ROOT" != "$SITE_PREFIX"* ]]
+aws s3api head-bucket --bucket "$bucket_name" --expected-bucket-owner "$EXPECTED_ACCOUNT_ID" --region "$AWS_REGION" --no-cli-pager >/dev/null
+bucket_location="$(aws s3api get-bucket-location --bucket "$bucket_name" --expected-bucket-owner "$EXPECTED_ACCOUNT_ID" --region "$AWS_REGION" --query LocationConstraint --output text --no-cli-pager)"
+if [[ "$bucket_location" != "None" && "$bucket_location" != "us-east-1" ]]; then
+  echo "Refusing to deploy: the existing S3 origin is outside us-east-1." >&2
+  exit 1
+fi
 aws s3api head-object \
   --bucket "$bucket_name" \
   --key "${SITE_PREFIX}index.html" \
+  --expected-bucket-owner "$EXPECTED_ACCOUNT_ID" \
+  --region "$AWS_REGION" \
   --no-cli-pager >/dev/null
 
 node_major="$(node -p 'Number(process.versions.node.split(".")[0])')"
@@ -245,6 +253,15 @@ aws s3 sync "$site_uri" "$backup_uri" --only-show-errors
 backup_complete=1
 deployment_active=1
 
+# Keep the independently activated US contact endpoint across static releases.
+if aws s3api get-object --bucket "$bucket_name" --key "${SITE_PREFIX}engagement-config.js" \
+  --expected-bucket-owner "$EXPECTED_ACCOUNT_ID" --region "$AWS_REGION" \
+  "$work_dir/engagement-config.js" --no-cli-pager >/dev/null 2>"$work_dir/engagement-config-error.txt"; then
+  cp "$work_dir/engagement-config.js" "$source_dir/dist/client/engagement-config.js"
+elif ! grep -Eq '\((NoSuchKey|404|NotFound)\)' "$work_dir/engagement-config-error.txt"; then
+  echo "Unable to verify the existing contact configuration. Stopping to preserve it." >&2
+  exit 1
+fi
 aws s3 sync "$source_dir/dist/client/" "$site_uri" \
   --delete \
   --exclude 'index.html' \

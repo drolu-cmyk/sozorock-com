@@ -1,0 +1,211 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "US enquiry service only, account 791860731989 us-east-1; existing website storage and distribution are preserved",
+  "Resources": {
+    "Enquiries": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ],
+        "SSESpecification": {
+          "SSEEnabled": true
+        },
+        "TimeToLiveSpecification": {
+          "AttributeName": "expiresAt",
+          "Enabled": true
+        }
+      }
+    },
+    "HandlerRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "EnquiryRecords",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:PutItem",
+                    "dynamodb:GetItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Enquiries",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:us-east-1:791860731989:log-group:/aws/lambda/sozorock-school-enquiries:*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Logs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/sozorock-school-enquiries",
+        "RetentionInDays": 14
+      }
+    },
+    "Handler": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": "Logs",
+      "Properties": {
+        "FunctionName": "sozorock-school-enquiries",
+        "Runtime": "python3.12",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "HandlerRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 10,
+        "MemorySize": 128,
+        "Environment": {
+          "Variables": {
+            "TABLE_NAME": {
+              "Ref": "Enquiries"
+            }
+          }
+        },
+        "Code": {
+          "ZipFile": "\"\"\"US enquiries: acknowledge only a durable, idempotent DynamoDB receipt.\"\"\"\nimport base64\nimport binascii\nimport hashlib\nimport json\nimport os\nimport re\nimport time\n\nimport boto3\nfrom botocore.exceptions import BotoCoreError, ClientError\n\nTABLE = boto3.resource('dynamodb').Table(os.environ['TABLE_NAME'])\nORIGIN = 'https://www.sozorock.com'\nINTENTS = {'general', 'organization', 'media', 'privacy', 'accessibility'}\n\n\ndef response(status, body):\n    return {\n        'statusCode': status,\n        'headers': {\n            'Content-Type': 'application/json', 'Cache-Control': 'no-store',\n            'Access-Control-Allow-Origin': ORIGIN, 'Vary': 'Origin',\n        },\n        'body': json.dumps(body),\n    }\n\n\ndef handler(event, context):\n    headers = {key.lower(): value for key, value in (event.get('headers') or {}).items()}\n    if headers.get('origin') not in (None, ORIGIN):\n        return response(403, {'message': 'Origin not allowed.'})\n    try:\n        raw = event.get('body') or ''\n        if not isinstance(raw, str):\n            raise ValueError()\n        if len(raw) > 22000:\n            return response(413, {'message': 'Message is too large.'})\n        if event.get('isBase64Encoded'):\n            raw = base64.b64decode(raw, validate=True).decode('utf-8')\n        if len(raw.encode('utf-8')) > 16000:\n            return response(413, {'message': 'Message is too large.'})\n        data = json.loads(raw)\n        if not isinstance(data, dict):\n            raise ValueError()\n    except (ValueError, TypeError, UnicodeError, binascii.Error):\n        return response(400, {'message': 'Invalid request.'})\n    if data.get('website'):\n        return response(400, {'message': 'Unable to process this enquiry.'})\n    fields = [data.get(key, '') for key in ('name', 'email', 'message', 'intent', 'requestId')]\n    if not all(isinstance(value, str) for value in fields):\n        return response(400, {'message': 'Check your name, email and message, then try again.'})\n    name, email, message, intent, request_id = [value.strip() for value in fields]\n    valid = (\n        2 <= len(name) <= 100 and len(email) <= 254\n        and re.fullmatch(r'[^\\s@]+@[^\\s@]+\\.[^\\s@]+', email)\n        and 20 <= len(message) <= 3000 and intent in INTENTS\n        and re.fullmatch(r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', request_id)\n    )\n    if not valid:\n        return response(400, {'message': 'Check your name, email and message, then try again.'})\n    digest = hashlib.sha256(json.dumps([name, email, message, intent]).encode()).hexdigest()\n    now = int(time.time())\n    item = {\n        'id': request_id, 'name': name, 'email': email, 'message': message,\n        'intent': intent, 'digest': digest, 'createdAt': now, 'expiresAt': now + 30 * 86400,\n    }\n    try:\n        try:\n            TABLE.put_item(Item=item, ConditionExpression='attribute_not_exists(id)')\n        except ClientError as error:\n            if error.response['Error']['Code'] != 'ConditionalCheckFailedException':\n                raise\n            existing = TABLE.get_item(Key={'id': request_id}, ConsistentRead=True).get('Item', {})\n            if existing.get('digest') != digest:\n                return response(409, {'message': 'This reference was used with different details. Reload the page before sending another enquiry.'})\n    except (ClientError, BotoCoreError):\n        return response(503, {'message': 'We could not confirm receipt. Please try again with the same details.'})\n    return response(200, {'id': request_id, 'message': 'Your enquiry was received.'})\n"
+        }
+      }
+    },
+    "Api": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Name": "sozorock-school-enquiries",
+        "ProtocolType": "HTTP",
+        "CorsConfiguration": {
+          "AllowOrigins": [
+            "https://www.sozorock.com"
+          ],
+          "AllowMethods": [
+            "POST",
+            "OPTIONS"
+          ],
+          "AllowHeaders": [
+            "content-type"
+          ],
+          "MaxAge": 3600
+        }
+      }
+    },
+    "Integration": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "Api"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "Handler",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0"
+      }
+    },
+    "Route": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "Api"
+        },
+        "RouteKey": "POST /enquiries",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "Integration"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "Stage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Properties": {
+        "ApiId": {
+          "Ref": "Api"
+        },
+        "StageName": "$default",
+        "AutoDeploy": true,
+        "DefaultRouteSettings": {
+          "ThrottlingBurstLimit": 10,
+          "ThrottlingRateLimit": 5
+        }
+      }
+    },
+    "Invoke": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "Handler"
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:us-east-1:791860731989:${Api}/*/POST/enquiries"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ApiEndpoint": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Api",
+          "ApiEndpoint"
+        ]
+      }
+    },
+    "EnquiriesTable": {
+      "Value": {
+        "Ref": "Enquiries"
+      }
+    }
+  }
+}

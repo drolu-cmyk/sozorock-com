@@ -4,7 +4,9 @@
 Help a visitor understand four disciplines through actual decisions, then explore the work involved. Preserve an honest admissions state until a separate US intake backend is verified.
 
 ## Direction
-A full-bleed stone-and-water hero with white overlay typography opens into generous white editorial sections. The water metaphor remains in the optional keyboard-accessible ripple. Precise diagrams convey the subjects below the hero. Avoid repeated cards, fake metrics, stock dashboard illustrations and decorative complexity.
+A full-bleed illustrative scene of a professional learning at her desk carries white overlay typography, then opens into generous white editorial sections. A lightweight still image appears immediately; an optional, pausable video adds gentle camera movement to that image. This is image animation, not documentary or Sora-generated footage. Reduced-motion and data-saving preferences prevent automatic motion. A quiet native disclosure in the footer offers one reflective learning question. Precise diagrams convey the four subjects below the hero. Avoid repeated cards, fake metrics, stock dashboard illustrations and decorative complexity.
+
+The director section uses the existing real portrait of Dr. Oluwabiyi Adeyemo, Director of Learning, AI & Cybersecurity. The hero depicts an illustrative learner and is not presented as a real student or member of staff.
 
 2026 research informed editorial typography, purposeful interaction and restrained motion. Reference patterns: MIT Professional Education's catalogue clarity, CMU Heinz's programme/admissions separation and SANS's role-oriented pathways. These institutions are design references, not affiliations.
 
@@ -47,9 +49,9 @@ All examples are explicitly illustrative. They do not submit data, award credent
 - [ ] No Canadian endpoints, account or region configuration introduced.
 
 ## Intentional differences from the generated concept
-Functional native diagrams replace decorative sculptural still-lifes so the visuals explain actual decisions. The redundant second program heading is removed. Four distinct practice controls replace a single generic chooser illustration. Admissions remains an honest availability notice, not an unsupported application form. No invented schedule, fee, employment or credential claims are introduced.
+The generated concept established the photographic composition, forest palette and editorial scale. Its synthetic director portrait is not published: the implementation uses the existing real portrait of Dr. Oluwabiyi Adeyemo. The implementation retains the four actual programs—Applied AI Systems, Cybersecurity GRC, Identity & Access Management, and AI Governance—instead of the concept’s incorrect program labels. Functional native diagrams and four distinct practice controls explain each discipline. The old stone-and-water hero, ripple control and unused public ripple media have been removed. Prior QA images remain as historical evidence outside the published assets. Admissions remains an honest availability notice until operational details are confirmed. No invented schedule, fee, employment or credential claims are introduced.
 
 ## Verification record
-Production build and all four Sites packaging tests pass. Four independent source reviews were run and their concrete issues resolved: differentiated interactions/artifacts, readable consequential copy, 200ms hover transitions, exposed meaningful artifact text, 44px navigation, visible pressed state, and coordinated scroll/focus.
+Release review dated 2026-09-05: the production build and all four Sites packaging tests pass. Source review covers differentiated interactions and artifacts, deliberate typography, readable consequential copy, 200ms hover transitions, meaningful artifact text, 44px navigation, visible pressed states, coordinated scroll and focus, and the native footer disclosure. These checks support the implementation but do not establish a rendered-browser pass.
 
-Browser verification is pending. The connected browser rejects local and self-contained previews under its URL policy. The permitted standalone fallback could not download Chromium. No final screenshot, font-load, mobile-rendering, image-overlay contrast or runtime interaction pass is claimed. Do not deploy this draft until those checks are completed in an allowed environment.
+Live-browser verification is pending for this release. Verify the new hero composition, actual image-overlay contrast, font loading, motion playback and pause, mobile layout, keyboard focus and all four practice flows after deployment. Do not interpret earlier release screenshots or historical QA notes as verification of this release.
