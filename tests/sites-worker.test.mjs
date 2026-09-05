@@ -66,3 +66,21 @@ test("emits the files required by Sites packaging", async () => {
   await access(new URL("../dist/server/index.js", import.meta.url));
   await access(new URL("../dist/.openai/hosting.json", import.meta.url));
 });
+
+test('US production content is readable without JavaScript and has independent pricing', async () => {
+  const { readFile, readdir } = await import('node:fs/promises');
+  const root = new URL('../dist/client/', import.meta.url);
+  const home = await readFile(new URL('index.html', root), 'utf8');
+  assert.match(home, /<h1[^>]*id="hero-title"/);
+  assert.match(home, /id="main"/);
+  assert.match(home, /SozoRock Tech Inc\./);
+  assert.doesNotMatch(home, /<div id="root"><\/div>/);
+  for (const name of (await readdir(root)).filter(name => name.endsWith('.html'))) {
+    const html = await readFile(new URL(name, root), 'utf8');
+    assert.doesNotMatch(html, /USD \$10|No tuition this intake|Meridian/i, name);
+    assert.match(html, /https:\/\/www\.sozorock\.com/, name);
+    for (const [,data] of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
+      assert.doesNotThrow(() => JSON.parse(data), name);
+    }
+  }
+});
