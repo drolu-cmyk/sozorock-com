@@ -10,12 +10,14 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 
 ## Current visual direction (September 2026)
 
-The user superseded the earlier glass-panel prototype with full creative freedom. Use a full-bleed illustrative professional-learning scene and white overlay text. Keep silent, pausable image-animation video and reduced-motion/data-saving still fallback. Use Manrope, white, forest green, and subject-specific ochre, blue and burgundy accents. Programs must have distinct copy, meaningful visual artifacts and genuinely different practice interactions. No emoji icons, purple gradients, invented outcomes or fake admissions receipts. Keep motion optional and reduced-motion support complete. Use the real director portrait only; hero people are illustrative, not actual students.
+The approved Open School direction supersedes the earlier laptop and document scenes. Use a full-bleed conceptual architectural school with four entrances, white overlay text, Plus Jakarta Sans headings, Source Sans 3 body, ink/steel and cobalt. Applied AI is cobalt, GRC teal, IAM silver and AI Governance terracotta. No tables, decorative connector lines, paper artifacts, fake dashboards, emoji icons, purple gradients or invented outcomes. Keep any scene animation optional and reduced-motion support complete. A generated still is not a Blender render or a video; describe the implemented medium accurately. Hero people are illustrative, not actual students. The director belongs in teaching/about content, never a hero CTA or footer attribution.
+
+Both markets share four 12-week Nano-Credentials, 3–6 hours/week, virtual delivery and human assessment. No tuition this intake; USD $10 enrollment fee after the learner accepts an offer. Credential issuance requires human authorization and a unique verification ID. No degree, academic credit, professional license, third-party certification or job guarantee. Keep program choices, deep-page links and selected-program application parameters consistent.
 
 Review with four independent angles: visual originality, detail/contrast, typography, and responsive/accessibility. Verify real browser screenshots and interactions before handoff.
 
 ## Deployment separation and simplification
 
 - This repository serves only www.sozorock.com and its sozorock.com redirect. Regional resources stay in us-east-1; DNS account is 149086500999 and hosting account is 791860731989.
-- Canada is a separate repository, AWS account, programme, and backend. Never route this site's applications to Canada or reuse its account configuration.
+- Canada shares the school offer but has a separate repository, AWS account and backend. Never route this site's applications to Canada or reuse its account configuration.
 - Prefer removing unsupported behavior over adding complexity. Never display a submission receipt without a confirmed durable backend write. Online intake stays unavailable until an independent US backend is implemented and verified.

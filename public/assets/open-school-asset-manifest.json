@@ -1,0 +1,38 @@
+{
+  "market": "us",
+  "artwork_notice": "Conceptual learning environment, not physical premises. No generated person depicts a named student or member of staff.",
+  "assets": [
+    {
+      "file": "open-school-us-wide.webp",
+      "width": 1916,
+      "height": 821,
+      "bytes": 146612,
+      "sha256": "7c4336b82468c2e2439c8c035550b1323b67466c42eddab58e87986ec2033973",
+      "source": "Approved generated CGI artwork, 5 September 2026; lossily encoded without crop, resize or creative alteration."
+    },
+    {
+      "file": "open-school-us-mobile.webp",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 166492,
+      "sha256": "87b67a071886c3a9cf044064e8e618e1f1399801a2f6eb570891a17144a97d16",
+      "source": "Approved generated CGI artwork, 5 September 2026; lossily encoded without crop, resize or creative alteration."
+    },
+    {
+      "file": "fonts/source-sans-3-latin.woff2",
+      "bytes": 28740,
+      "sha256": "7a19a7027e125257d310c6dbd78ae3a30b5ea1e3794d60b12bb28227a003bfda",
+      "source": "https://fonts.gstatic.com/s/sourcesans3/v19/nwpStKy2OAdR1K-IwhWudF-R3w8aZQ.woff2",
+      "licence": "fonts/sourcesans3-OFL.txt",
+      "font_weight": "400 700"
+    },
+    {
+      "file": "fonts/plus-jakarta-sans-latin.woff2",
+      "bytes": 27348,
+      "sha256": "153fc85b70298beeb1d61a5f723331649e7f23bb77302a66e61cb3e2fbdb5e79",
+      "source": "https://fonts.gstatic.com/s/plusjakartasans/v12/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yw.woff2",
+      "licence": "fonts/plusjakartasans-OFL.txt",
+      "font_weight": "400 700"
+    }
+  ]
+}
