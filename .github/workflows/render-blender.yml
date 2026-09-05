@@ -15,9 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install Blender and encoder
-        run: sudo apt-get update -qq && sudo apt-get install -y blender ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y blender ffmpeg xvfb
       - name: Render original scene
-        run: blender -b -t 2 -P artwork/blender/build_open_school.py
+        run: xvfb-run -a blender -b -t 2 -P artwork/blender/build_open_school.py
       - name: Encode optimized loop and poster
         run: |
           ffmpeg -y -framerate 24 -i artwork/blender/generated/frames/frame_%04d.png -c:v libx264 -preset slow -crf 26 -pix_fmt yuv420p -movflags +faststart -an artwork/blender/generated/open-school.mp4
