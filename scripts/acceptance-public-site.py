@@ -138,7 +138,7 @@ def scene_motion(page):
       return v.videoWidth >= 720 && !v.paused && v.currentTime > 0.1;
     }""")
     expect(page.locator(".school-hero")).to_have_class(re.compile(r"\bscene-running\b"))
-    page.locator("#programs").scroll_into_view_if_needed()
+    page.locator("#teaching-title").scroll_into_view_if_needed()
     page.wait_for_function("document.querySelector('.school-blender-video').paused")
     control.scroll_into_view_if_needed()
     page.wait_for_function("!document.querySelector('.school-blender-video').paused")
