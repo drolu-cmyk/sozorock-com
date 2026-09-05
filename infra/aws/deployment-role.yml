@@ -10,7 +10,6 @@ Parameters:
     Description: Existing CloudFront distribution for www.sozorock.com
   S3Prefix:
     Type: String
-    Default: meridian/
     AllowedPattern: "^[A-Za-z0-9._/-]+/$"
     Description: Existing S3 prefix served by the CloudFront origin
   BackupPrefix:

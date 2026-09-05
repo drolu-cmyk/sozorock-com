@@ -19,9 +19,7 @@ env:
   EXPECTED_AWS_ACCOUNT_ID: "791860731989"
   CANONICAL_URL: https://www.sozorock.com
   AWS_DEPLOY_ROLE_ARN: arn:aws:iam::791860731989:role/sozorock-com-github-deploy
-  AWS_S3_BUCKET: sozorock-meridian-site
   AWS_CLOUDFRONT_DISTRIBUTION_ID: E2YV5089958YRU
-  AWS_S3_PREFIX: meridian/
   AWS_BACKUP_ROOT: deployment-backups/sozorock-com/
 
 jobs:
@@ -62,16 +60,32 @@ jobs:
           distribution="$(aws cloudfront get-distribution \
             --id "$AWS_CLOUDFRONT_DISTRIBUTION_ID" \
             --output json)"
-          aliases="$(jq -c '.Distribution.DistributionConfig.Aliases.Items // []' <<<"$distribution")"
-          jq -e --arg domain "${CANONICAL_URL#https://}" 'index($domain)' <<<"$aliases" >/dev/null
+          jq -e '
+            .Distribution.DomainName == "d14v3l4z5ufdrh.cloudfront.net"
+            and .Distribution.DistributionConfig.Enabled == true
+            and ((.Distribution.DistributionConfig.Aliases.Items | sort) == ["sozorock.com", "www.sozorock.com"])
+          ' <<<"$distribution" >/dev/null
           target_origin_id="$(jq -r '.Distribution.DistributionConfig.DefaultCacheBehavior.TargetOriginId' <<<"$distribution")"
           origin_domain="$(jq -r --arg id "$target_origin_id" '[.Distribution.DistributionConfig.Origins.Items[] | select(.Id == $id)][0].DomainName' <<<"$distribution")"
           origin_path="$(jq -r --arg id "$target_origin_id" '[.Distribution.DistributionConfig.Origins.Items[] | select(.Id == $id)][0].OriginPath // ""' <<<"$distribution")"
-          test "${origin_domain%%.s3*}" = "$AWS_S3_BUCKET"
-          test "${origin_path#/}/" = "$AWS_S3_PREFIX"
+          AWS_S3_BUCKET="${origin_domain%%.s3*}"
+          AWS_S3_PREFIX="${origin_path#/}"
+          if [[ -z "$AWS_S3_PREFIX" ]]; then
+            echo "Refusing a root origin: the release backup must be outside the website prefix." >&2
+            exit 1
+          fi
+          AWS_S3_PREFIX="${AWS_S3_PREFIX%/}/"
+          [[ "$AWS_S3_PREFIX" != "$AWS_BACKUP_ROOT"* && "$AWS_BACKUP_ROOT" != "$AWS_S3_PREFIX"* ]]
+          [[ "$origin_domain" == *.s3.amazonaws.com || "$origin_domain" == *.s3.us-east-1.amazonaws.com || "$origin_domain" == *.s3-us-east-1.amazonaws.com ]]
+          location="$(aws s3api get-bucket-location --bucket "$AWS_S3_BUCKET" --expected-bucket-owner "$EXPECTED_AWS_ACCOUNT_ID" --region "$AWS_REGION" --query LocationConstraint --output text)"
+          [[ "$location" == "None" || "$location" == "us-east-1" ]]
+          echo "AWS_S3_BUCKET=$AWS_S3_BUCKET" >> "$GITHUB_ENV"
+          echo "AWS_S3_PREFIX=$AWS_S3_PREFIX" >> "$GITHUB_ENV"
           aws s3api list-objects-v2 \
             --bucket "$AWS_S3_BUCKET" \
             --prefix "$AWS_S3_PREFIX" \
+            --expected-bucket-owner "$EXPECTED_AWS_ACCOUNT_ID" \
+            --region "$AWS_REGION" \
             --max-items 1 >/dev/null
 
       - name: Publish, verify, and roll back automatically
@@ -113,10 +127,20 @@ jobs:
 
           aws s3api head-object \
             --bucket "$AWS_S3_BUCKET" \
-            --key "${AWS_S3_PREFIX}index.html" >/dev/null
+            --key "${AWS_S3_PREFIX}index.html" \
+            --expected-bucket-owner "$EXPECTED_AWS_ACCOUNT_ID" \
+            --region "$AWS_REGION" >/dev/null
           aws s3 sync "$site_uri" "$backup_uri"
           backup_complete=1
 
+          if aws s3api get-object --bucket "$AWS_S3_BUCKET" --key "${AWS_S3_PREFIX}engagement-config.js" \
+            --expected-bucket-owner "$EXPECTED_AWS_ACCOUNT_ID" --region "$AWS_REGION" \
+            /tmp/existing-engagement-config.js >/dev/null 2>/tmp/engagement-config-error.txt; then
+            cp /tmp/existing-engagement-config.js dist/client/engagement-config.js
+          elif ! grep -Eq '\((NoSuchKey|404|NotFound)\)' /tmp/engagement-config-error.txt; then
+            echo "Unable to verify the existing contact configuration. Stopping to preserve it." >&2
+            exit 1
+          fi
           aws s3 sync dist/client/ "$site_uri" \
             --delete \
             --exclude 'index.html' \

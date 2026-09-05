@@ -27,10 +27,7 @@ The production resources span two AWS accounts:
 - Account `149086500999` owns the Route 53 hosted zone and domain registration.
 - Account `791860731989` owns CloudFront distribution `E2YV5089958YRU` and the S3 origin.
 
-The old Meridian website is replaced in place. Its historical S3 bucket and
-origin-prefix names remain internal implementation details so the existing,
-verified CloudFront setup can be reused without a risky infrastructure migration.
-No Meridian branding or content is published.
+The deployment discovers the S3 origin from the verified US CloudFront distribution and checks bucket ownership and region before publishing. The current bucket and origin prefix stay in place; no replacement bucket or origin migration is required.
 
 ## One-time AWS setup and first deployment
 
@@ -84,3 +81,41 @@ curl --proto '=https' --tlsv1.2 --fail --location --silent --show-error \
   --output /tmp/discover-aws-hosting.sh && \
 bash /tmp/discover-aws-hosting.sh
 ```
+
+## US enquiry service activation
+
+The website's existing S3 bucket, origin prefix, distribution and DNS records are
+preserved. `infra/aws/school-platform.json` adds only an independent US contact
+service: HTTP API, Lambda, DynamoDB and their bounded IAM/logging resources in
+hosting account `791860731989`, `us-east-1`. It does not use the Canadian backend.
+
+The current GitHub deployment role can publish website files but cannot provision
+this service. No AWS credentials were available in the implementation workspace,
+so the template has been checked locally, not deployed. Once the website release
+with `engagement-config.js` is live, run this from AWS CloudShell while signed into
+the US hosting account with CloudFormation/IAM/Lambda/API Gateway/DynamoDB access:
+
+```bash
+curl --proto '=https' --tlsv1.2 --fail --location --silent --show-error \
+  https://raw.githubusercontent.com/drolu-cmyk/sozorock-com/main/scripts/enable-us-enquiries.sh \
+  --output /tmp/enable-us-enquiries.sh && \
+bash /tmp/enable-us-enquiries.sh
+```
+
+The script verifies the account, production aliases, existing bucket owner and
+region, deploys only the contact service, and tests a rejected honeypot request
+without storing an enquiry. It then publishes the endpoint configuration to the
+existing origin, invalidates that one file and verifies the served configuration.
+A failed activation restores the previous configuration. Static deployments
+preserve the activated endpoint. Run from a reviewed checkout, or set
+`SOZOROCK_RELEASE_REF` to the approved commit SHA to pin the downloaded template.
+
+Only successful durable writes produce a receipt. Retries with the same request
+ID and details return the same receipt; different details with that ID are
+rejected. Storage failures never produce a success response. Records are marked
+for automatic deletion after 30 days; DynamoDB TTL deletion is asynchronous and
+can occur later. The service does not send email or subscribe users to marketing.
+An authorized operator must review the table reported by the activation script
+in the US AWS console and handle enquiries, including privacy and accessibility
+requests. Until activation, the website truthfully shows that online enquiries
+are unavailable and does not collect form details.
