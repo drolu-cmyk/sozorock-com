@@ -124,6 +124,28 @@ def keyboard_menu(page, mobile):
     expect(toggle).to_have_attribute("aria-expanded", "false")
 
 
+def scene_motion(page):
+    control = page.locator("[data-scene-motion]")
+    expect(control).to_have_text("Animate scene")
+    expect(control).to_have_attribute("aria-pressed", "false")
+    control.scroll_into_view_if_needed()
+    control.click()
+    expect(control).to_have_text("Pause scene")
+    expect(control).to_have_attribute("aria-pressed", "true")
+    expect(page.locator(".school-hero")).to_have_class(re.compile(r"\bscene-running\b"))
+    # Wait for an actual rendered animation timeline, not just a changed label.
+    page.wait_for_function("""() => document.querySelector('.school-hero-art img')
+      .getAnimations().some(a => a.animationName === 'school-scene-drift'
+        && a.playState === 'running' && a.currentTime > 0)""")
+    control.click()
+    expect(control).to_have_text("Animate scene")
+    expect(control).to_have_attribute("aria-pressed", "false")
+    expect(page.locator(".school-hero")).not_to_have_class(re.compile(r"\bscene-running\b"))
+    page.wait_for_function("""() => !document.querySelector('.school-hero-art img')
+      .getAnimations().some(a => a.animationName === 'school-scene-drift'
+        && a.playState === 'running')""")
+
+
 def program_journey(page, directory, label):
     paths = []
     for program_id, name, slug in PROGRAMS:
@@ -187,6 +209,7 @@ def reduced_motion(browser, base, directory):
         page = context.new_page()
         open_home(page, base)
         assert page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
+        expect(page.locator("[data-scene-motion]")).to_be_hidden()
         assert page.locator("video[autoplay],audio[autoplay]").count() == 0
         assert page.evaluate("""document.getAnimations().filter(a=>a.playState==='running'
           && a.effect?.getComputedTiming().iterations===Infinity).length""") == 0
@@ -227,6 +250,7 @@ def main():
                     record["hero_bounds"] = hero_bounds(page)
                     capture_scroll(page, directory, label)
                     keyboard_menu(page, width<800)
+                    scene_motion(page)
                     programs = program_journey(page, directory, label)
                     supporting_pages(page, base, directory, label, programs)
                     assert not errors, errors
