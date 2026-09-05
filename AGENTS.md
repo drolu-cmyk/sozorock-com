@@ -10,7 +10,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 
 ## Current visual direction (September 2026)
 
-The user superseded the earlier glass-panel prototype with full creative freedom. Preserve the full-bleed stone-and-water hero and white overlay text. Use Manrope, white, forest green, and subject-specific ochre, blue and burgundy accents. Programs must have distinct copy, meaningful visual artifacts and genuinely different practice interactions. No emoji icons, purple gradients, invented outcomes or fake admissions receipts. Keep motion optional and reduced-motion support complete. The keyboard-accessible stone easter egg is supplementary.
+The user superseded the earlier glass-panel prototype with full creative freedom. Use a full-bleed illustrative professional-learning scene and white overlay text. Keep silent, pausable image-animation video and reduced-motion/data-saving still fallback. Use Manrope, white, forest green, and subject-specific ochre, blue and burgundy accents. Programs must have distinct copy, meaningful visual artifacts and genuinely different practice interactions. No emoji icons, purple gradients, invented outcomes or fake admissions receipts. Keep motion optional and reduced-motion support complete. Use the real director portrait only; hero people are illustrative, not actual students.
 
 Review with four independent angles: visual originality, detail/contrast, typography, and responsive/accessibility. Verify real browser screenshots and interactions before handoff.
 
