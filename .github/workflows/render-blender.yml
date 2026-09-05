@@ -1,12 +1,12 @@
-name: Render editable Open School Blender scene
+name: Preview Open School Blender composition
 on:
   push:
-    branches: [artwork/open-school-blender]
+    branches: [artwork/open-school-preview]
     paths: [artwork/blender/build_open_school.py, .github/workflows/render-blender.yml]
 permissions:
   contents: write
 concurrency:
-  group: open-school-blender-render
+  group: open-school-blender-preview
   cancel-in-progress: true
 jobs:
   render:
@@ -28,4 +28,4 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add artwork/blender/generated/open-school.blend artwork/blender/generated/open-school.mp4 artwork/blender/generated/open-school-poster.webp
           git diff --cached --quiet || git commit -m 'artwork: preserve original Blender source and encoded school loop'
-          git push origin HEAD:artwork/open-school-blender
+          git push origin HEAD:artwork/open-school-preview
