@@ -34,5 +34,22 @@
       "licence": "fonts/plusjakartasans-OFL.txt",
       "font_weight": "400 700"
     }
-  ]
+  ],
+  "hero_motion": {
+    "medium": "Blender 2.5D camera projection of this market\u2019s approved artwork, not recovered full architecture",
+    "source": "artwork/blender/",
+    "playback": "Opt-in, muted, responsive and reduced-motion aware",
+    "files": [
+      {
+        "file": "/media/open-school-blender-v1.mp4",
+        "bytes": 135867,
+        "sha256": "2708162292816a3dfbcf3cb4d3ffd19e5457c53e8eb366b56b517fce33a8d821"
+      },
+      {
+        "file": "/media/open-school-blender-mobile-v1.mp4",
+        "bytes": 176747,
+        "sha256": "000a8a1fce9626ade2e8a49963306bff892dbab6601ad215337ff7286064740f"
+      }
+    ]
+  }
 }

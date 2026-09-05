@@ -13,7 +13,7 @@ try {
   }
   const file = 'dist/client/index.html';
   const html = readFileSync(file, 'utf8');
-  const fallback = '<noscript><style>@media(max-width:860px){.home .primary-nav{display:flex;position:static;flex-wrap:wrap}.home .site-header{position:relative;background:#132b42}.nav-shell{flex-wrap:wrap}.home .menu-toggle,.scene-motion{display:none}}</style></noscript>';
+  const fallback = '<noscript><style>.scene-motion{display:none!important}@media(max-width:860px){.home .primary-nav{display:flex;position:static;flex-wrap:wrap}.home .site-header{position:relative;background:#132b42}.nav-shell{flex-wrap:wrap}.home .menu-toggle,.scene-motion{display:none}}</style></noscript>';
   writeFileSync(file, html.replace('<div id="root"></div>', '<div id="root">' + markup + '</div>' + fallback));
   console.log('Prerendered US homepage content and navigation.');
 } finally {

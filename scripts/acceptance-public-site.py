@@ -126,24 +126,27 @@ def keyboard_menu(page, mobile):
 
 def scene_motion(page):
     control = page.locator("[data-scene-motion]")
-    expect(control).to_have_text("Animate scene")
+    video = page.locator(".school-blender-video")
+    expect(control).to_have_text("Play motion")
     expect(control).to_have_attribute("aria-pressed", "false")
+    assert video.get_attribute("src") is None, "Video downloaded before opt-in"
     control.scroll_into_view_if_needed()
     control.click()
     expect(control).to_have_text("Pause scene")
-    expect(control).to_have_attribute("aria-pressed", "true")
+    page.wait_for_function("""() => {
+      const v=document.querySelector('.school-blender-video');
+      return v.videoWidth >= 720 && !v.paused && v.currentTime > 0.1;
+    }""")
     expect(page.locator(".school-hero")).to_have_class(re.compile(r"\bscene-running\b"))
-    # Wait for an actual rendered animation timeline, not just a changed label.
-    page.wait_for_function("""() => document.querySelector('.school-hero-art img')
-      .getAnimations().some(a => a.animationName === 'school-scene-drift'
-        && a.playState === 'running' && a.currentTime > 0)""")
+    page.locator("#programs").scroll_into_view_if_needed()
+    page.wait_for_function("document.querySelector('.school-blender-video').paused")
+    control.scroll_into_view_if_needed()
+    page.wait_for_function("!document.querySelector('.school-blender-video').paused")
     control.click()
-    expect(control).to_have_text("Animate scene")
+    expect(control).to_have_text("Play motion")
     expect(control).to_have_attribute("aria-pressed", "false")
+    page.wait_for_function("document.querySelector('.school-blender-video').paused")
     expect(page.locator(".school-hero")).not_to_have_class(re.compile(r"\bscene-running\b"))
-    page.wait_for_function("""() => !document.querySelector('.school-hero-art img')
-      .getAnimations().some(a => a.animationName === 'school-scene-drift'
-        && a.playState === 'running')""")
 
 
 def program_journey(page, directory, label):
