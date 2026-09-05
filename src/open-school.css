@@ -41,3 +41,9 @@ h1,h2,h3,h4{font-weight:650}.school-hero h1{font-weight:650;font-size:clamp(48px
 .scene-ai{--scene-x:-51%;--scene-y:-20%}.scene-grc{--scene-x:-84%;--scene-y:-20%}.scene-iam{--scene-x:-52%;--scene-y:-58%}.scene-governance{--scene-x:-88%;--scene-y:-58%}
 .school-door:hover .door-scene img{transform:translate(var(--scene-x),var(--scene-y)) scale(1.025)}
 @media(prefers-reduced-motion:reduce){.school-door:hover .door-scene img{transform:translate(var(--scene-x),var(--scene-y))}}
+
+/* Navigation, readable portrait and a consistent decision point. */
+.menu-toggle{gap:8px}.menu-toggle img{width:22px;height:22px}.home .menu-toggle img{filter:invert(1)}
+.director-photo{max-width:420px;justify-self:center;background:transparent}.school-forum.director-photo img{width:100%;height:auto;object-fit:contain;object-position:center;transform:none}.director-photo figcaption{color:var(--muted);background:white;padding:16px 0}
+.school-weeks strong,.school-facts{font-variant-numeric:tabular-nums}
+@media(max-width:860px){.home .primary-nav[data-open]{position:fixed;inset:72px 0 0;max-height:none;height:calc(100dvh - 72px);padding:32px 24px max(32px,env(safe-area-inset-bottom));justify-content:flex-start;overscroll-behavior:contain}.home .primary-nav[data-open]>a{font-size:clamp(24px,6vw,34px);min-height:64px}.home .primary-nav[data-open] .nav-apply{margin-top:24px}.wordmark{flex-direction:column;align-items:flex-start;gap:3px}.wordmark-country{font-size:12px}.school-faq{grid-template-columns:1fr}.school-hero-content{padding-top:112px}.director-photo{max-width:340px}}
