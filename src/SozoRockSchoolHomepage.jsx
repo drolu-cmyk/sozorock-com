@@ -54,5 +54,5 @@ export function SozoRockSchoolHomepage(){
 <details><summary>Who is this not for?</summary><p>These programs are not for people seeking a degree, professional license or an automatic certificate for attendance. They require active participation and assessed submissions.</p></details>
 </div></div></section>
 <section className="school-close school-section" aria-labelledby="close-title"><div className="container"><h2 id="close-title">Choose your program.<br />Check admissions availability.</h2><p>No tuition this intake. USD $10 enrollment fee after you accept an offer.</p><a className="school-button school-button-light" data-selected-apply href={applyHref}>Apply</a></div></section>
-</main><SiteFooter /></div>;
+</main><SiteFooter applyHref={applyHref} /></div>;
 }

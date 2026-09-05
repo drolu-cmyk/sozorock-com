@@ -1,7 +1,7 @@
-export function SiteFooter(){return <footer className="site-footer"><div className="container">
+export function SiteFooter({applyHref='/apply.html'}){return <footer className="site-footer"><div className="container">
   <div className="footer-grid"><div className="footer-brand"><a className="wordmark" href="/"><span>SozoRockSchool</span><span className="wordmark-country">United States</span></a><p>AI and cybersecurity Nano-Credentials.<br />100% virtual. Human-assessed.</p></div>
   <div className="footer-column"><strong>School</strong><a href="/#programs">Programs</a><a href="/experience.html">How you learn</a><a href="/about.html">About</a></div>
-  <div className="footer-column"><strong>Participate</strong><a href="/apply.html">Apply</a><a href="/organizations.html">For employers</a><a href="/contact.html">Contact</a><a href="/media.html">Media</a></div>
+  <div className="footer-column"><strong>Participate</strong><a data-selected-apply href={applyHref}>Apply</a><a href="/organizations.html">For employers</a><a href="/contact.html">Contact</a><a href="/media.html">Media</a></div>
   <div className="footer-column"><strong>Policies &amp; standards</strong><a href="/credential-standards.html">Credentials &amp; verification</a><a href="/enrollment-fees.html">Enrollment &amp; fees</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/accessibility.html">Accessibility</a></div></div>
   <p className="footer-legal">© {new Date().getFullYear()} SozoRockSchool. All rights reserved. Focused professional development. No degree, diploma, academic credit, professional license or third-party certification. No job guarantee.</p>
   <div className="footer-bottom"><span>U.S. virtual participation</span><span>No tuition this intake. USD $10 enrollment fee after you accept an offer.</span></div></div></footer>;}
