@@ -148,8 +148,11 @@ def program_journey(page, directory, label):
         page.screenshot(path=str(directory / f"{label}-program-{program_id}.png"))
     weeks = page.locator("ol.school-weeks")
     expect(weeks.locator(":scope > li")).to_have_count(4)
-    for number in (1, 4, 8, 12):
-        expect(weeks).to_contain_text(re.compile(rf"Week\s*{number}\b", re.I))
+    for index, number in enumerate((1, 4, 8, 12)):
+        stage = weeks.locator(":scope > li").nth(index)
+        expect(stage.locator(":scope > span")).to_have_text("Week")
+        expect(stage.locator(":scope > strong")).to_have_text(str(number))
+        expect(stage.locator("h3")).to_be_visible()
     return paths
 
 
