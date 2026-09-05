@@ -132,8 +132,8 @@ def program_journey(page):
             check = practice.get_by_role("button", name="Check this access decision", exact=True)
             check.click()
             expect(practice.get_by_role("status")).to_contain_text("Match the permission to the task")
-            practice.get_by_label("Project permission", exact=True).select_option("read")
-            practice.get_by_label("Access expires", exact=True).select_option("30")
+            practice.get_by_role("combobox", name="Project permission", exact=True).select_option("read")
+            practice.get_by_role("combobox", name="Access expires", exact=True).select_option("30")
             check.click()
             expect(practice.get_by_role("status")).to_contain_text("This scope matches the task.")
         else:
