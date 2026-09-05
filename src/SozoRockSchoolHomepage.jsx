@@ -1,109 +1,58 @@
-import { useState, useRef, useEffect } from 'react';
-import { ArrowUpRight, ArrowRight, Check, ShieldCheck, Workflow, KeyRound, Scale, ChevronDown } from 'lucide-react';
-import './sozorockschool.css';
-import './market.css';
-import {HeroMedia} from './HeroMedia.jsx';
+import {useState,useEffect,useRef} from 'react';
 import {SiteFooter} from './SiteFooter.jsx';
-const programs = [{
-  id: 'ai',
-  name: 'Applied AI Systems',
-  title: 'Make AI useful beyond the prompt.',
-  description: 'Explore how an idea becomes a dependable workflow. Connect the steps, test the output, and keep a person in charge of the decisions that matter.',
-  feedback: 'A review before an external action lets a person verify the result before it affects someone. The right checkpoint also depends on the impact of the task.',
-  task: 'An AI assistant drafts a reply to a customer. Choose where a person should review it.',
-  icon: Workflow,
-  artifact: 'A workflow you can explain',
-  learn: ['Define a useful problem', 'Connect inputs, tools and decisions', 'Evaluate failures and human oversight']
-}, {
-  id: 'grc',
-  name: 'Cybersecurity GRC',
-  title: 'Turn risk into a decision.',
-  description: 'Move from a list of controls to a defensible recommendation. Ask for evidence, weigh the consequences, and make the trade-offs visible.',
-  feedback: 'Evidence of access controls helps you assess who can reach the data and how that access is reviewed. A claim becomes useful when you can test it.',
-  task: 'A new vendor will handle customer data. Your team needs a recommendation before signing.',
-  icon: ShieldCheck,
-  artifact: 'A risk recommendation with evidence',
-  learn: ['Frame risk in business terms', 'Evaluate control evidence', 'Explain a practical response']
-}, {
-  id: 'iam',
-  name: 'Identity & Access Management',
-  title: 'Give access a reason.',
-  description: 'Follow an identity from arrival to departure. Explore how the right permissions protect the organization while letting people do their work.',
-  feedback: 'Time-limited, read-only access matches this task. Confirm the project owner’s approval and remove access when the assignment ends.',
-  task: 'A contractor needs to read one project’s documents for a 30-day assignment.',
-  icon: KeyRound,
-  artifact: 'An access decision you can defend',
-  learn: ['Map identities to responsibilities', 'Apply least privilege', 'Plan reviews and offboarding']
-}, {
-  id: 'governance',
-  name: 'AI Governance',
-  title: 'Decide what AI is allowed to do.',
-  description: 'Make accountability part of the design. Examine who an AI system affects, what evidence a release needs, and when to pause.',
-  feedback: 'Pause and evaluate the system across the people it will affect. Assign an accountable owner and define review and appeal routes before considering release.',
-  task: 'A hiring tool performs well overall, but its evaluation does not cover all applicant groups.',
-  icon: Scale,
-  artifact: 'A documented release decision',
-  learn: ['Identify affected people', 'Define evaluation and oversight', 'Document accountable decisions']
-}];
-function Artifact({
-  program: p
-}) {
-  return <div className={`artifact artifact-${p.id}`}>{p.id === 'ai' ? <><span className="artifact-kicker">A workflow with a checkpoint</span><div className="flow-block">Customer request</div><div className="flow-line" /><div className="flow-block model">AI drafts a response</div><div className="flow-line" /><div className="flow-split"><span>Human review</span><span>Revise</span></div><div className="flow-line" /><div className="flow-block">Approved reply</div></> : p.id === 'grc' ? <><div className="dossier-back" /><div className="dossier"><ShieldCheck size={30} /><span className="artifact-kicker">Vendor review</span><h4>Claims need<br />evidence.</h4><div>Access policy <Check size={17} /></div><div>Review history <Check size={17} /></div><div>Open questions <span>2</span></div><p>Evidence → judgment → action</p></div></> : p.id === 'iam' ? <><span className="artifact-kicker">Permission by purpose</span><div className="identity"><KeyRound /><span>Project contractor<small>30-day assignment</small></span></div><div className="permission-row"><span>Project documents</span><strong>Read</strong></div><div className="permission-row"><span>Billing records</span><span>No access</span></div><div className="permission-row"><span>Administration</span><span>No access</span></div><div className="expiry">Access expires with the task</div></> : <><Scale size={42} /><span className="artifact-kicker">A decision before deployment</span><h4>Ready is a<br />responsibility.</h4><div className="release-line"><span>Impact</span><span>Evidence</span><span>Owner</span></div><div className="release-stamp">Review before release</div></>}</div>;
-}
-function Practice({
-  program: p,
-  focusRequest
-}) {
-  const [choice, setChoice] = useState(null),
-    [evidence, setEvidence] = useState(false),
-    [access, setAccess] = useState('none'),
-    [expiry, setExpiry] = useState('permanent'),
-    [checks, setChecks] = useState([]);
-  const heading = useRef(null);
-  useEffect(() => {
-    if (focusRequest && heading.current) {
-      heading.current.scrollIntoView({
-        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-        block: 'center'
-      });
-      heading.current.focus({
-        preventScroll: true
-      });
-    }
-  }, [focusRequest]);
-  const response = p.id === 'iam' ? access === 'read' && expiry === '30' ? 'This scope matches the task. Confirm owner approval and remove access when the assignment ends.' : 'Match the permission to the task: read-only project access, expiring after 30 days.' : p.feedback;
-  return <div className="practice" style={{
-    '--accent': `var(--${p.id})`
-  }}><div className="practice-top"><p>Try a practice decision</p><p>Illustrative scenario</p></div><h3 ref={heading} tabIndex={-1}>{p.task}</h3>
- {p.id === 'ai' && <fieldset><legend>Place a human checkpoint in the workflow.</legend><div className="checkpoint-flow">{['Request received', 'Draft prepared', 'Reply sent'].map((step, i) => <div key={step}><span>{step}</span>{i < 2 && <button onClick={() => setChoice(i)} aria-pressed={choice === i}>{choice === i ? <Check size={18} /> : <span>+</span>} Review here</button>}</div>)}</div></fieldset>}
- {p.id === 'grc' && <><button className="evidence-toggle" aria-expanded={evidence} onClick={() => setEvidence(!evidence)}>Inspect the vendor’s evidence <ChevronDown size={18} /></button>{evidence && <div className="evidence-paper"><strong>Evidence provided</strong><p>Access policy: supplied.<br />Latest access review: missing.<br />Named control owner: not identified.</p></div>}<fieldset><legend>What would you recommend?</legend>{['Approve on the policy alone', 'Request the review record and owner'].map((c, i) => <button key={c} disabled={!evidence} aria-pressed={choice === i} onClick={() => setChoice(i)}>{c}<ArrowUpRight size={18} /></button>)}</fieldset>{!evidence && <p className="interaction-hint">Inspect the evidence to make your recommendation.</p>}</>}
- {p.id === 'iam' && <><div className="access-config"><label>Project permission<select value={access} onChange={e => {
-            setAccess(e.target.value);
-            setChoice(null);
-          }}><option value="none">No access</option><option value="read">Read only</option><option value="admin">Administrator</option></select></label><label>Access expires<select value={expiry} onChange={e => {
-            setExpiry(e.target.value);
-            setChoice(null);
-          }}><option value="permanent">No expiry</option><option value="30">After 30 days</option></select></label></div><button className="evaluate" onClick={() => setChoice(1)}>Check this access decision <ArrowRight size={18} /></button></>}
- {p.id === 'governance' && <><fieldset><legend>Build the review required before a release decision.</legend>{['Evaluate performance across applicant groups', 'Assign an accountable owner', 'Define a human review and appeal route'].map((c, i) => <label className="review-check" key={c}><input type="checkbox" checked={checks.includes(i)} onChange={() => {
-            setChecks(checks.includes(i) ? checks.filter(x => x !== i) : [...checks, i]);
-            setChoice(null);
-          }} />{c}</label>)}</fieldset><button className="evaluate" onClick={() => setChoice(1)}>Review readiness <ArrowRight size={18} /></button></>}
- <div className="feedback" role="status">{choice !== null && (p.id === 'governance' ? <><strong>{checks.length === 3 ? 'Review plan assembled.' : 'The review plan has gaps.'}</strong> {checks.length === 3 ? 'These checks prepare the review; they do not establish that the system is safe to release. Gather and assess the evidence before deciding.' : 'Consider evaluation coverage, accountability, and a route for people to challenge a decision.'}</> : <><strong>{p.id === 'iam' ? 'Check the scope.' : choice === 1 ? 'A considered choice.' : 'Reconsider the timing or evidence.'}</strong> {p.id === 'grc' ? 'A policy describes intent. Request the review record and a named owner to assess whether the control operates in practice.' : response}</>)}</div></div>;
-}
-export function SozoRockSchoolHomepage() {
-  const [active, setActive] = useState('ai');
-  const [focusRequest, setFocusRequest] = useState(0);
+import './open-school.css';
+const programs=[
+{id:'ai',slug:'applied-ai-systems',title:'Applied AI Systems',goal:'I want to build AI systems.',description:'Turn an idea into a working AI system. Test its behavior, identify its limits and explain where a person needs to stay in control.',output:'A bounded AI system, evaluation evidence and an explanation of its limits.',href:'/applied-ai-systems.html'},
+{id:'grc',slug:'cybersecurity-grc',title:'Cybersecurity Governance, Risk and Compliance',goal:'I work with risk and controls.',description:'Connect security risks to controls. Check the evidence, identify gaps and recommend what should change. Explain how your conclusions support a security decision.',output:'A risk and control analysis, evidence review and reasoned recommendations.',href:'/cybersecurity-grc.html'},
+{id:'iam',slug:'identity-access-management',title:'Identity & Access Management',goal:'I manage identity and access.',description:'Design permissions around real responsibilities. Configure access policies, investigate failures and explain who should have access, why and under what conditions.',output:'An access model, policy configuration and a failure investigation.',href:'/identity-access-management.html'},
+{id:'governance',slug:'ai-governance',title:'AI Governance',goal:'I am responsible for AI oversight.',description:'Set responsibilities, assess AI risks and define how decisions should be reviewed. Explain who is accountable and what evidence they need.',output:'An AI governance position covering risk, accountability and review.',href:'/ai-governance.html'}
+];
+export function SozoRockSchoolHomepage(){
+ const [selected,setSelected]=useState(()=>programs.find(p=>p.slug===new URLSearchParams(window.location.search).get('program'))||programs[0]);
+ const [announcement,setAnnouncement]=useState('');
+ const [visited,setVisited]=useState(()=>new Set());
+ const [menuOpen,setMenuOpen]=useState(false);
+ const nav=useRef(null),menuButton=useRef(null),resultRef=useRef(null),heroRef=useRef(null);
+ const [motionEnabled,setMotionEnabled]=useState(false),[heroVisible,setHeroVisible]=useState(true);
+ const [reducedMotion,setReducedMotion]=useState(()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+ useEffect(()=>{const query=window.matchMedia('(prefers-reduced-motion: reduce)');const update=()=>{setReducedMotion(query.matches);if(query.matches)setMotionEnabled(false);};query.addEventListener('change',update);const observer=new IntersectionObserver(entries=>setHeroVisible(entries[0].isIntersecting));if(heroRef.current)observer.observe(heroRef.current);return()=>{query.removeEventListener('change',update);observer.disconnect();};},[]);
+ const applyHref='/apply.html?program='+selected.slug;
+ const choose=id=>{const p=programs.find(p=>p.id===id);if(!p)return;setSelected(p);setAnnouncement(p.title+' selected. Program details and application links updated.');setVisited(old=>new Set([...old,id]));const url=new URL(window.location.href);url.searchParams.set('program',p.slug);window.history.replaceState(null,'',url.pathname+url.search+url.hash);if(window.innerWidth<=860)requestAnimationFrame(()=>resultRef.current?.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'}));};
+ useEffect(()=>{
+  if(!menuOpen)return;
+  const before=document.body.style.overflow;document.body.style.overflow='hidden';nav.current?.querySelector('a')?.focus();
+  const keydown=e=>{if(e.key==='Escape'){setMenuOpen(false);menuButton.current?.focus();}if(e.key==='Tab'){const first=nav.current?.querySelector('a');if(!e.shiftKey&&document.activeElement===menuButton.current){e.preventDefault();first?.focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();menuButton.current?.focus();}}};
+  const resize=()=>{if(window.innerWidth>860)setMenuOpen(false);};
+  document.addEventListener('keydown',keydown);window.addEventListener('resize',resize);
+  return()=>{document.body.style.overflow=before;document.removeEventListener('keydown',keydown);window.removeEventListener('resize',resize);};
+ },[menuOpen]);
+ return <div className="home open-school school-ready"><a className="skip-link" href="#main">Skip to content</a><header className="site-header"><div className="nav-shell"><a className="wordmark" href="/" aria-label="SozoRockSchool United States"><span>SozoRockSchool</span><span className="wordmark-country">United States</span></a><nav ref={nav} className="primary-nav" id="primary-nav" aria-label="Primary navigation" data-primary-nav data-open={menuOpen?'':undefined} onClick={()=>setMenuOpen(false)}><a href="#programs">Programs</a><a href="/experience.html">How you learn</a><a href="/enrollment-fees.html">Admissions</a><a className="nav-apply" href={applyHref}>Apply</a></nav><button ref={menuButton} className="menu-toggle" type="button" aria-label={menuOpen?'Close menu':'Open menu'} aria-expanded={menuOpen} aria-controls="primary-nav" data-menu-toggle onClick={()=>setMenuOpen(open=>!open)}>{menuOpen?'Close':'Menu'}</button></div></header><main id="main">
+<section ref={heroRef} className={"school-hero"+(motionEnabled&&heroVisible&&!reducedMotion?" scene-running":"")} aria-labelledby="hero-title"><picture className="school-hero-art"><source media="(max-width: 860px)" srcSet="/assets/open-school-us-mobile.webp" /><img src="/assets/open-school-us-wide.webp" width="2520" height="1080" alt="" fetchPriority="high" /></picture>
+<div className="container school-hero-content"><p className="school-function">AI and cybersecurity Nano-Credentials</p><h1 id="hero-title">Build the technology.<br />Earn the trust.</h1><p className="school-hero-intro">Applied projects. Human assessment.</p><p className="school-facts">12 weeks · 100% virtual · United States<br />3–6 hours/week</p><p className="school-fee">No tuition this intake. USD $10 enrollment fee after you accept an offer.</p><div className="school-actions"><a className="school-button school-button-light" data-selected-apply href={applyHref}>Apply</a><a className="school-text-link" href="#programs">Choose your program <span aria-hidden="true">→</span></a></div><p className="school-availability">U.S. applications are not open yet. Check admissions availability before sharing information.</p></div>
+{!reducedMotion&&<button type="button" className="scene-motion" data-scene-motion aria-pressed={motionEnabled} onClick={()=>setMotionEnabled(on=>!on)}>{motionEnabled?"Pause scene":"Animate scene"}</button>}<p className="school-scene-caption">Conceptual learning environment. Programs are 100% virtual.</p></section>
+<section className="school-programs school-section" id="programs" aria-labelledby="programs-title"><div className="container">
+<p className="school-kicker">Programs</p><h2 id="programs-title">Four paths. One school.</h2><p className="school-intro">Choose the responsibility closest to your goals. Each program follows the same twelve-week learning rhythm.</p>
+<div className="school-doors" aria-label="Choose a program"><button type="button" className="school-door" data-school-choice="ai" aria-pressed={selected.id==='ai'} onClick={()=>choose('ai')} aria-controls="selected-program"><span className="door-scene scene-ai"><img src="/assets/open-school-us-wide.webp" width="2520" height="1080" loading="lazy" alt="" /></span><span className="door-name">Applied AI Systems</span><span className="door-description">Build and test AI.</span></button><button type="button" className="school-door" data-school-choice="grc" aria-pressed={selected.id==='grc'} onClick={()=>choose('grc')} aria-controls="selected-program"><span className="door-scene scene-grc"><img src="/assets/open-school-us-wide.webp" width="2520" height="1080" loading="lazy" alt="" /></span><span className="door-name">Cybersecurity GRC</span><span className="door-description">Assess security risk.</span></button><button type="button" className="school-door" data-school-choice="iam" aria-pressed={selected.id==='iam'} onClick={()=>choose('iam')} aria-controls="selected-program"><span className="door-scene scene-iam"><img src="/assets/open-school-us-wide.webp" width="2520" height="1080" loading="lazy" alt="" /></span><span className="door-name">Identity &amp; Access Management</span><span className="door-description">Design secure access.</span></button><button type="button" className="school-door" data-school-choice="governance" aria-pressed={selected.id==='governance'} onClick={()=>choose('governance')} aria-controls="selected-program"><span className="door-scene scene-governance"><img src="/assets/open-school-us-wide.webp" width="2520" height="1080" loading="lazy" alt="" /></span><span className="door-name">AI Governance</span><span className="door-description">Guide responsible AI use.</span></button></div>
+<div ref={resultRef} className="school-selected" id="selected-program" data-school-result><div><p className="school-kicker">Your program</p><h3 data-school-title>{selected.title}</h3><p className="selected-goal" data-school-goal>{selected.goal}</p><p data-school-description>{selected.description}</p><p><strong>You will develop:</strong> <span data-school-output>{selected.output}</span></p><p className="school-small">Guided practice. Applied project. Human assessment.</p><div className="school-actions"><a className="school-button" data-school-detail href={selected.href}>View program</a><a className="school-text-link" data-school-apply href={applyHref} aria-label={"Apply for "+selected.title}>Apply for this program</a></div></div><p className="school-selected-note">One discipline.<br />Twelve weeks.<br />Your decisions, explained.</p></div>
+<p className="visually-hidden" aria-live="polite" data-school-status>{announcement}</p><p className="school-discovery" data-school-discovery hidden={visited.size!==4}>Four entrances. One shared space for learning and human review. That is the idea behind our school sculpture.</p>
 
-  const p = programs.find(p => p.id === active);
-  return <><a className="skip" href="#courses">Skip to programs</a><section className="hero"><HeroMedia/><div className="hero-shade" /><header><a href="#" className="brand" aria-label="SozoRock School home">SozoRock<span>School</span></a><nav aria-label="Main navigation"><a href="#courses">Programs</a><a href="#experience">How you learn</a><a href="/organizations.html">For organizations</a></nav><a className="button light header-cta" href="#courses">Find your program <ArrowUpRight size={18} /></a></header><div className="hero-copy"><h1>Learn it.<br />Put it to work.</h1><p>Build your judgment in AI systems,<br className="desktop-break" /> cybersecurity and AI governance.</p><div className="hero-actions"><a className="button light" href="#courses">Explore the programs <ArrowUpRight size={20} /></a><a className="text-link" href="#director">Meet the director <ArrowRight size={18} /></a></div></div><div className="hero-foot"><span>Four disciplines. Work that matters.</span><a href="#courses" aria-label="Discover the programs"><ChevronDown /></a></div></section>
- <section id="courses" className="section explorer"><div className="section-heading"><h2>Start with the decisions<br />you want to make.</h2><p>Start with the kind of problem you want to solve.<br />Try a decision. Find a direction.</p></div><div className="explorer-grid"><div className="program-picker" aria-label="Choose a program">{programs.map(item => <button key={item.id} className={active === item.id ? 'active' : ''} aria-pressed={active === item.id} onClick={() => {
-            setActive(item.id);
-            setFocusRequest(0);
-          }}><item.icon size={22} /><span>{item.name}</span><ArrowUpRight size={22} /></button>)}<a className="small-link" href={`#program-${p.id}`}>Explore {p.name} <ArrowRight size={18} /></a></div><Practice key={p.id} program={p} focusRequest={focusRequest} /></div></section>
- <section className="section program-stories">{programs.map((item, i) => <article id={`program-${item.id}`} className={`program-story ${item.id}`} key={item.id}><div className="story-copy"><p className="program-name">{item.name}</p><h3>{item.title}</h3><p>{item.description}</p><details><summary>What you’ll explore <span>+</span></summary><ul>{item.learn.map(l => <li key={l}>{l}</li>)}</ul></details><button className="text-link" onClick={() => {
-            setActive(item.id);
-            setFocusRequest(n => n + 1);
-          }}>Try an {item.id === 'iam' ? 'access' : item.id === 'grc' ? 'evidence' : item.id === 'ai' ? 'AI workflow' : 'AI release'} decision <ArrowUpRight size={20} /></button></div><div className={`program-art art-${item.id}`}><Artifact program={item} /></div></article>)}</section>
- <section id="experience" className="journey section"><h2>A skill becomes yours<br />when you can use it.</h2><p className="journey-intro">Work through a problem. Make choices. Understand why they matter.</p><div className="journey-steps">{[['Understand the brief', 'Identify the problem, the people involved and the constraints.'], ['Build a response', 'Turn the idea into a workflow, analysis or decision.'], ['Test your choices', 'Look for weak evidence, failure modes and unintended effects.'], ['Explain the result', 'Make your reasoning clear enough for someone else to examine.']].map(([title, copy], i) => <div key={title}><span className="step-number">{i + 1}</span><h3>{title}</h3><p>{copy}</p></div>)}</div></section>
- <section id="director" className="section director"><img src="/media/director.webp" alt="Dr. Oluwabiyi Adeyemo" width="400" height="500" loading="lazy"/><div><h2>Learning with a<br/>clear standard.</h2><p className="director-name">Dr. Oluwabiyi Adeyemo</p><p>Director of Learning, AI &amp; Cybersecurity</p><p>Our focus is the reasoning behind the result: how you define a problem, test an approach and explain your decisions.</p><a className="text-link" href="/about.html">Meet the director <ArrowUpRight size={20}/></a></div></section><section id="outcomes" className="section outcomes"><h2>More than an answer.<br />A reason behind it.</h2><div><p>Technology changes. The ability to investigate a problem, test a solution and explain a decision travels with you.</p><p>Explore the program that matches the work you want to understand. These practice examples introduce the subject; they are not assessments or credential awards.</p><a href="#courses" className="text-link">Explore the four disciplines <ArrowUpRight size={20} /></a></div></section><section id="apply" className="section admissions"><div><h2>Make a more informed<br />next move.</h2><p>Take a closer look at the work before choosing your path.</p></div><div><a className="button dark" href="#courses">Explore your program <ArrowUpRight size={20} /></a><p className="availability">Online applications are not available yet.<br />Program dates and admissions details will be published here when confirmed.</p></div></section><SiteFooter/></>;
+</div></section>
+<section className="school-rhythm school-section" aria-labelledby="rhythm-title"><div className="container"><p className="school-kicker">How you learn</p><h2 id="rhythm-title">Twelve weeks.<br className="mobile-break" /> A clear progression.</h2><ol className="school-weeks">
+<li><span>Week</span><strong>1</strong><h3>Understand</h3><p>Learn the problem, the environment and the standard you are aiming for.</p></li>
+<li><span>Week</span><strong>4</strong><h3>Practice</h3><p>Complete guided exercises and explain the choices you make.</p></li>
+<li><span>Week</span><strong>8</strong><h3>Apply</h3><p>Develop your project within realistic constraints.</p></li>
+<li><span>Week</span><strong>12</strong><h3>Explain and review</h3><p>Present evidence, respond to human review and address required revisions.</p></li></ol><a className="school-text-link" href="/experience.html">How the twelve weeks work <span aria-hidden="true">→</span></a></div></section>
+<section className="school-teaching school-section" aria-labelledby="teaching-title"><div className="container school-teaching-layout"><div className="school-teaching-copy"><p className="school-kicker">Our method</p><h2 id="teaching-title">A person assesses<br />your progress.</h2><p>Your final submission is reviewed against the program requirements. You explain your choices and respond to feedback. Attendance alone does not earn a credential.</p><p className="school-director"><strong>Dr. Oluwabiyi Adeyemo</strong><br />Director of Learning, AI &amp; Cybersecurity</p><a className="school-text-link" href="/about.html#director">Meet the director <span aria-hidden="true">→</span></a></div><figure className="school-forum"><img src="/assets/open-school-us-wide.webp" width="1280" height="900" alt="Conceptual school sculpture with people gathered in a shared learning space" loading="lazy" /><figcaption>Learning includes discussion, explanation and review.</figcaption></figure></div></section>
+<section className="school-scope school-section" aria-labelledby="scope-title"><div className="container school-scope-layout"><div><p className="school-kicker">Credentials</p><h2 id="scope-title">A credential with<br />clear limits.</h2><p>Issued only after requirements are met and human authorization is recorded. Each issued credential has a unique verification ID.</p><a className="school-text-link" href="/credential-standards.html">Credential standards and verification <span aria-hidden="true">→</span></a></div><div className="school-scope-note"><p>This is focused professional development.</p><p>It is not a degree, diploma, academic credit, professional license or third-party certification. It does not guarantee a job.</p></div></div></section>
+<section className="school-context school-section" aria-labelledby="context-title"><div className="container school-context-layout"><h2 id="context-title">Technical skill<br />includes judgment.</h2><div><p>Building a system is one responsibility. Evaluating risk, controlling access and deciding how it should be used are others.</p><p>The U.S. Bureau of Labor Statistics projects information security analyst employment to grow 21% from 2025 to 2035.</p><p className="school-small">This occupation commonly requires a bachelor’s degree and related experience. This is occupational context, not a claim that a SozoRock credential meets those requirements or produces employment.</p><a className="school-text-link" href="https://www.bls.gov/ooh/computer-and-information-technology/information-security-analysts.htm">Read the BLS occupational outlook <span aria-hidden="true">↗</span></a></div></div></section>
+<section className="school-questions school-section" aria-labelledby="questions-title"><div className="container"><p className="school-kicker">Questions</p><h2 id="questions-title">Before you apply.</h2><div className="school-faq">
+<details open><summary>What does it cost?</summary><p>There is no tuition this intake. The USD $10 enrollment fee is due only after you accept an offer. Read the <a href="/enrollment-fees.html">fee and cancellation terms</a> before payment.</p></details>
+<details open><summary>How much time will I need?</summary><p>Plan for 3–6 hours each week over twelve weeks. Read the schedule in your offer before accepting your place.</p></details>
+<details open><summary>Who is this for?</summary><p>People ready to learn through guided practice, develop an applied project and explain their decisions. Read the entry expectations on your chosen program page.</p></details>
+<details><summary>What will the credential mean?</summary><p>It records completion of the stated requirements for one SozoRock Nano-Credential. Issuance requires human assessment and separate authorization.</p></details>
+<details><summary>Will it get me a job?</summary><p>No job is guaranteed. You can use your completed project to explain your skills and share verification details of an issued credential.</p></details>
+<details><summary>Who is this not for?</summary><p>These programs are not for people seeking a degree, professional license or an automatic certificate for attendance. They require active participation and assessed submissions.</p></details>
+</div></div></section>
+<section className="school-close school-section" aria-labelledby="close-title"><div className="container"><h2 id="close-title">Choose your program.<br />Check admissions availability.</h2><p>No tuition this intake. USD $10 enrollment fee after you accept an offer.</p><a className="school-button school-button-light" data-selected-apply href={applyHref}>Apply</a></div></section>
+</main><SiteFooter /></div>;
 }
