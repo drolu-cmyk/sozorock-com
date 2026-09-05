@@ -171,6 +171,26 @@ jobs:
           trap - EXIT
           echo "verified=true" >> "$GITHUB_OUTPUT"
 
+      - name: Install browser verification dependency
+        run: python -m pip install 'playwright==1.58.0'
+
+      - name: Verify public journeys in desktop and mobile Chrome
+        id: public-qa
+        timeout-minutes: 8
+        run: >-
+          python scripts/acceptance-public-site.py
+          --base-url "$CANONICAL_URL"
+          --output-dir "$RUNNER_TEMP/sozorock-public-qa"
+
+      - name: Preserve browser verification screenshots
+        if: always() && steps.release.outputs.verified == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sozorock-public-qa-${{ github.run_id }}
+          path: ${{ runner.temp }}/sozorock-public-qa/
+          retention-days: 14
+          if-no-files-found: warn
+
       - name: Record the deployment result
         if: always()
         shell: bash
@@ -178,6 +198,11 @@ jobs:
           if [[ '${{ steps.release.outputs.verified }}' = 'true' ]]; then
             echo '## AWS deployment verified' >> "$GITHUB_STEP_SUMMARY"
             echo "Commit \`${GITHUB_SHA}\` is live at ${CANONICAL_URL}." >> "$GITHUB_STEP_SUMMARY"
+            if [[ '${{ steps.public-qa.outcome }}' = 'success' ]]; then
+              echo 'Desktop and mobile browser journeys passed at 1440×1000, 390×844 and 375×667. Screenshots are attached as workflow artifacts.' >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo 'The release is live, but browser acceptance did not pass. Inspect the browser step and screenshot artifacts before considering the release complete.' >> "$GITHUB_STEP_SUMMARY"
+            fi
           else
             echo '## AWS deployment did not verify' >> "$GITHUB_STEP_SUMMARY"
             echo 'The workflow restored the previous S3 release when a backup was available.' >> "$GITHUB_STEP_SUMMARY"
