@@ -39,8 +39,9 @@ export function BlenderScene({heroRef, reducedMotion}) {
     <video ref={videoRef} className="school-blender-video" width="1280" height="548" muted loop playsInline preload="none" aria-hidden="true"
       onPlaying={()=>{setPlaying(true);setLoaded(true);}} onPause={()=>setPlaying(false)}
       onError={()=>{setFailed(true);setEnabled(false);setLoaded(false);setPlaying(false);}} />
-    {!reducedMotion&&!failed&&<button type="button" className="scene-motion" data-scene-motion aria-pressed={enabled}
-      onClick={()=>setEnabled(on=>!on)}>{playing?'Pause scene':enabled?'Loading scene…':'Play motion'}</button>}
-    {failed&&<p className="scene-motion scene-error" role="status">Motion unavailable. The still image remains visible.</p>}
+    {!reducedMotion&&<button type="button" className="scene-motion" data-scene-motion aria-pressed={enabled}
+      title={failed?'Motion could not load. Retry when your connection is available.':undefined}
+      onClick={()=>{if(failed){videoRef.current.removeAttribute('src');videoRef.current.load();setFailed(false);setEnabled(true);}else setEnabled(on=>!on);}}>{failed?'Retry motion':playing?'Pause scene':enabled?'Loading scene…':'Play motion'}</button>}
+    {failed&&<p className="visually-hidden" role="status">Motion unavailable. The still image remains visible.</p>}
   </>;
 }

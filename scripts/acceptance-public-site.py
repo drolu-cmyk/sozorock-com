@@ -131,6 +131,12 @@ def scene_motion(page):
     expect(control).to_have_attribute("aria-pressed", "false")
     assert video.get_attribute("src") is None, "Video downloaded before opt-in"
     control.scroll_into_view_if_needed()
+    # A transient CDN/network failure must preserve the still and allow retry.
+    page.route("**/*blender*.mp4", lambda route: route.abort())
+    control.click()
+    expect(control).to_have_text("Retry motion")
+    expect(page.locator(".school-hero")).not_to_have_class(re.compile(r"\bscene-loaded\b"))
+    page.unroute("**/*blender*.mp4")
     control.click()
     expect(control).to_have_text("Pause scene")
     page.wait_for_function("""() => {
