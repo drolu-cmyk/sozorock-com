@@ -131,12 +131,6 @@ def scene_motion(page):
     expect(control).to_have_attribute("aria-pressed", "false")
     assert video.get_attribute("src") is None, "Video downloaded before opt-in"
     control.scroll_into_view_if_needed()
-    # A transient CDN/network failure must preserve the still and allow retry.
-    page.route("**/*blender*.mp4", lambda route: route.abort())
-    control.click()
-    expect(control).to_have_text("Retry motion")
-    expect(page.locator(".school-hero")).not_to_have_class(re.compile(r"\bscene-loaded\b"))
-    page.unroute("**/*blender*.mp4")
     control.click()
     expect(control).to_have_text("Pause scene")
     page.wait_for_function("""() => {
@@ -212,6 +206,27 @@ def supporting_pages(page, base, directory, label, programs):
                     "does not collect or store your information")
 
 
+def scene_recovery(browser, base):
+    # Fault injection has its own contexts: normal journeys still reject console errors.
+    for width, height in ((1440, 1000), (390, 844)):
+        context = browser.new_context(viewport={"width": width, "height": height})
+        try:
+            page = context.new_page()
+            open_home(page, base)
+            control = page.locator("[data-scene-motion]")
+            page.route("**/*blender*.mp4", lambda route: route.abort())
+            control.click()
+            expect(control).to_have_text("Retry motion")
+            expect(control).to_have_attribute("aria-pressed", "false")
+            expect(page.locator(".school-hero")).not_to_have_class(re.compile(r"\bscene-loaded\b"))
+            page.unroute("**/*blender*.mp4")
+            control.click()
+            expect(control).to_have_text("Pause scene")
+            page.wait_for_function("() => {const v=document.querySelector('video'); return v.videoWidth >= 720 && !v.paused && v.currentTime > .1;}")
+        finally:
+            context.close()
+
+
 def reduced_motion(browser, base, directory):
     context = browser.new_context(viewport={"width":390,"height":844}, reduced_motion="reduce")
     try:
@@ -276,9 +291,10 @@ def main():
                     results.append(record)
                     context.close()
                 print(json.dumps(record), flush=True)
-            record = {"check":"reduced-motion","passed":False}
+            record = {"check":"reduced-motion-and-recovery","passed":False}
             try:
                 reduced_motion(browser, base, directory)
+                scene_recovery(browser, base)
                 record["passed"] = True
             except Exception as error:
                 record["error"] = str(error)
