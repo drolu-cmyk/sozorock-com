@@ -52,7 +52,7 @@ resource('ExecutionRole', 'AWS::IAM::Role', {
 resource('Handler', 'AWS::Lambda::Function', {
     'FunctionName': sub('${AWS::StackName}-handler'), 'Runtime': 'python3.12',
     'Handler': 'index.handler', 'Role': arn('ExecutionRole'), 'Timeout': 10, 'MemorySize': 128,
-    'ReservedConcurrentExecutions': 5,
+    'ReservedConcurrentExecutions': {'Fn::If': ['ReserveCapacity', 5, ref('AWS::NoValue')]},
     'Environment': {'Variables': {'TABLE_NAME': ref('Applications'), 'ADMIN_CLIENT_ID': ref('AdminClient'),
         'INTAKE_ENABLED': ref('IntakeEnabled')}},
     'Code': {'ZipFile': (ROOT / 'infra/aws/applications.py').read_text()}})
@@ -78,7 +78,10 @@ resource('InvokePermission', 'AWS::Lambda::Permission', {'FunctionName': ref('Ha
     'SourceAccount': ref('AWS::AccountId'),
     'SourceArn': sub('arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*/*/*')})
 template = {'AWSTemplateFormatVersion': '2010-09-09', 'Description': 'Independent US applications and private administrator API. No website activation.',
-    'Parameters': {'IntakeEnabled': {'Type': 'String', 'Default': 'false', 'AllowedValues': ['false', 'true']}},
+    'Parameters': {'IntakeEnabled': {'Type': 'String', 'Default': 'false', 'AllowedValues': ['false', 'true']},
+        'ReserveFunctionCapacity': {'Type': 'String', 'Default': 'false', 'AllowedValues': ['false', 'true'],
+            'Description': 'Reserve five executions only after verifying sufficient regional account capacity.'}},
+    'Conditions': {'ReserveCapacity': {'Fn::Equals': [ref('ReserveFunctionCapacity'), 'true']}},
     'Rules': {'USBoundary': {'Assertions': [
         {'Assert': {'Fn::Equals': [ref('AWS::AccountId'), '791860731989']}, 'AssertDescription': 'US hosting account only'},
         {'Assert': {'Fn::Equals': [ref('AWS::Region'), 'us-east-1']}, 'AssertDescription': 'US East only'}]}},

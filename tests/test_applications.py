@@ -103,6 +103,12 @@ class ApplicationsTests(unittest.TestCase):
         self.assertEqual(r['Admins']['Properties']['MfaConfiguration'], 'ON')
         self.assertEqual(template['Parameters']['IntakeEnabled']['Default'], 'false')
         self.assertEqual(r['Applications']['DeletionPolicy'], 'Retain')
+        self.assertEqual(template['Parameters']['ReserveFunctionCapacity']['Default'], 'false')
+        self.assertEqual(template['Conditions']['ReserveCapacity'], {'Fn::Equals': [{'Ref':'ReserveFunctionCapacity'}, 'true']})
+        self.assertEqual(r['Handler']['Properties']['ReservedConcurrentExecutions'],
+                         {'Fn::If': ['ReserveCapacity', 5, {'Ref':'AWS::NoValue'}]})
+        self.assertEqual(r['Stage']['Properties']['DefaultRouteSettings'],
+                         {'ThrottlingBurstLimit':10, 'ThrottlingRateLimit':5})
 
 if __name__ == '__main__':
     unittest.main()
