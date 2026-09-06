@@ -262,6 +262,14 @@ elif ! grep -Eq '\((NoSuchKey|404|NotFound)\)' "$work_dir/engagement-config-erro
   echo "Unable to verify the existing contact configuration. Stopping to preserve it." >&2
   exit 1
 fi
+if aws s3api get-object --bucket "$bucket_name" --key "${SITE_PREFIX}applications-config.js" \
+  --expected-bucket-owner "$EXPECTED_ACCOUNT_ID" --region "$AWS_REGION" \
+  "$work_dir/applications-config.js" --no-cli-pager >/dev/null 2>"$work_dir/applications-config-error.txt"; then
+  cp "$work_dir/applications-config.js" "$source_dir/dist/client/applications-config.js"
+elif ! grep -Eq '\((NoSuchKey|404|NotFound)\)' "$work_dir/applications-config-error.txt"; then
+  echo "Unable to verify the existing application configuration. Stopping to preserve it." >&2
+  exit 1
+fi
 aws s3 sync "$source_dir/dist/client/" "$site_uri" \
   --delete \
   --exclude 'index.html' \

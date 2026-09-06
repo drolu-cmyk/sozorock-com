@@ -8,7 +8,8 @@
     "build": "node scripts/build-public-pages.mjs && vite build && node scripts/prerender-home.mjs && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
     "test:sites": "node --test tests/sites-worker.test.mjs",
-    "verify": "npm run build && npm run test:sites"
+    "verify": "npm run build && npm run test:sites && npm run test:applications",
+    "test:applications": "python3 -m unittest discover -s tests -p 'test_applications.py'"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

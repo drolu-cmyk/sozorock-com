@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only Open School checks. No forms or credential requests are submitted."""
+"""Read-only Open School checks. Application contract checks intercept all submission and token requests. No live forms are submitted."""
 import argparse
 import json
 import os
@@ -243,6 +243,40 @@ def reduced_motion(browser, base, directory):
         context.close()
 
 
+def application_contract(browser, base):
+    # All API requests are intercepted: this cannot create a real application.
+    context = browser.new_context(viewport={"width":390,"height":844})
+    endpoint = "https://testapi.execute-api.us-east-1.amazonaws.com"
+    cfg = {"enabled":True,"apiEndpoint":endpoint,"adminClientId":"testclient", "adminLoginOrigin":"https://test.auth.us-east-1.amazoncognito.com"}
+    context.route("**/applications-config.js", lambda route: route.fulfill(content_type="application/javascript", body="window.SOZOROCK_APPLICATIONS="+json.dumps(cfg)))
+    calls = []
+    def submit(route):
+        payload = route.request.post_data_json
+        calls.append(payload)
+        route.fulfill(status=503 if len(calls)==1 else 200, content_type="application/json", body=json.dumps({"id":payload["requestId"],"status":"received"}))
+    context.route(endpoint+"/**", submit)
+    page = context.new_page()
+    try:
+        page.goto(base+"/apply.html")
+        page.get_by_label("Your name", exact=True).fill("Acceptance Test")
+        page.get_by_label("Email address", exact=True).fill("test@example.com")
+        page.get_by_label("What would you like to learn and apply?", exact=True).fill("Learn how to assess applied AI systems responsibly.")
+        page.locator('input[name="consent"]').check()
+        page.get_by_role("button", name="Submit application", exact=True).click()
+        expect(page.locator('form [role="status"]')).to_contain_text("Receipt could not be confirmed")
+        page.get_by_role("button", name="Submit application", exact=True).click()
+        expect(page.locator('[data-application-root]')).to_contain_text("Your application was received")
+        assert len(calls)==2 and calls[0]==calls[1], "Retry must preserve request and reference"
+        token_calls=[]
+        context.route("https://test.auth.us-east-1.amazoncognito.com/**", lambda route: (token_calls.append(route.request.url), route.abort()))
+        page.goto(base+"/admin.html?code=fake&state=wrong")
+        expect(page.locator('#admin-status')).to_contain_text("could not be verified")
+        assert not token_calls, "Unverified callback must not exchange a token"
+        expect(page.locator('#admin-content')).to_be_hidden()
+    finally:
+        context.close()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", default=CANONICAL)
@@ -295,6 +329,7 @@ def main():
             try:
                 reduced_motion(browser, base, directory)
                 scene_recovery(browser, base)
+                application_contract(browser, base)
                 record["passed"] = True
             except Exception as error:
                 record["error"] = str(error)

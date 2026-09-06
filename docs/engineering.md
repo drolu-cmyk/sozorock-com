@@ -48,3 +48,7 @@ Do not push main before release approval. Preserve existing tests; add checks fo
 - Public DNS observed: MX points to Amazon SES inbound in us-east-1; SPF authorizes amazonses.com; DMARC is `p=none`. Google DKIM's common selector was not present; the actual selector and SES receipt rules remain unknown.
 - Do not replace MX blindly: inspect SES forwarding/storage rules and Workspace domain/licence status first. Confirm whether the requested addresses are existing users, aliases or shared mailboxes before purchasing licences.
 - Authenticate every legitimate sender with one complete SPF record and provider-generated DKIM; inspect reports before tightening DMARC. The current monitoring policy does not reject spoofing. Mail delivery and header alignment remain unverified. [Google SPF guidance](https://support.google.com/a/answer/12082590) and [DMARC setup](https://support.google.com/a/answer/2466580).
+
+## US application preparation
+
+The separate [application service runbook](us-applications.md) owns provisioning, configuration and live acceptance. Public intake remains disabled until durable write, replay and protected administrator readback pass in the US account. The admin shell is `public/admin.html`; its data requires Cognito access tokens and the Admins group.

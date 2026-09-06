@@ -80,6 +80,12 @@ test('US production content is readable without JavaScript and has independent p
   assert.doesNotMatch(home, /<div id="root"><\/div>/);
   for (const name of (await readdir(root)).filter(name => name.endsWith('.html'))) {
     const html = await readFile(new URL(name, root), 'utf8');
+    if(name === 'admin.html') {
+      assert.match(html, /content="noindex,nofollow,noarchive"/);
+      assert.match(html, /id="admin-content" hidden/);
+      const sitemap = await readFile(new URL('sitemap.xml', root), 'utf8');
+      assert.doesNotMatch(sitemap, /admin\.html/);
+    }
     assert.doesNotMatch(html, /USD \$10|No tuition this intake|Meridian|fees will be published/i, name);
     assert.match(html, /https:\/\/www\.sozorock\.com/, name);
     for (const [,data] of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
