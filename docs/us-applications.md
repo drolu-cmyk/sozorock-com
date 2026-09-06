@@ -61,3 +61,9 @@ python3 scripts/build-applications-template.py > /tmp/us-applications.json
 Unit tests exercise input rejection, write failure, idempotent replay/conflict, unavailable intake, admin client/group/token boundaries, empty-page continuation, storage failures and handler/template consistency. They use a simulated DynamoDB client. CloudFormation schema validation, actual Cognito challenges, IAM permissions, API Gateway signature enforcement, persistence and browser integration require the live acceptance above.
 
 References: [AWS HTTP API JWT verification](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html), [Cognito administrator-created users](https://docs.aws.amazon.com/cognito/latest/developerguide/how-to-create-user-accounts.html).
+
+## Connect staff sign-in before intake acceptance
+
+After provisioning and creating the invited Admins user, run `bash scripts/connect-us-admin.sh` in the US hosting account. It reads stack outputs, verifies required authenticator MFA and the callback, checks anonymous access denial, backs up the existing configuration and publishes only `applications-config.js` with `enabled:false`. It verifies the served file after cache invalidation and attempts restoration if publication verification fails. It never accepts a password or MFA secret.
+
+Then open https://www.sozorock.com/admin.html, choose Sign in, change the temporary password and register an authenticator in Cognito. A successful return should show zero loaded applications before acceptance submissions. Sign out and back in to verify password plus authenticator challenge. Only the later live acceptance steps can justify opening intake.
