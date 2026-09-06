@@ -172,6 +172,14 @@ jobs:
             echo "Unable to verify the existing contact configuration. Stopping to preserve it." >&2
             exit 1
           fi
+          if aws s3api get-object --bucket "$AWS_S3_BUCKET" --key "${AWS_S3_PREFIX}applications-config.js" \
+            --expected-bucket-owner "$EXPECTED_AWS_ACCOUNT_ID" --region "$AWS_REGION" \
+            /tmp/existing-applications-config.js >/dev/null 2>/tmp/applications-config-error.txt; then
+            cp /tmp/existing-applications-config.js dist/client/applications-config.js
+          elif ! grep -Eq '\((NoSuchKey|404|NotFound)\)' /tmp/applications-config-error.txt; then
+            echo "Unable to verify the existing application configuration. Stopping to preserve it." >&2
+            exit 1
+          fi
           aws s3 sync dist/client/ "$site_uri" \
             --delete \
             --exclude 'index.html' \
