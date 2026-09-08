@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/preview-server.mjs >"$RUNNER_TEMP/preview.log" 2>&1 &
+          CSP_MODE=enforce node scripts/preview-server.mjs >"$RUNNER_TEMP/preview.log" 2>&1 &
           preview_pid=$!
           trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
           python scripts/acceptance-public-site.py --base-url http://127.0.0.1:4173 --output-dir "$RUNNER_TEMP/evidence/school-local"

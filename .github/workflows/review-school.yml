@@ -1,4 +1,4 @@
-name: Review school experience
+name: Review corporate and School experience
 on:
   pull_request:
     branches: [main]
@@ -20,10 +20,11 @@ jobs:
       - name: Review desktop and mobile journeys
         timeout-minutes: 10
         run: |
-          python -m http.server 4173 --bind 127.0.0.1 --directory dist/client > /tmp/school-preview.log 2>&1 &
+          CSP_MODE=enforce node scripts/preview-server.mjs > /tmp/school-preview.log 2>&1 &
           preview_pid=$!
           trap 'kill "$preview_pid"' EXIT
-          python scripts/acceptance-public-site.py --base-url http://127.0.0.1:4173 --output-dir /tmp/school-review
+          python scripts/acceptance-public-site.py --base-url http://127.0.0.1:4173 --output-dir /tmp/school-review/school
+          python scripts/acceptance-corporate.py --base-url http://127.0.0.1:4173 --output-dir /tmp/school-review/corporate
       - name: Save rendered review
         if: always()
         uses: actions/upload-artifact@v4
