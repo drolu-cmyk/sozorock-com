@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Least-privilege GitHub Actions deployment role for SozoRockSchool
+Description: Least-privilege GitHub Actions deployment role for SozoRock Technology
 
 Parameters:
   S3BucketName:
@@ -27,7 +27,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: sozorock-com-github-deploy
-      Description: Deploys the SozoRockSchool static build to S3 and refreshes CloudFront
+      Description: Deploys the SozoRock Technology static build to S3 and refreshes CloudFront
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -71,8 +71,20 @@ Resources:
                 Action:
                   - cloudfront:CreateInvalidation
                   - cloudfront:GetDistribution
+                  - cloudfront:GetDistributionConfig
+                  - cloudfront:UpdateDistribution
                   - cloudfront:GetInvalidation
                 Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistributionId}
+              - Sid: ManageCorporateReleaseFunctions
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateFunction
+                  - cloudfront:GetFunction
+                  - cloudfront:DescribeFunction
+                  - cloudfront:TestFunction
+                  - cloudfront:PublishFunction
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:function/sozorock-com-release-*
+
 Outputs:
   DeployRoleArn:
     Description: GitHub Actions role used by the production workflow
