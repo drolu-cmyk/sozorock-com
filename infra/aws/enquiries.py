@@ -47,23 +47,29 @@ def handler(event, context):
         return response(400, {'message': 'Invalid request.'})
     if data.get('website'):
         return response(400, {'message': 'Unable to process this enquiry.'})
-    fields = [data.get(key, '') for key in ('name', 'email', 'message', 'intent', 'requestId')]
+    fields = [data.get(key, '') for key in ('name', 'email', 'message', 'intent', 'requestId', 'organization', 'context')]
     if not all(isinstance(value, str) for value in fields):
         return response(400, {'message': 'Check your name, email and message, then try again.'})
-    name, email, message, intent, request_id = [value.strip() for value in fields]
+    name, email, message, intent, request_id, organization, context = [value.strip() for value in fields]
+    context = context or 'school'
     valid = (
         2 <= len(name) <= 100 and len(email) <= 254
         and re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email)
         and 20 <= len(message) <= 3000 and intent in INTENTS
+        and len(organization) <= 200 and context in {'school', 'corporate'}
         and re.fullmatch(r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', request_id)
     )
     if not valid:
         return response(400, {'message': 'Check your name, email and message, then try again.'})
-    digest = hashlib.sha256(json.dumps([name, email, message, intent]).encode()).hexdigest()
+    digest_fields = [name, email, message, intent]
+    if organization or context != 'school':
+        digest_fields += [organization, context]
+    digest = hashlib.sha256(json.dumps(digest_fields).encode()).hexdigest()
     now = int(time.time())
     item = {
         'id': request_id, 'name': name, 'email': email, 'message': message,
-        'intent': intent, 'digest': digest, 'createdAt': now, 'expiresAt': now + 30 * 86400,
+        'intent': intent, 'organization': organization, 'context': context,
+        'digest': digest, 'createdAt': now, 'expiresAt': now + 30 * 86400,
     }
     try:
         try:
@@ -72,7 +78,7 @@ def handler(event, context):
             if error.response['Error']['Code'] != 'ConditionalCheckFailedException':
                 raise
             existing = TABLE.get_item(Key={'id': request_id}, ConsistentRead=True).get('Item', {})
-            if existing.get('digest') != digest:
+            if existing.get('digest') != digest or existing.get('expiresAt', 0) <= now:
                 return response(409, {'message': 'This reference was used with different details. Reload the page before sending another enquiry.'})
     except (ClientError, BotoCoreError):
         return response(503, {'message': 'We could not confirm receipt. Please try again with the same details.'})
