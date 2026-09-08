@@ -11,7 +11,7 @@ from urllib.parse import parse_qs, urlparse
 from playwright.sync_api import expect, sync_playwright
 
 CANONICAL = "https://www.sozorock.com"
-VIEWPORTS = ((1440, 1000), (390, 844), (375, 667))
+VIEWPORTS = ((320, 800), (375, 812), (390, 844), (430, 932), (768, 1024), (1024, 900), (1280, 900), (1440, 1000), (1920, 1080))
 PROGRAMS = (
     ("ai", "Applied AI Systems", "applied-ai-systems"),
     ("grc", "Cybersecurity Governance, Risk and Compliance", "cybersecurity-grc"),
@@ -50,7 +50,7 @@ def metadata(page, path):
 
 
 def open_home(page, base):
-    response = page.goto(base + "/", wait_until="domcontentloaded")
+    response = page.goto(base + "/school", wait_until="domcontentloaded")
     assert response and response.ok, "Homepage failed"
     expect(page.locator(".school-hero h1")).to_have_text(
         re.compile(r"Build the technology\.\s*Earn the trust\."))
@@ -59,7 +59,7 @@ def open_home(page, base):
       const image=document.querySelector('.school-hero-art img');
       return image?.complete && image.naturalWidth>500 && document.fonts.status==='loaded';
     }""")
-    metadata(page, "/")
+    metadata(page, "/school")
     assert "meridian" not in page.locator("body").inner_text().lower(), "Retired branding"
     for fact in ("USD $299", "$49 enrollment", "$250 tuition", "12 weeks", "100% virtual"):
         expect(page.locator(".school-hero")).to_contain_text(fact)
@@ -139,13 +139,13 @@ def scene_motion(page):
     }""")
     expect(page.locator(".school-hero")).to_have_class(re.compile(r"\bscene-running\b"))
     page.locator("#teaching-title").scroll_into_view_if_needed()
-    page.wait_for_function("document.querySelector('.school-blender-video').paused")
+    page.wait_for_function("() => document.querySelector('.school-blender-video').paused")
     control.scroll_into_view_if_needed()
-    page.wait_for_function("!document.querySelector('.school-blender-video').paused")
+    page.wait_for_function("() => !document.querySelector('.school-blender-video').paused")
     control.click()
     expect(control).to_have_text("Play motion")
     expect(control).to_have_attribute("aria-pressed", "false")
-    page.wait_for_function("document.querySelector('.school-blender-video').paused")
+    page.wait_for_function("() => document.querySelector('.school-blender-video').paused")
     expect(page.locator(".school-hero")).not_to_have_class(re.compile(r"\bscene-running\b"))
 
 
@@ -166,7 +166,7 @@ def program_journey(page, directory, label):
         paths.append(detail)
         for link in page.locator("[data-selected-apply],[data-school-apply]").all():
             application = link.get_attribute("href")
-            assert urlparse(application).path == "/apply.html", application
+            assert urlparse(application).path == "/school/apply", application
             assert parse_qs(urlparse(application).query).get("program") == [slug], application
         no_overflow(page)
         page.locator("[data-school-title]").scroll_into_view_if_needed()
@@ -182,23 +182,24 @@ def program_journey(page, directory, label):
 
 
 def supporting_pages(page, base, directory, label, programs):
-    paths = ["/about.html", "/organizations.html", "/contact.html", "/media.html",
-             "/privacy.html", "/terms.html", "/accessibility.html", "/apply.html",
-             "/programs.html", "/experience.html", "/enrollment-fees.html",
-             "/credential-standards.html", "/verify.html", *programs]
+    paths = ["/school/about", "/school/for-organizations", "/school/contact", "/school/media",
+             "/school/privacy", "/school/terms", "/accessibility", "/school/apply",
+             "/school/programs", "/school/how-you-learn", "/school/admissions",
+             "/school/credentials", "/school/verify", *programs]
     for path in dict.fromkeys(paths):
         response = page.goto(base + path, wait_until="domcontentloaded")
         assert response and response.ok, f"Failed {path}"
         expect(page.locator("h1")).to_be_visible()
         metadata(page, urlparse(path).path)
         no_overflow(page)
-        if urlparse(path).path == "/apply.html":
-            expect(page.locator("body")).to_contain_text(re.compile(
-                r"applications? (?:are |is )?not (?:yet )?available|applications? (?:are |is )?not open", re.I))
-            expect(page.locator("form")).to_have_count(0)
+        if urlparse(path).path == "/school/apply":
+            configured = page.evaluate("Boolean(window.SOZOROCK_APPLICATIONS?.enabled)")
+            expect(page.locator("form")).to_have_count(1 if configured else 0)
+            if not configured:
+                expect(page.locator('[data-application-unavailable]')).to_be_visible()
             assert not page.locator('a[href*="canada.sozorock.com/apply"]').count()
             page.screenshot(path=str(directory / f"{label}-apply-unavailable.png"), full_page=True)
-        if path == "/contact.html":
+        if path == "/school/contact":
             configured = page.evaluate("Boolean(window.SOZOROCK_CONTACT?.apiEndpoint)")
             if not configured:
                 expect(page.locator("[data-contact-root] form")).to_have_count(0)
@@ -246,8 +247,8 @@ def reduced_motion(browser, base, directory):
 def application_contract(browser, base):
     # All API requests are intercepted: this cannot create a real application.
     context = browser.new_context(viewport={"width":390,"height":844})
-    endpoint = "https://testapi.execute-api.us-east-1.amazonaws.com"
-    cfg = {"enabled":True,"apiEndpoint":endpoint,"adminClientId":"testclient", "adminLoginOrigin":"https://test.auth.us-east-1.amazoncognito.com"}
+    endpoint = "https://q9l0fuov97.execute-api.us-east-1.amazonaws.com"
+    cfg = {"enabled":True,"apiEndpoint":endpoint,"adminClientId":"testclient", "adminLoginOrigin":"https://sozorock-us-admin-791860731989.auth.us-east-1.amazoncognito.com"}
     context.route("**/applications-config.js", lambda route: route.fulfill(content_type="application/javascript", body="window.SOZOROCK_APPLICATIONS="+json.dumps(cfg)))
     calls = []
     def submit(route):
@@ -257,7 +258,7 @@ def application_contract(browser, base):
     context.route(endpoint+"/**", submit)
     page = context.new_page()
     try:
-        page.goto(base+"/apply.html")
+        page.goto(base+"/school/apply")
         page.get_by_label("Your name", exact=True).fill("Acceptance Test")
         page.get_by_label("Email address", exact=True).fill("test@example.com")
         page.get_by_label("What would you like to learn and apply?", exact=True).fill("Learn how to assess applied AI systems responsibly.")
@@ -268,7 +269,7 @@ def application_contract(browser, base):
         expect(page.locator('[data-application-root]')).to_contain_text("Your application was received")
         assert len(calls)==2 and calls[0]==calls[1], "Retry must preserve request and reference"
         token_calls=[]
-        context.route("https://test.auth.us-east-1.amazoncognito.com/**", lambda route: (token_calls.append(route.request.url), route.abort()))
+        context.route("https://sozorock-us-admin-791860731989.auth.us-east-1.amazoncognito.com/**", lambda route: (token_calls.append(route.request.url), route.abort()))
         page.goto(base+"/admin.html?code=fake&state=wrong")
         expect(page.locator('#admin-status')).to_contain_text("could not be verified")
         assert not token_calls, "Unverified callback must not exchange a token"
@@ -285,9 +286,7 @@ def main():
     base = validated_base(args.base_url)
     directory = Path(args.output_dir)
     directory.mkdir(parents=True, exist_ok=True)
-    chrome = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
-    if not chrome:
-        raise RuntimeError("Acceptance runner must provide Google Chrome")
+    chrome = shutil.which("google-chrome") or shutil.which("google-chrome-stable") or next((str(p) for p in [Path("C:/Program Files/Google/Chrome/Application/chrome.exe"),Path("C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe")] if p.exists()), None)
     results = []
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True, executable_path=chrome)
@@ -307,7 +306,7 @@ def main():
                     open_home(page, base)
                     record["hero_bounds"] = hero_bounds(page)
                     capture_scroll(page, directory, label)
-                    keyboard_menu(page, width<800)
+                    keyboard_menu(page, width<=860)
                     scene_motion(page)
                     programs = program_journey(page, directory, label)
                     supporting_pages(page, base, directory, label, programs)
@@ -338,7 +337,7 @@ def main():
             browser.close()
     (directory / "results.json").write_text(json.dumps(results, indent=2)+"\n", encoding="utf-8")
     passed = all(result["passed"] for result in results)
-    print("PASS: Open School journeys, three viewports, supporting pages, reduced motion"
+    print("PASS: Open School journeys, nine viewports, supporting pages, reduced motion"
           if passed else "FAIL: inspect results.json and screenshots", flush=True)
     return 0 if passed else 1
 
