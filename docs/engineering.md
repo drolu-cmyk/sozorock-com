@@ -12,12 +12,12 @@ flowchart TD
   E --> F["Authorized AWS operator"]
   B --> G["Application availability notice"]
 ```
-D through F are designed in the enquiry template, not verified as deployed. There is no US application service or authenticated web admin. No enquiry email worker exists. Contact mail links open the visitor's email client and do not prove mailbox delivery.
+As of September 8, 2026, the US enquiry service is deployed with verified durable writes, retries and authorized DynamoDB readback. The independent US application service and Cognito administrator shell exist, but public intake is disabled and authenticated staff readback is pending. No enquiry email worker exists. Mail links do not prove mailbox delivery. See [the current release runbook](corporate-release.md).
 
 ## Work map
 - `src/`: interactive homepage; `scripts/build-public-pages.mjs`: static page source.
 - `scripts/prerender-home.mjs`: crawler-readable homepage.
-- `infra/aws/school-platform.json`: deployable enquiry template; `infra/aws/enquiries.py`: handler reference. Check both when changing behavior; they currently duplicate handler code.
+- `infra/aws/school-platform.json`: template skeleton; `infra/aws/enquiries.py`: authoritative handler. Generate the deployable template with `scripts/build-enquiries-template.py`.
 - `public/contact.js`: enquiry client; `public/engagement-config.js`: disabled default. Deployment preserves activated production configuration.
 - `worker/` and `scripts/prepare-sites-build.mjs`: alternate Sites packaging. Keep its tests even though AWS is the production host.
 - `scripts/deploy-aws-production.sh` and `.github/workflows/deploy-aws.yml`: production boundaries and rollback.
@@ -26,7 +26,7 @@ D through F are designed in the enquiry template, not verified as deployed. Ther
 ## Verification
 `npm ci && npm run verify` runs the production build and existing packaging/content tests, also used by PR and deployment CI.
 
-For changes affecting interaction, serve `dist/client` on port 4173, then run `python scripts/acceptance-public-site.py --base-url http://127.0.0.1:4173 --output-dir /tmp/school-review`. Install Python Playwright 1.58.0 and Chrome as in CI. The existing PR workflow performs this desktop/mobile review and saves evidence. No AWS access is needed for PR review.
+For changes affecting interaction, use `node scripts/preview-server.mjs` on port 4173, then run `python scripts/acceptance-public-site.py --base-url http://127.0.0.1:4173 --output-dir /tmp/school-review`. Install Python Playwright 1.58.0 and Chrome as in CI. The existing PR workflow performs this desktop/mobile review and saves evidence. No AWS access is needed for PR review.
 
 Completion means the specified visitor outcome works on the built revision; relevant checks pass; any backend claim has a verified write and authorized readback; and blockers are explicit. A rejected honeypot request only proves rejection, not successful service operation.
 
@@ -44,7 +44,7 @@ Do not push main before release approval. Preserve existing tests; add checks fo
 
 ## Current operations blockers — 2026-09-06
 - No AWS operator access or authenticated Google Workspace session was available during this review. No admin username/password was recovered or created. Passwords must not enter source, logs or review descriptions; issue a secure invitation/reset after confirming the operator identity.
-- US application/admin backend is absent. Reuse AWS API Gateway, Lambda, DynamoDB and Cognito independently in the US account; require application validation, idempotent durable receipt, authorized operator readback, retention and recovery before removing closed-intake copy.
+- US application/admin resources now exist. Public intake remains disabled until the operational route, durable receipts and authenticated staff readback are verified. School-open copy is separate from the online collection gate.
 - Public DNS observed: MX points to Amazon SES inbound in us-east-1; SPF authorizes amazonses.com; DMARC is `p=none`. Google DKIM's common selector was not present; the actual selector and SES receipt rules remain unknown.
 - Do not replace MX blindly: inspect SES forwarding/storage rules and Workspace domain/licence status first. Confirm whether the requested addresses are existing users, aliases or shared mailboxes before purchasing licences.
 - Authenticate every legitimate sender with one complete SPF record and provider-generated DKIM; inspect reports before tightening DMARC. The current monitoring policy does not reject spoofing. Mail delivery and header alignment remain unverified. [Google SPF guidance](https://support.google.com/a/answer/12082590) and [DMARC setup](https://support.google.com/a/answer/2466580).

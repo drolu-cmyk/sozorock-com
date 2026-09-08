@@ -1,3 +1,5 @@
+Corporate pages use the distinct system in [corporate source notes](artwork/corporate/README.md) and `public/corporate.css`. The School system below applies to `/school` and its supporting pages.
+
 # US Open School design
 The current implementation is the approved architectural Open School, not the historical laptop, stone or document concepts in QA files.
 
