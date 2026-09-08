@@ -1,0 +1,23 @@
+{
+  "captured": "2026-09-08",
+  "assets": [
+    {
+      "file": "joint-desktop-v1.webp",
+      "source": "artwork/corporate/structural-joint-source.png",
+      "rights": "Generated for this project with OpenAI image generation",
+      "state": "Conceptual fitted structural joint; not a real product or measured engineering test"
+    },
+    {
+      "file": "evidence/cb-cap-v1.webp",
+      "source": "https://cbcap.sozorockfoundation.org/",
+      "rights": "User-authorized public-interface capture for engineering story; Foundation retains rights",
+      "state": "Albany County preview with source disclosure open; institutional features unavailable"
+    },
+    {
+      "file": "evidence/place-intelligence-v1.webp",
+      "source": "https://health.sozorockfoundation.org/explore?kind=county&geoid=36001&view=brief",
+      "rights": "User-authorized public-interface capture for engineering story; Foundation retains rights",
+      "state": "Albany County brief, first measure source expanded; county evidence, not ZIP measurements"
+    }
+  ]
+}

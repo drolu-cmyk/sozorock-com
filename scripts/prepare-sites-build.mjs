@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,7 +15,8 @@ for (const file of [index, worker, hosting]) {
 
 mkdirSync(path.join(dist, "server"), { recursive: true });
 mkdirSync(path.join(dist, ".openai"), { recursive: true });
-copyFileSync(worker, path.join(dist, "server", "index.js"));
+const {LEGACY,ROUTES} = await import('../src/site.mjs');
+writeFileSync(path.join(dist,'server','index.js'),readFileSync(worker,'utf8').replace("import {LEGACY,ROUTES} from '../src/site.mjs';",'const LEGACY='+JSON.stringify(LEGACY)+';const ROUTES='+JSON.stringify(ROUTES)+';'));
 copyFileSync(hosting, path.join(dist, ".openai", "hosting.json"));
 
 console.log("Prepared Sites build: dist/server/index.js and dist/.openai/hosting.json");
