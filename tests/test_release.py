@@ -11,7 +11,7 @@ with patch.dict('sys.modules',{'boto3':types.ModuleType('boto3'),'botocore.excep
 
 class ReleaseTests(unittest.TestCase):
     def test_failed_browser_acceptance_and_interruption_restore_only_distribution(self):
-        for failure in [RuntimeError('Injected browser failure'),KeyboardInterrupt()]:
+        for failure in [RuntimeError('Injected browser failure'),KeyboardInterrupt(),RuntimeError('Injected publication failure')]:
             with self.subTest(failure=type(failure).__name__),tempfile.TemporaryDirectory() as directory:
                 root=Path(directory);(root/'dist/client').mkdir(parents=True);(root/'dist/client/index.html').write_text('<h1>Candidate</h1>');evidence=root/'evidence';evidence.mkdir()
                 objects={'meridian/applications-config.js':b'current applications config','meridian/engagement-config.js':b'current contact config'}
@@ -21,6 +21,8 @@ class ReleaseTests(unittest.TestCase):
                         if kw['Key'] not in objects:raise CloudError('NoSuchKey')
                         return {'Body':io.BytesIO(objects[kw['Key']])}
                     def put_object(self,**kw):
+                        if str(failure)=='Injected publication failure' and kw['Key'].startswith('meridian/releases/'):
+                            raise failure
                         if kw.get('IfNoneMatch')=='*' and kw['Key'] in objects:raise CloudError('PreconditionFailed')
                         body=kw['Body'];objects[kw['Key']]=body.encode() if isinstance(body,str) else body
                     def delete_object(self,**kw):del objects[kw['Key']]
@@ -37,10 +39,11 @@ class ReleaseTests(unittest.TestCase):
                 def fake_run(cmd,**kw):Path(cmd[-1]).write_text('function handler(event){return event.request;}')
                 with patch.object(release,'ROOT',root),patch.object(release.subprocess,'check_output',side_effect=lambda cmd,**kw:sha if cmd[1]=='rev-parse' else ''),patch.object(release.subprocess,'run',side_effect=fake_run),patch.object(release,'run_acceptance',side_effect=failure):
                     with self.assertRaises(type(failure)):release.deploy(s3,cf,types.SimpleNamespace(activate=True,headers_policy=None),evidence,cf.get_distribution_config(),lock,'test-token')
-                self.assertEqual(cf.config,original);self.assertEqual(len(cf.updates),2);self.assertNotIn(lock,objects)
+                publication_failed=str(failure)=='Injected publication failure'
+                self.assertEqual(cf.config,original);self.assertEqual(len(cf.updates),0 if publication_failed else 2);self.assertNotIn(lock,objects)
                 self.assertEqual(objects['meridian/applications-config.js'],b'current applications config');self.assertEqual(objects['meridian/engagement-config.js'],b'current contact config')
-                self.assertTrue(any(key.endswith('previous-distribution.json')for key in objects))
-                self.assertTrue((evidence/'automatic-rollback.json').exists());self.assertFalse((evidence/'production-result.json').exists())
+                self.assertEqual(any(key.endswith('previous-distribution.json')for key in objects),not publication_failed)
+                self.assertEqual((evidence/'automatic-rollback.json').exists(),not publication_failed);self.assertFalse((evidence/'production-result.json').exists())
     def test_artifact_keeps_configuration_and_callback_outside_versioned_assets(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);page=root/'admin.html'
