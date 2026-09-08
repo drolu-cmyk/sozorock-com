@@ -7,3 +7,5 @@ The structural joint is a conceptual OpenAI-generated illustration, not a real p
 Optimized exports: joint-desktop-v1.webp (1536x1024 source frame) and joint-mobile-v1.webp, with sizes recorded in release QA. Desktop and mobile use separate responsive sources. Corporate social images are 1200x630 PNG; School retains its distinct sculpture artwork. Interface images are real public Foundation captures with source/date/limits recorded in asset-provenance.json. Rights in Foundation interfaces remain with the Foundation.
 
 The corporate site reuses the existing S mark; it does not introduce a new symbol. Existing School Blender artwork and scripts remain under artwork/blender and are not represented as new corporate animation.
+
+Social typography uses the actual self-hosted Instrument Sans and Plus Jakarta Sans files. Raster favicon fallbacks are rendered directly from the SVG master. Reproduce these with artwork/corporate/render-brand-assets.py from the repository root while the local review server is on port 4175; the script uses Playwright and the installed Windows Chrome executable.
