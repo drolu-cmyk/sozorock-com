@@ -151,7 +151,7 @@ def deploy(s3,cf,args,evidence,current,lock_key,token):
         sample={'version':'1.0','context':{'eventType':'viewer-request'},'viewer':{'ip':'192.0.2.1'},'request':{'method':'GET','uri':'/apply.html','querystring':{'program':{'value':'ai-governance'}},'headers':{'host':{'value':'sozorock.com'}},'cookies':{}}}
         checked=cf.test_function(Name=name,IfMatch=created['ETag'],Stage='DEVELOPMENT',EventObject=json.dumps(sample).encode())
         save(evidence/'cloudfront-function-test.json',checked)
-        output=json.loads(checked['TestResult']['FunctionOutput']);assert output['headers']['location']['value']=='https://www.sozorock.com/school/apply?program=ai-governance'
+        output=json.loads(checked['TestResult']['FunctionOutput'])['response'];assert output['headers']['location']['value']=='https://www.sozorock.com/school/apply?program=ai-governance'
         published=cf.publish_function(Name=name,IfMatch=created['ETag']);arn=published['FunctionSummary']['FunctionMetadata']['FunctionARN'];backup['activatedFunction']=arn
         planned=release_configuration(current['DistributionConfig'],arn,sha,args.headers_policy);save(evidence/'activated-distribution.json',planned)
         backup['activatedConfiguration']=planned
