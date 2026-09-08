@@ -7,6 +7,7 @@ export function metadata({path,title,description,school=false,image,course,noind
   const provider=school?{'@id':ORIGIN+'/school#school'}:{'@id':company['@id']};
   const graph=[company];
   if(school)graph.push({'@type':'EducationalOrganization','@id':ORIGIN+'/school#school',name:'SozoRockSchool',url:ORIGIN+'/school',parentOrganization:{'@id':company['@id']}});
+  if(path==='/school/about')graph.push({'@type':'Person','@id':ORIGIN+'/school/about#director',name:'Dr. Oluwabiyi Adeyemo',jobTitle:'Director of Learning, AI & Cybersecurity',worksFor:{'@id':ORIGIN+'/school#school'}});
   graph.push({'@type':'WebSite','@id':ORIGIN+'/#website',name:'SozoRock Technology',url:ORIGIN+'/',publisher:{'@id':company['@id']},inLanguage:'en-US'},
     {'@type':path.startsWith('/work/')?'CreativeWork':path.endsWith('/contact')?'ContactPage':'WebPage','@id':url+'#page',url,name:title,description,isPartOf:{'@id':ORIGIN+'/#website'},publisher:provider,inLanguage:'en-US'});
   if(course)graph.push({'@type':'Course','@id':url+'#course',url,name:course[2],description:course[5],provider,timeRequired:'P12W',inLanguage:'en-US'});
