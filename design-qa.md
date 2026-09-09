@@ -18,14 +18,17 @@ The reference and current corporate capture were reviewed together. Hero hierarc
 
 ## Verification
 
-- npm run verify: production build, 18 Node tests and 17 Python tests passed.
+- npm run verify: production build, 20 Node tests and 20 Python tests passed.
 - School browser acceptance: all nine viewport widths passed; existing programs, fees, motion, supporting pages and fault cases retained.
 - Corporate browser acceptance: 16 routes at all nine viewport widths passed, including ZIP selection, barriers, forecast horizon, resource scenarios, review modal and export.
 - Corporate navigation, focus handling, no-JavaScript content, legacy redirects, contact receipt retry behavior and unknown routes passed.
 - Initial no-JavaScript mobile navigation overflow was fixed and the complete corporate suite rerun successfully.
 - Final navigation review moved the Platform anchor to the static platform explanation. Desktop link and mobile selector were rechecked; regression coverage now requires a unique static target with and without JavaScript.
 - Corporate Instrument Sans and School font/style bundles remain isolated. The planning island is approximately 99 KB gzip and uses production React.
-- Git diff confirms School source, its deep-page generator, application/admin source and operational configurations are unchanged.
+- School source, its deep-page generator and operational configurations remain unchanged. Shared page metadata now adds canonical identity, breadcrumbs and social-image checks.
+- Leadership uses the verified School portrait, name and biography, with the corporate title Director, Technology & Strategic Initiatives. Supporting-page headings use a smaller scale than the homepage hero; white remains #FFFFFF.
+- Corporate and CB-CAP social cards are 1200 by 630 JPEG images with matching file extensions and metadata. The unconnected prototype contact modal was removed from the planning bundle.
+- The company-admin candidate passes synthetic browser checks for pagination, literal text rendering, stale responses, expiry and unauthorized responses. Its deployment remains separate; see docs/company-admin.md.
 
 ## Product limits and remaining evidence
 
