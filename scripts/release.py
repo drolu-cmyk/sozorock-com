@@ -123,7 +123,11 @@ def deploy(s3,cf,args,evidence,current,lock_key,token):
     if not args.activate:return
     # Gate against absent operations evidence; this is separate from build/browser QA.
     gate=json.loads((evidence/'operational-acceptance.json').read_text())
-    assert all(gate.get(key) is True for key in ['applications','administratorReadback','contact','claimsConfirmed']),'Operational or claim acceptance is incomplete'
+    assert all(gate.get(key) is True for key in ['contact','claimsConfirmed']),'Contact or claim acceptance is incomplete'
+    if gate.get('applicationMode')=='preserve-disabled':
+        assert gate.get('intakeDisabled') is True and gate.get('adminBoundaryPreserved') is True,'Existing application boundaries must be verified before preserving them'
+    else:
+        assert gate.get('applications') is True and gate.get('administratorReadback') is True,'Enabling application collection requires authenticated operational acceptance'
     assert gate.get('account')==ACCOUNT and gate.get('distributionId')==DIST,'Acceptance belongs to another target'
     assert int(time.time()) < gate.get('expiresAt',0),'Operational acceptance expired'
     for filename in MUTABLE:
