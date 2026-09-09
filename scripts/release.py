@@ -12,7 +12,7 @@ ACCOUNT='791860731989';DIST='E2YV5089958YRU';BUCKET='sozorock-meridian-site';PRE
 ROOT=Path(__file__).resolve().parents[1]
 MUTABLE={'applications-config.js','engagement-config.js'}
 PRESERVED=MUTABLE|{'admin.html','admin.js'}
-ASSET=re.compile(r'(?<=[\x22\x27(])/(assets/|media/|corporate\.css|corporate\.js|school\.css|school-nav\.js|applications\.js|contact\.js|favicon\.svg|favicon-48\.png|apple-touch-icon\.png)')
+ASSET=re.compile(r'(?<=[\x22\x27(])/(assets/|media/|corporate\.css|corporate\.js|cbcap-preview\.js|school\.css|school-nav\.js|applications\.js|contact\.js|favicon\.svg|favicon-48\.png|apple-touch-icon\.png)')
 
 def digest(data):return hashlib.sha256(data).hexdigest()
 def save(path,value):path.write_text(json.dumps(value,indent=2,default=str)+'\n',encoding='utf-8')

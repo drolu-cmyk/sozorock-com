@@ -20,9 +20,9 @@ function handler(event) {
  if(uri==='/applications-config.js'||uri==='/engagement-config.js')return r;
  // Keep previous documents' immutable assets reachable through their own release.
  if(/^\/releases\/[a-f0-9]{40}\/(assets\/|media\/)[a-zA-Z0-9_./-]+$/.test(uri)&&uri.indexOf('..')===-1)return r;
- if(/^\/releases\/[a-f0-9]{40}\/(corporate\.css|corporate\.js|school\.css|school-nav\.js|applications\.js|admin\.js|contact\.js|favicon\.svg|favicon-48\.png|apple-touch-icon\.png)$/.test(uri))return r;
+ if(/^\/releases\/[a-f0-9]{40}\/(corporate\.css|corporate\.js|cbcap-preview\.js|school\.css|school-nav\.js|applications\.js|admin\.js|contact\.js|favicon\.svg|favicon-48\.png|apple-touch-icon\.png)$/.test(uri))return r;
  if(routes.indexOf(uri)!==-1)r.uri=(release?'/releases/'+release:'')+(uri==='/'?'/index.html':uri+'/index.html');
- else if(/^\/(assets|media)\/[a-zA-Z0-9_./-]+$/.test(uri)&&uri.indexOf('..')===-1||/^\/(corporate\.css|corporate\.js|school\.css|school-nav\.js|applications\.js|admin\.js|contact\.js|favicon\.svg|favicon-48\.png|apple-touch-icon\.png|menu\.svg|robots\.txt|sitemap\.xml|social-card\.(png|svg)|404\.html)$/.test(uri)){
+ else if(/^\/(assets|media)\/[a-zA-Z0-9_./-]+$/.test(uri)&&uri.indexOf('..')===-1||/^\/(corporate\.css|corporate\.js|cbcap-preview\.js|school\.css|school-nav\.js|applications\.js|admin\.js|contact\.js|favicon\.svg|favicon-48\.png|apple-touch-icon\.png|menu\.svg|robots\.txt|sitemap\.xml|social-card\.(png|svg)|404\.html)$/.test(uri)){
   r.uri=(release?'/releases/'+release:'')+uri;
  } else return {statusCode:404,statusDescription:'Not Found',headers:{'content-type':{value:'text/html; charset=utf-8'},'cache-control':{value:'no-store'},'x-content-type-options':{value:'nosniff'},'x-frame-options':{value:'DENY'}},body:'<!doctype html><html lang="en-US"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page Not Found | SozoRock Technology</title><link rel="stylesheet" href="/corporate.css"><body class="corporate"><main class="page-intro" id="main"><h1>That page<br>is not here.</h1><p>Check the address or continue to <a href="/">SozoRock Technology</a> or <a href="/school">SozoRockSchool</a>.</p></main></body></html>'};
  return r;

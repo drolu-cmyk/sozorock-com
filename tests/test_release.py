@@ -47,12 +47,13 @@ class ReleaseTests(unittest.TestCase):
     def test_artifact_keeps_configuration_and_callback_outside_versioned_assets(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);page=root/'index.html'
-            page.write_text('<script src="/applications-config.js"></script><script src="/admin.js"></script><a href="/admin.html">Staff</a><img src="/media/director.webp">')
+            page.write_text('<script src="/applications-config.js"></script><script src="/admin.js"></script><script src="/cbcap-preview.js"></script><a href="/admin.html">Staff</a><img src="/media/director.webp">')
             (root/'applications-config.js').write_text('mutable');(root/'engagement-config.js').write_text('mutable')
             (root/'admin.html').write_text('existing admin');(root/'admin.js').write_text('existing admin script')
             data=release.artifact_bytes(page,'a'*40).decode()
             self.assertIn('src="/applications-config.js"',data);self.assertIn('href="/admin.html"',data)
             self.assertIn('src="/admin.js"',data);self.assertIn('/releases/'+'a'*40+'/media/director.webp',data)
+            self.assertIn('src="/releases/'+'a'*40+'/cbcap-preview.js"',data)
             entries=release.files_manifest(root,'a'*40);self.assertEqual([x['path']for x in entries],['index.html'])
             self.assertEqual(entries[0]['sha256'],release.digest(data.encode()))
     def test_configuration_switch_preserves_origin_and_unrelated_associations(self):
