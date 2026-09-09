@@ -12746,7 +12746,7 @@ function yg({ data: i, zip: f, setZip: o, layer: c, barrier: h, scenario: y, com
 }
 function gg({ data: i, compact: f = !1, onExplore: o, onReview: c }) {
   const [h, y] = H.useState("12205"), [v, m] = H.useState(f ? "Barriers" : "Resource planning"), [S, d] = H.useState("transport"), [b, p] = H.useState(0), [M, Z] = H.useState(6), Y = (i == null ? void 0 : i.features.map((C) => C.properties.ZCTA5CE10).sort()) || ["12205"];
-  return /* @__PURE__ */ O.jsxs("div", { "data-layer": v, className: "workspace " + (f ? "workspace-compact" : ""), id: f ? void 0 : "platform", children: [
+  return /* @__PURE__ */ O.jsxs("div", { "data-layer": v, className: "workspace " + (f ? "workspace-compact" : ""), id: f ? void 0 : "planning", children: [
     /* @__PURE__ */ O.jsxs("div", { className: "geo-panel", children: [
       /* @__PURE__ */ O.jsxs("div", { className: "workspace-toolbar", children: [
         !f && /* @__PURE__ */ O.jsx("strong", { children: "Access planning" }),

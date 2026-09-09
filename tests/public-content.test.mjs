@@ -3,6 +3,10 @@ test('all public routes have initial content, distinct canonicals and working lo
  for(const route of ROUTES){
   const html=readFileSync('dist/client'+(route==='/'?'/index.html':route+'/index.html'),'utf8');
   assert.match(html,/<h1[ >]/);assert.ok(html.includes('rel="canonical" href="'+ORIGIN+route+'"'),route);
+  if(route==='/cb-cap'){
+   for(const[,id]of html.matchAll(/href="#([^"]+)"/g))assert.equal([...html.matchAll(new RegExp('id="'+id+'"','g'))].length,1,'Product anchor must resolve without JavaScript: '+id);
+   assert.match(html,/<section id="platform" class="section platform-story">/);
+  }
   for(const[,json]of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs))JSON.parse(json);
   for(const[,url]of html.matchAll(/(?:src|href)="(\/[^"#?]*)(?:[^" ]*)"/g)){
    if(ROUTES.includes(url)||url==='/admin.html')continue;

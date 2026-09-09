@@ -23,6 +23,7 @@ The reference and current corporate capture were reviewed together. Hero hierarc
 - Corporate browser acceptance: 16 routes at all nine viewport widths passed, including ZIP selection, barriers, forecast horizon, resource scenarios, review modal and export.
 - Corporate navigation, focus handling, no-JavaScript content, legacy redirects, contact receipt retry behavior and unknown routes passed.
 - Initial no-JavaScript mobile navigation overflow was fixed and the complete corporate suite rerun successfully.
+- Final navigation review moved the Platform anchor to the static platform explanation. Desktop link and mobile selector were rechecked; regression coverage now requires a unique static target with and without JavaScript.
 - Corporate Instrument Sans and School font/style bundles remain isolated. The planning island is approximately 99 KB gzip and uses production React.
 - Git diff confirms School source, its deep-page generator, application/admin source and operational configurations are unchanged.
 

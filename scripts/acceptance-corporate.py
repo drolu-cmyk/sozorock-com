@@ -34,6 +34,8 @@ def main():
                         page.keyboard.press('Shift+Tab');expect(button).to_be_focused();page.keyboard.press('Tab');expect(page.locator('#corporate-nav summary').first).to_be_focused()
                         page.keyboard.press('Escape');expect(button).to_have_attribute('aria-expanded','false');expect(button).to_be_focused()
                 if path=='/cb-cap':
+                    expect(page.locator('#platform')).to_have_count(1)
+                    expect(page.locator('#platform h2')).to_contain_text('One planning view')
                     expect(page.get_by_label('Map ZIP area',exact=True)).to_be_visible()
                     page.get_by_label('Map ZIP area',exact=True).select_option('12208')
                     expect(page.locator('.chart svg')).to_have_attribute('aria-label', __import__('re').compile('12208'))
@@ -69,6 +71,7 @@ def main():
         nojs=browser.new_context(java_script_enabled=False,viewport={'width':320,'height':844});fallback=nojs.new_page()
         for path in ROUTES:
             fallback.goto(base+path);assert fallback.locator('h1').inner_text();expect(fallback.get_by_role('navigation',name='Primary')).to_be_visible()
+            if path=='/cb-cap':expect(fallback.locator('#platform h2')).to_contain_text('One planning view')
             assert fallback.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),('nojs',path)
         assert not errors,errors
         (out/'acceptance.json').write_text(json.dumps({'passed':True,'viewports':results,'noJavaScript':True,'contactReceiptFaultInjection':True,'pageErrors':errors,'scope':'Chromium lab checks, not a complete WCAG certification'},indent=2))
