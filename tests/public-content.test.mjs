@@ -13,10 +13,9 @@ test('all public routes have initial content, distinct canonicals and working lo
  }
 });
 test('corporate and School fonts and scripts are isolated within delivery budgets',()=>{
- const html=readFileSync('dist/client/index.html','utf8');assert.doesNotMatch(html,/school-[^" ]+\.(js|css)/);assert.doesNotMatch(html,/plus-jakarta|source-sans/);
+ const html=readFileSync('dist/client/index.html','utf8');assert.doesNotMatch(html,/school-[^" ]+\.(js|css)/);assert.doesNotMatch(html,/plus-jakarta|instrument-sans/);assert.match(html,/source-sans-3-latin/);
  assert.ok(gzipSync(readFileSync('dist/client/corporate.js')).length<80000);
  assert.ok(gzipSync(readFileSync('dist/client/corporate.css')).length<35000);
- assert.ok(readFileSync('dist/client/assets/fonts/instrument-sans-latin.woff2').length<100000);
- assert.ok(readFileSync('dist/client/assets/joint-mobile-v1.webp').length<180000);
- assert.ok(readFileSync('dist/client/assets/joint-desktop-v1.webp').length<250000);
+ assert.ok(readFileSync('dist/client/assets/fonts/source-sans-3-latin.woff2').length<100000);
+ assert.ok(gzipSync(readFileSync('dist/client/assets/data/cbcap-counties-2025.json')).length<150000);
 });

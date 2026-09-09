@@ -89,7 +89,7 @@ def hero_bounds(page):
 def capture_scroll(page, directory, label):
     # Overlapping actual viewport captures expose sticky/clipped content hidden
     # by stitched full-page screenshots. No arbitrary sleeps or scroll gating.
-    page.screenshot(path=str(directory / f"{label}-homepage.png"), full_page=True)
+    pass  # Image capture disabled at user request.
     height = page.viewport_size["height"]
     total = page.evaluate("document.documentElement.scrollHeight")
     offsets = list(range(0, max(1, total-height), max(1, int(height*.8))))
@@ -97,7 +97,7 @@ def capture_scroll(page, directory, label):
     for index, offset in enumerate(dict.fromkeys(offsets)):
         page.evaluate("y=>window.scrollTo({top:y,behavior:'instant'})", offset)
         no_overflow(page)
-        page.screenshot(path=str(directory / f"{label}-scroll-{index:02d}.png"))
+        pass  # Image capture disabled at user request.
     page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
 
 
@@ -170,7 +170,7 @@ def program_journey(page, directory, label):
             assert parse_qs(urlparse(application).query).get("program") == [slug], application
         no_overflow(page)
         page.locator("[data-school-title]").scroll_into_view_if_needed()
-        page.screenshot(path=str(directory / f"{label}-program-{program_id}.png"))
+        pass  # Image capture disabled at user request.
     weeks = page.locator("ol.school-weeks")
     expect(weeks.locator(":scope > li")).to_have_count(4)
     for index, number in enumerate((1, 4, 8, 12)):
@@ -198,7 +198,7 @@ def supporting_pages(page, base, directory, label, programs):
             if not configured:
                 expect(page.locator('[data-application-unavailable]')).to_be_visible()
             assert not page.locator('a[href*="canada.sozorock.com/apply"]').count()
-            page.screenshot(path=str(directory / f"{label}-apply-unavailable.png"), full_page=True)
+            pass  # Image capture disabled at user request.
         if path == "/school/contact":
             configured = page.evaluate("Boolean(window.SOZOROCK_CONTACT?.apiEndpoint)")
             if not configured:
@@ -239,7 +239,7 @@ def reduced_motion(browser, base, directory):
         assert page.evaluate("""document.getAnimations().filter(a=>a.playState==='running'
           && a.effect?.getComputedTiming().iterations===Infinity).length""") == 0
         no_overflow(page)
-        page.screenshot(path=str(directory / "390-reduced-motion.png"))
+        pass  # Image capture disabled at user request.
     finally:
         context.close()
 
@@ -316,7 +316,7 @@ def main():
                 except Exception as error:
                     record["error"] = str(error)
                     try:
-                        page.screenshot(path=str(directory / f"{label}-failure.png"), full_page=True)
+                        pass  # Image capture disabled at user request.
                     except Exception:
                         pass
                 finally:

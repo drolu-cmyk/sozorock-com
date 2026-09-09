@@ -3,7 +3,8 @@ import argparse, json, os, shutil
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
-ROUTES=['/','/what-we-build','/work','/work/cb-cap','/work/place-intelligence','/company','/contact','/privacy','/terms','/accessibility','/legal']
+ROUTES=json.loads(Path('public/route-manifest.json').read_text())['routes']
+ROUTES=[route for route in ROUTES if not route.startswith('/school')]
 WIDTHS=[320,375,390,430,768,1024,1280,1440,1920]
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--base-url',required=True);parser.add_argument('--output-dir',type=Path,required=True);args=parser.parse_args()
@@ -24,16 +25,23 @@ def main():
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(width,path,'overflow')
                 assert page.locator('main').inner_text().strip()
                 for script in page.locator('script[type="application/ld+json"]').all_text_contents():json.loads(script)
-                assert page.evaluate("!performance.getEntriesByType('resource').some(r=>/school-|open-school|source-sans|plus-jakarta/.test(r.name)&&r.initiatorType==='css')")
+                assert page.evaluate("!performance.getEntriesByType('resource').some(r=>/school-|open-school|plus-jakarta/.test(r.name)&&r.initiatorType==='css')")
                 if path=='/':
-                    page.locator('.joint-art img').wait_for();page.wait_for_function("() => document.querySelector('.joint-art img').complete && document.querySelector('.joint-art img').naturalWidth>0")
+                    expect(page.locator('h1')).to_contain_text('Technology for')
+                    assert not page.locator('img[src*="evidence"]').count()
                     if width<=768:
                         button=page.locator('.corporate-menu');button.click();expect(button).to_have_attribute('aria-expanded','true')
                         page.keyboard.press('Shift+Tab');expect(button).to_be_focused();page.keyboard.press('Tab');expect(page.locator('#corporate-nav a').first).to_be_focused()
                         page.keyboard.press('Escape');expect(button).to_have_attribute('aria-expanded','false');expect(button).to_be_focused()
-                    if width in [390,1440]:page.screenshot(path=str(out/f'home-{width}.png'),full_page=True)
-                if width in [390,1440] and path in ['/work/cb-cap','/contact']:
-                    page.screenshot(path=str(out/(path.strip('/').replace('/','-')+f'-{width}.png')),full_page=True)
+                if path=='/cb-cap':
+                    expect(page.get_by_label('County',exact=True)).to_be_visible()
+                    page.get_by_role('button',name='02 Compare').click()
+                    expect(page.get_by_label('Compare with')).to_be_visible()
+                    page.get_by_label('Compare with').select_option('36091')
+                    expect(page.locator('[data-result]')).to_contain_text('5.5')
+                    page.get_by_role('button',name='03 Trace the source').click()
+                    expect(page.locator('[data-result]')).to_contain_text('36001')
+                    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(width,path,'trace overflow')
             results.append({'width':width,'routes':len(ROUTES),'overflow':False,'passed':True});print(json.dumps(results[-1]),flush=True)
         response=page.goto(base+'/this-page-does-not-exist');assert response.status==404
         response=page.goto(base+'/assets/missing-release-check.webp');assert response.status==404

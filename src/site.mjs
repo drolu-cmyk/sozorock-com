@@ -1,6 +1,7 @@
 export const ORIGIN = 'https://www.sozorock.com';
 export const SCHOOL = '/school';
 export const LEGACY = Object.freeze({
+  '/what-we-build':'/what-we-do', '/work':'/cb-cap', '/work/cb-cap':'/cb-cap', '/company':'/about',
   '/programs.html':'/school/programs', '/experience.html':'/school/how-you-learn',
   '/enrollment-fees.html':'/school/admissions', '/apply.html':'/school/apply',
   '/applied-ai-systems.html':'/school/programs/applied-ai-systems',
@@ -13,7 +14,7 @@ export const LEGACY = Object.freeze({
   '/privacy.html':'/school/privacy', '/terms.html':'/school/terms',
   '/accessibility.html':'/accessibility', '/index.html':'/', '/school/index.html':'/school'
 });
-export const CORPORATE_ROUTES = ['/', '/what-we-build', '/work', '/work/cb-cap', '/work/place-intelligence', '/company', '/contact', '/privacy', '/terms', '/accessibility', '/legal'];
+export const CORPORATE_ROUTES = ['/', '/cb-cap', '/cb-cap/request-demo', '/what-we-do', '/what-we-do/ai-intelligent-systems', '/what-we-do/data-decision-infrastructure', '/what-we-do/cybersecurity-identity', '/what-we-do/product-engineering', '/insights', '/insights/evidence-needs-context', '/about', '/contact', '/privacy', '/terms', '/accessibility', '/legal'];
 export const ROUTES = [...new Set([...CORPORATE_ROUTES, SCHOOL, ...Object.values(LEGACY)])];
 export const schoolPath = name => LEGACY['/'+name+'.html'];
 export function schoolLinks(html) {

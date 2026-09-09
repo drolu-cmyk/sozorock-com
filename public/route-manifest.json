@@ -1,11 +1,16 @@
 {
   "routes": [
     "/",
-    "/what-we-build",
-    "/work",
-    "/work/cb-cap",
-    "/work/place-intelligence",
-    "/company",
+    "/cb-cap",
+    "/cb-cap/request-demo",
+    "/what-we-do",
+    "/what-we-do/ai-intelligent-systems",
+    "/what-we-do/data-decision-infrastructure",
+    "/what-we-do/cybersecurity-identity",
+    "/what-we-do/product-engineering",
+    "/insights",
+    "/insights/evidence-needs-context",
+    "/about",
     "/contact",
     "/privacy",
     "/terms",
@@ -30,6 +35,10 @@
     "/school/terms"
   ],
   "redirects": {
+    "/what-we-build": "/what-we-do",
+    "/work": "/cb-cap",
+    "/work/cb-cap": "/cb-cap",
+    "/company": "/about",
     "/programs.html": "/school/programs",
     "/experience.html": "/school/how-you-learn",
     "/enrollment-fees.html": "/school/admissions",
