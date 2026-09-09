@@ -16,7 +16,7 @@
     if(!form.reportValidity())return;
     const payload={name:form.elements.name.value,email:form.elements.email.value,programme:form.elements.programme.value,motivation:form.elements.motivation.value,consent:form.elements.consent.checked,website:form.elements.website.value};
     const signature=JSON.stringify(payload);
-    if(attempted!==null&&attempted!==signature){status.textContent='A previous submission could not be confirmed. Restore those details and retry, or contact contact@sozorock.com with reference '+requestId+' before starting another application.';status.focus();return;}
+    if(attempted!==null&&attempted!==signature){status.textContent='A previous submission could not be confirmed. Restore those details and retry, or use the School contact form with reference '+requestId+' before starting another application.';status.focus();return;}
     attempted=signature;payload.requestId=requestId;busy=true;button.disabled=true;status.textContent='Sending application…';
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
     try{
@@ -24,7 +24,7 @@
       const data=await response.json();
       if(!response.ok||data.id!==requestId||data.status!=='received'){
         if(response.status===400)attempted=null;
-        throw new Error(response.status===409?'This reference has different details. Contact contact@sozorock.com with reference '+requestId+'.':'Receipt could not be confirmed. Keep these details and retry. Reference: '+requestId+'.');
+        throw new Error(response.status===409?'This reference has different details. Use the School contact form with reference '+requestId+'.':'Receipt could not be confirmed. Keep these details and retry. Reference: '+requestId+'.');
       }
       root.replaceChildren();const message=document.createElement('p');message.setAttribute('role','status');message.tabIndex=-1;message.textContent='Your application was received. Reference: '+data.id+'. Keep this reference for follow-up. No payment has been taken.';root.append(message);message.focus();
     }catch(error){status.textContent=error.name==='AbortError'?'The connection timed out before receipt was confirmed. Retry with the same details and reference: '+requestId+'.':error.message;status.focus();}

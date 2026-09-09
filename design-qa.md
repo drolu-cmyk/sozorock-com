@@ -25,10 +25,11 @@ The reference and current corporate capture were reviewed together. Hero hierarc
 - Initial no-JavaScript mobile navigation overflow was fixed and the complete corporate suite rerun successfully.
 - Final navigation review moved the Platform anchor to the static platform explanation. Desktop link and mobile selector were rechecked; regression coverage now requires a unique static target with and without JavaScript.
 - Corporate Instrument Sans and School font/style bundles remain isolated. The planning island is approximately 99 KB gzip and uses production React.
-- School source, its deep-page generator and operational configurations remain unchanged. Shared page metadata now adds canonical identity, breadcrumbs and social-image checks.
+- School homepage source, programs, fees and operational configurations remain unchanged. The supporting-page generator and application guidance remove the unverified email address after the user's clarification. Shared page metadata adds canonical identity, breadcrumbs and social-image checks.
 - Leadership uses the verified School portrait, name and biography, with the corporate title Director, Technology & Strategic Initiatives. Supporting-page headings use a smaller scale than the homepage hero; white remains #FFFFFF.
 - Corporate and CB-CAP social cards are 1200 by 630 JPEG images with matching file extensions and metadata. The unconnected prototype contact modal was removed from the planning bundle.
 - The company-admin candidate passes synthetic browser checks for pagination, literal text rendering, stale responses, expiry and unauthorized responses. Its deployment remains separate; see docs/company-admin.md.
+- Final copy review removes unsupported trademark/licensing claims, unused footer filler and unverified contact addresses. Capability pages describe governed search, data integration, identity/access management and product delivery in direct language. The approved homepage and CB-CAP hero lines are preserved.
 
 ## Product limits and remaining evidence
 
