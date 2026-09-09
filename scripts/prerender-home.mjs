@@ -4,7 +4,7 @@ import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 
 // Render the same component that the client hydrates, without running a browser.
-const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, warmup: { clientFiles: [] } }, appType: 'custom' });
+const server = await createServer({ configFile: false, esbuild: {jsx:'automatic'}, optimizeDeps: { noDiscovery: true, include: [], exclude: ['react','react-dom','react-dom/client','react/jsx-runtime','react/jsx-dev-runtime'] }, server: { middlewareMode: true, warmup: { clientFiles: [] } }, appType: 'custom' });
 try {
   const { SozoRockSchoolHomepage } = await server.ssrLoadModule('/src/SozoRockSchoolHomepage.jsx');
   const markup = renderToString(createElement(SozoRockSchoolHomepage));
