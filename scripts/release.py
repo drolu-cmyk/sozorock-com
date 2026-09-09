@@ -11,7 +11,8 @@ from botocore.exceptions import ClientError
 ACCOUNT='791860731989';DIST='E2YV5089958YRU';BUCKET='sozorock-meridian-site';PREFIX='meridian/'
 ROOT=Path(__file__).resolve().parents[1]
 MUTABLE={'applications-config.js','engagement-config.js'}
-ASSET=re.compile(r'(?<=[\x22\x27(])/(assets/|media/|corporate\.css|corporate\.js|school\.css|school-nav\.js|applications\.js|admin\.js|contact\.js|favicon\.svg|favicon-48\.png|apple-touch-icon\.png)')
+PRESERVED=MUTABLE|{'admin.html','admin.js'}
+ASSET=re.compile(r'(?<=[\x22\x27(])/(assets/|media/|corporate\.css|corporate\.js|school\.css|school-nav\.js|applications\.js|contact\.js|favicon\.svg|favicon-48\.png|apple-touch-icon\.png)')
 
 def digest(data):return hashlib.sha256(data).hexdigest()
 def save(path,value):path.write_text(json.dumps(value,indent=2,default=str)+'\n',encoding='utf-8')
@@ -31,7 +32,7 @@ def files_manifest(directory,sha):
     for path in sorted(directory.rglob('*')):
         if not path.is_file():continue
         name=path.relative_to(directory).as_posix()
-        if name in MUTABLE:continue
+        if name in PRESERVED:continue
         assert not name.endswith('.map') and '..' not in name.split('/'),'Unexpected artifact'
         content=artifact_bytes(path,sha);files.append({'path':name,'sha256':digest(content),'bytes':len(content)})
     return files
@@ -85,7 +86,7 @@ def deploy(s3,cf,args,evidence,current,lock_key,token):
     assert len(sha)==40
     assert not subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True).strip(),'Commit the candidate before staging'
     artifact=ROOT/'dist/client';files=files_manifest(artifact,sha);assert files
-    manifest={'commit':sha,'account':ACCOUNT,'distributionId':DIST,'prefix':PREFIX+'releases/'+sha+'/','files':files,'mutableConfigExcluded':sorted(MUTABLE)}
+    manifest={'commit':sha,'account':ACCOUNT,'distributionId':DIST,'prefix':PREFIX+'releases/'+sha+'/','files':files,'mutableConfigExcluded':sorted(MUTABLE),'adminPortalExcluded':['admin.html','admin.js']}
     manifest_data=(json.dumps(manifest,sort_keys=True,separators=(',',':'))+'\n').encode();manifest_key=manifest['prefix']+'release-manifest.json'
     try:
         previous=s3.get_object(Bucket=BUCKET,Key=manifest_key,ExpectedBucketOwner=ACCOUNT)['Body'].read()

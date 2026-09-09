@@ -4,10 +4,7 @@ function handler(event) {
  if(r.method!=='GET'&&r.method!=='HEAD')return r;
  // Never redirect API paths or change OAuth callback requests.
  if(uri.indexOf('/api/')===0)return r;
- if(uri==='/admin.html'){
-  if(release)r.uri='/releases/'+release+uri;
-  return r;
- }
+ if(uri==='/admin.html'||uri==='/admin.js')return r;
  var path=uri;
  if(path.length>1)path=path.replace(/\/+$/,'');
  if(redirects[path])path=redirects[path];

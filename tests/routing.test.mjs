@@ -14,6 +14,7 @@ test('canonical routes resolve inside the matching immutable artifact',()=>{
 test('unknown paths return useful 404 and never the homepage',()=>{for(const path of ['/missing','/thinking','/releases/secret','/assets/../private'])assert.equal(request(path).statusCode,404);});
 test('POST APIs and callback URLs do not enter marketing redirects',()=>{assert.equal(request('/apply.html','sozorock.com',{},'POST').uri,'/apply.html');assert.equal(request('/api/test','sozorock.com').uri,'/api/test');assert.equal(request('/admin.html','sozorock.com',{code:{value:'x'}}).statusCode,undefined);});
 test('mutable operational configuration remains outside artifacts',()=>{for(const file of ['/applications-config.js','/engagement-config.js'])assert.equal(request(file).uri,file);});
+test('admin portal remains on its existing deployment',()=>{for(const file of ['/admin.html','/admin.js'])assert.equal(request(file).uri,file);});
 test('old documents retain access to their original asset release without exposing HTML or configs',()=>{
  const prefix='/releases/'+'b'.repeat(40);
  for(const asset of ['/assets/school-old.js','/media/director.webp','/corporate.css'])assert.equal(request(prefix+asset).uri,prefix+asset);
