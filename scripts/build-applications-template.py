@@ -48,13 +48,16 @@ resource('ExecutionRole', 'AWS::IAM::Role', {
     'Policies': [{'PolicyName': 'applications-only', 'PolicyDocument': {'Version': '2012-10-17', 'Statement': [
         {'Effect': 'Allow', 'Action': ['dynamodb:PutItem', 'dynamodb:GetItem', 'dynamodb:Scan'], 'Resource': arn('Applications')},
         {'Effect': 'Allow', 'Action': ['logs:CreateLogStream', 'logs:PutLogEvents'],
-         'Resource': arn('ApplicationLogs')}]}}]})
+         'Resource': arn('ApplicationLogs')},
+        {'Fn::If': ['ReadEnquiries', {'Effect': 'Allow', 'Action': ['dynamodb:Scan'],
+            'Resource': sub('arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${EnquiriesTableName}')},
+            ref('AWS::NoValue')]}]}}]})
 resource('Handler', 'AWS::Lambda::Function', {
     'FunctionName': sub('${AWS::StackName}-handler'), 'Runtime': 'python3.12',
     'Handler': 'index.handler', 'Role': arn('ExecutionRole'), 'Timeout': 10, 'MemorySize': 128,
     'ReservedConcurrentExecutions': {'Fn::If': ['ReserveCapacity', 5, ref('AWS::NoValue')]},
     'Environment': {'Variables': {'TABLE_NAME': ref('Applications'), 'ADMIN_CLIENT_ID': ref('AdminClient'),
-        'INTAKE_ENABLED': ref('IntakeEnabled')}},
+        'INTAKE_ENABLED': ref('IntakeEnabled'), 'ENQUIRIES_TABLE_NAME': ref('EnquiriesTableName')}},
     'Code': {'ZipFile': (ROOT / 'infra/aws/applications.py').read_text()}})
 resource('Api', 'AWS::ApiGatewayV2::Api', {'Name': sub('${AWS::StackName}-api'), 'ProtocolType': 'HTTP',
     'CorsConfiguration': {'AllowOrigins': ['https://www.sozorock.com'], 'AllowMethods': ['GET', 'POST'],
@@ -65,9 +68,10 @@ resource('Authorizer', 'AWS::ApiGatewayV2::Authorizer', {'ApiId': ref('Api'), 'N
     'AuthorizerType': 'JWT', 'IdentitySource': ['$request.header.Authorization'],
     'JwtConfiguration': {'Audience': [ref('AdminClient')],
         'Issuer': sub('https://cognito-idp.${AWS::Region}.amazonaws.com/${Admins}')}})
-for name, route in [('SubmitRoute', 'POST /applications'), ('AdminRoute', 'GET /admin/applications')]:
+for name, route in [('SubmitRoute', 'POST /applications'), ('AdminRoute', 'GET /admin/applications'),
+                    ('EnquiriesAdminRoute', 'GET /admin/enquiries')]:
     props = {'ApiId': ref('Api'), 'RouteKey': route, 'Target': sub('integrations/${Integration}')}
-    if name == 'AdminRoute':
+    if name != 'SubmitRoute':
         props.update(AuthorizationType='JWT', AuthorizerId=ref('Authorizer'),
                      AuthorizationScopes=['aws.cognito.signin.user.admin'])
     resource(name, 'AWS::ApiGatewayV2::Route', props)
@@ -79,9 +83,12 @@ resource('InvokePermission', 'AWS::Lambda::Permission', {'FunctionName': ref('Ha
     'SourceArn': sub('arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*/*/*')})
 template = {'AWSTemplateFormatVersion': '2010-09-09', 'Description': 'Independent US applications and private administrator API. No website activation.',
     'Parameters': {'IntakeEnabled': {'Type': 'String', 'Default': 'false', 'AllowedValues': ['false', 'true']},
+        'EnquiriesTableName': {'Type': 'String', 'Default': '', 'AllowedPattern': '(^$|[a-zA-Z0-9_.-]{3,255})',
+            'Description': 'Existing US corporate contact table; empty disables enquiry access.'},
         'ReserveFunctionCapacity': {'Type': 'String', 'Default': 'false', 'AllowedValues': ['false', 'true'],
             'Description': 'Reserve five executions only after verifying sufficient regional account capacity.'}},
-    'Conditions': {'ReserveCapacity': {'Fn::Equals': [ref('ReserveFunctionCapacity'), 'true']}},
+    'Conditions': {'ReserveCapacity': {'Fn::Equals': [ref('ReserveFunctionCapacity'), 'true']},
+        'ReadEnquiries': {'Fn::Not': [{'Fn::Equals': [ref('EnquiriesTableName'), '']}] }},
     'Rules': {'USBoundary': {'Assertions': [
         {'Assert': {'Fn::Equals': [ref('AWS::AccountId'), '791860731989']}, 'AssertDescription': 'US hosting account only'},
         {'Assert': {'Fn::Equals': [ref('AWS::Region'), 'us-east-1']}, 'AssertDescription': 'US East only'}]}},

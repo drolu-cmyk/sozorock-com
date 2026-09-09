@@ -95,11 +95,51 @@ class ApplicationsTests(unittest.TestCase):
     def test_other_origin_and_unknown_route_rejected(self):
         self.assertEqual(app.handler({'headers': {'origin': 'https://canada.sozorock.com'}}, None)['statusCode'], 403)
         self.assertEqual(app.handler({'routeKey': 'DELETE /applications'}, None)['statusCode'], 404)
+    def enquiry_listing(self, claims, query=None):
+        return app.handler({'routeKey': 'GET /admin/enquiries', 'queryStringParameters': query,
+            'requestContext': {'authorizer': {'jwt': {'claims': claims}}}}, None)
+    def test_enquiries_require_same_admin_boundary_before_storage_access(self):
+        table = Mock()
+        with patch.object(app, 'ENQUIRIES', table):
+            for claims in ({}, self.claims(token_use='id'), self.claims(client_id='other'),
+                           self.claims(**{'cognito:groups': '[NotAdmins]'})):
+                self.assertEqual(self.enquiry_listing(claims)['statusCode'], 403)
+        table.scan.assert_not_called()
+    def test_enquiries_fail_closed_without_table(self):
+        with patch.object(app, 'ENQUIRIES', None):
+            self.assertEqual(self.enquiry_listing(self.claims())['statusCode'], 503)
+    def test_enquiries_allowlist_filters_expiry_context_and_preserves_empty_cursor(self):
+        import time
+        table = Mock()
+        record = dict(self.data, id=self.data['requestId'], context='corporate',
+            message='Synthetic message', expiresAt=int(time.time())+100, digest='private', extra='private')
+        table.scan.return_value = {'Items': [record, dict(record, context='school'), dict(record, expiresAt=1)],
+            'LastEvaluatedKey': {'id': self.data['requestId']}}
+        with patch.object(app, 'ENQUIRIES', table):
+            body = json.loads(self.enquiry_listing(self.claims())['body'])
+            self.assertEqual(len(body['items']), 1)
+            self.assertNotIn('digest', body['items'][0])
+            self.assertNotIn('extra', body['items'][0])
+            self.assertNotIn('motivation', body['items'][0])
+            self.assertEqual(table.scan.call_args.kwargs['ExpressionAttributeValues'][':context'], 'corporate')
+            self.assertIn('ProjectionExpression', table.scan.call_args.kwargs)
+            table.scan.return_value['Items'] = []
+            empty = json.loads(self.enquiry_listing(self.claims(), {'cursor': body['nextCursor']})['body'])
+            self.assertEqual(empty['items'], [])
+            self.assertTrue(empty['nextCursor'])
+            self.assertEqual(table.scan.call_args.kwargs['ExclusiveStartKey'], {'id': self.data['requestId']})
+        self.table.scan.assert_not_called()
     def test_template_embeds_current_source_and_protects_admin(self):
         template = json.loads(subprocess.check_output([sys.executable, str(ROOT / 'scripts/build-applications-template.py')]))
         r = template['Resources']
         self.assertEqual(r['Handler']['Properties']['Code']['ZipFile'], (ROOT / 'infra/aws/applications.py').read_text())
         self.assertEqual(r['AdminRoute']['Properties']['AuthorizationType'], 'JWT')
+        self.assertEqual(r['EnquiriesAdminRoute']['Properties']['AuthorizationType'], 'JWT')
+        self.assertEqual(r['EnquiriesAdminRoute']['Properties']['AuthorizationScopes'], ['aws.cognito.signin.user.admin'])
+        self.assertEqual(template['Parameters']['EnquiriesTableName']['Default'], '')
+        statement = r['ExecutionRole']['Properties']['Policies'][0]['PolicyDocument']['Statement'][-1]['Fn::If'][1]
+        self.assertEqual(statement['Action'], ['dynamodb:Scan'])
+        self.assertTrue(statement['Resource']['Fn::Sub'].endswith(':table/${EnquiriesTableName}'))
         self.assertEqual(r['Admins']['Properties']['MfaConfiguration'], 'ON')
         self.assertEqual(template['Parameters']['IntakeEnabled']['Default'], 'false')
         self.assertEqual(r['Applications']['DeletionPolicy'], 'Retain')

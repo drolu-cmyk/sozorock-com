@@ -36,6 +36,7 @@ jobs:
           trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
           python scripts/acceptance-public-site.py --base-url http://127.0.0.1:4173 --output-dir "$RUNNER_TEMP/evidence/school-local"
           python scripts/acceptance-corporate.py --base-url http://127.0.0.1:4173 --output-dir "$RUNNER_TEMP/evidence/corporate-local"
+          python scripts/acceptance-admin.py --base-url http://127.0.0.1:4173 > "$RUNNER_TEMP/evidence/admin-candidate.json"
       - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
         with:
           role-to-assume: arn:aws:iam::791860731989:role/sozorock-com-github-deploy

@@ -11,6 +11,8 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
 TABLE = boto3.resource('dynamodb').Table(os.environ['TABLE_NAME'])
+ENQUIRIES = (boto3.resource('dynamodb').Table(os.environ['ENQUIRIES_TABLE_NAME'])
+             if os.environ.get('ENQUIRIES_TABLE_NAME') else None)
 ORIGIN = 'https://www.sozorock.com'
 PROGRAMMES = {'applied-ai-systems', 'cybersecurity-grc', 'identity-access-management', 'ai-governance'}
 UUID = r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
@@ -33,9 +35,12 @@ def admin(event):
             and isinstance(groups, list) and 'Admins' in groups)
 
 
-def listing(event):
+def listing(event, enquiries=False):
     if not admin(event):
         return response(403, {'message': 'Administrator access required.'})
+    table = ENQUIRIES if enquiries else TABLE
+    if table is None:
+        return response(503, {'message': 'Enquiry access is not configured.'})
     query = event.get('queryStringParameters') or {}
     try:
         limit = int(query.get('limit', '25'))
@@ -44,6 +49,15 @@ def listing(event):
         args = {'Limit': limit, 'ConsistentRead': True,
                 'FilterExpression': 'expiresAt > :now',
                 'ExpressionAttributeValues': {':now': int(time.time())}}
+        fields = ('id', 'name', 'email', 'createdAt', 'expiresAt') + (
+            ('organization', 'intent', 'message', 'context') if enquiries else
+            ('programme', 'motivation', 'status'))
+        args['ProjectionExpression'] = ', '.join('#f' + str(i) for i in range(len(fields)))
+        args['ExpressionAttributeNames'] = {'#f' + str(i): field for i, field in enumerate(fields)}
+        if enquiries:
+            args['FilterExpression'] += ' AND #context = :context'
+            args['ExpressionAttributeNames']['#context'] = 'context'
+            args['ExpressionAttributeValues'][':context'] = 'corporate'
         cursor = query.get('cursor')
         if cursor:
             if not isinstance(cursor, str) or len(cursor) > 200:
@@ -54,8 +68,10 @@ def listing(event):
             args['ExclusiveStartKey'] = {'id': decoded}
     except (ValueError, TypeError, UnicodeError, binascii.Error):
         return response(400, {'message': 'Invalid page parameters.'})
-    page = TABLE.scan(**args)
-    items = [{k: v for k, v in item.items() if k != 'digest'} for item in page.get('Items', [])]
+    page = table.scan(**args)
+    items = [{k: item[k] for k in fields if k in item} for item in page.get('Items', [])
+             if item.get('expiresAt', 0) > args['ExpressionAttributeValues'][':now']
+             and (not enquiries or item.get('context') == 'corporate')]
     last = page.get('LastEvaluatedKey')
     # Return a cursor even for an empty filtered page; never silently truncate results.
     cursor = base64.urlsafe_b64encode(last['id'].encode()).decode() if last else None
@@ -116,6 +132,8 @@ def handler(event, context):
             return submit(event)
         if event.get('routeKey') == 'GET /admin/applications':
             return listing(event)
+        if event.get('routeKey') == 'GET /admin/enquiries':
+            return listing(event, enquiries=True)
         return response(404, {'message': 'Not found.'})
     except (ClientError, BotoCoreError):
         return response(503, {'message': 'Service unavailable. Retry with the same application reference.'})
