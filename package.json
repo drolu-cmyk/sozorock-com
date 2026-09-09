@@ -5,15 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/build-public-pages.mjs && node scripts/build-corporate.mjs && vite build && node scripts/prerender-home.mjs && node scripts/prepare-sites-build.mjs",
+    "build": "node scripts/build-public-pages.mjs && node scripts/build-corporate.mjs && vite build --configLoader native --config vite.planning.config.mjs && vite build --configLoader native && node scripts/prerender-home.mjs && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
     "test:sites": "node --test tests/*.test.mjs",
     "verify": "npm run build && npm run test:sites && npm run test:applications",
     "test:applications": "node scripts/test-python.mjs"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "5.0.4",
+    "d3-geo": "^3.1.1",
+    "d3-scale": "^4.0.2",
     "lucide-react": "^1.40.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",

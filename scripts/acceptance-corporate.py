@@ -27,21 +27,26 @@ def main():
                 for script in page.locator('script[type="application/ld+json"]').all_text_contents():json.loads(script)
                 assert page.evaluate("!performance.getEntriesByType('resource').some(r=>/school-|open-school|plus-jakarta/.test(r.name)&&r.initiatorType==='css')")
                 if path=='/':
-                    expect(page.locator('h1')).to_contain_text('Technology for')
+                    expect(page.locator('h1')).to_contain_text('Build the systems')
                     assert not page.locator('img[src*="evidence"]').count()
                     if width<=768:
                         button=page.locator('.corporate-menu');button.click();expect(button).to_have_attribute('aria-expanded','true')
-                        page.keyboard.press('Shift+Tab');expect(button).to_be_focused();page.keyboard.press('Tab');expect(page.locator('#corporate-nav a').first).to_be_focused()
+                        page.keyboard.press('Shift+Tab');expect(button).to_be_focused();page.keyboard.press('Tab');expect(page.locator('#corporate-nav summary').first).to_be_focused()
                         page.keyboard.press('Escape');expect(button).to_have_attribute('aria-expanded','false');expect(button).to_be_focused()
                 if path=='/cb-cap':
-                    expect(page.get_by_label('County',exact=True)).to_be_visible()
-                    page.get_by_role('button',name='02 Compare').click()
-                    expect(page.get_by_label('Compare with')).to_be_visible()
-                    page.get_by_label('Compare with').select_option('36091')
-                    expect(page.locator('[data-result]')).to_contain_text('5.5')
-                    page.get_by_role('button',name='03 Trace the source').click()
-                    expect(page.locator('[data-result]')).to_contain_text('36001')
-                    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(width,path,'trace overflow')
+                    expect(page.get_by_label('Map ZIP area',exact=True)).to_be_visible()
+                    page.get_by_label('Map ZIP area',exact=True).select_option('12208')
+                    expect(page.locator('.chart svg')).to_have_attribute('aria-label', __import__('re').compile('12208'))
+                    before=page.locator('.chart svg').get_attribute('aria-label')
+                    page.get_by_label('Planning scenario',exact=True).select_option('mobile')
+                    assert page.locator('.chart svg').get_attribute('aria-label') != before
+                    page.get_by_role('tab',name='Forecast',exact=True).click()
+                    page.get_by_role('slider').focus();page.keyboard.press('ArrowRight')
+                    expect(page.locator('.chart svg')).to_have_attribute('aria-label', __import__('re').compile('9 months'))
+                    page.get_by_role('button',name='Review scenario',exact=True).click()
+                    expect(page.get_by_role('dialog',name='Scenario review')).to_be_visible()
+                    page.keyboard.press('Escape')
+                    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(width,path,'scenario overflow')
             results.append({'width':width,'routes':len(ROUTES),'overflow':False,'passed':True});print(json.dumps(results[-1]),flush=True)
         response=page.goto(base+'/this-page-does-not-exist');assert response.status==404
         response=page.goto(base+'/assets/missing-release-check.webp');assert response.status==404

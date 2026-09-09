@@ -32,6 +32,6 @@ test('commercial journeys stay in the Technology product architecture',()=>{
 
 test('the product has readable evidence and source limits without JavaScript',()=>{
   const html=readFileSync('dist/client/cb-cap/index.html','utf8');
-  for(const expected of ['Albany County','7.2','6.1% to 8.5%','Adults aged 18 and older','July 14, 2026','BRFSS 2023/2022','Missing data is not zero'])assert.ok(html.includes(expected),expected);
+  for(const expected of ['See where access breaks down.','ZIP Code Tabulation Areas','2010','synthetic','no resident records','not provide validated forecasts','CHA/CHIP'])assert.ok(html.includes(expected),expected);
   assert.doesNotMatch(html,/<iframe|<canvas|assets\/evidence\//);
 });
