@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   build: {
     outDir: "dist/client",
+    rollupOptions: {input: {corporate:"index.html", school:"school/index.html"}},
   },
   optimizeDeps: {
     include: ["react", "react-dom/client"],

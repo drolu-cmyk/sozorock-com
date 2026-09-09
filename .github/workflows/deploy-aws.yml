@@ -1,249 +1,60 @@
 name: Deploy www.sozorock.com
-
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
   id-token: write
-
 concurrency:
   group: sozorock-com-production
-  cancel-in-progress: true
-
+  cancel-in-progress: false
 env:
   AWS_REGION: us-east-1
-  EXPECTED_AWS_ACCOUNT_ID: "791860731989"
-  CANONICAL_URL: https://www.sozorock.com
-  AWS_DEPLOY_ROLE_ARN: arn:aws:iam::791860731989:role/sozorock-com-github-deploy
-  AWS_CLOUDFRONT_DISTRIBUTION_ID: E2YV5089958YRU
-  AWS_BACKUP_ROOT: deployment-backups/sozorock-com/
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
-
     steps:
-      - name: Check out source
-        uses: actions/checkout@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build and test
-        run: npm run verify
-
-      - name: Install browser verification dependency
-        run: python -m pip install 'playwright==1.58.0'
-
-      - name: Verify release journeys before AWS authentication
-        id: predeploy-qa
-        timeout-minutes: 8
+      - run: npm ci
+      - run: npm run verify
+      - run: python -m pip install 'playwright==1.58.0' 'boto3==1.43.90'
+      - run: python -m playwright install --with-deps chromium
+      - name: Browser acceptance before authentication
         shell: bash
         run: |
           set -euo pipefail
-          python -m http.server 4173 --bind 127.0.0.1 --directory dist/client >"$RUNNER_TEMP/sozorock-preview.log" 2>&1 &
+          CSP_MODE=enforce node scripts/preview-server.mjs >"$RUNNER_TEMP/preview.log" 2>&1 &
           preview_pid=$!
           trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then break; fi
-            sleep 1
-          done
-          python scripts/acceptance-public-site.py \
-            --base-url http://127.0.0.1:4173 \
-            --output-dir "$RUNNER_TEMP/sozorock-predeploy-qa"
-
-      - name: Preserve predeployment browser evidence
-        if: always() && steps.predeploy-qa.outcome != 'skipped'
-        uses: actions/upload-artifact@v4
+          python scripts/acceptance-public-site.py --base-url http://127.0.0.1:4173 --output-dir "$RUNNER_TEMP/evidence/school-local"
+          python scripts/acceptance-corporate.py --base-url http://127.0.0.1:4173 --output-dir "$RUNNER_TEMP/evidence/corporate-local"
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
         with:
-          name: sozorock-predeploy-qa-${{ github.run_id }}
-          path: |
-            ${{ runner.temp }}/sozorock-predeploy-qa/
-            ${{ runner.temp }}/sozorock-preview.log
-          retention-days: 14
-          if-no-files-found: warn
-
-      - name: Authenticate to AWS with OIDC
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
-        with:
-          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::791860731989:role/sozorock-com-github-deploy
           role-session-name: sozorock-com-${{ github.run_id }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
           unset-current-credentials: true
-
-      - name: Verify the AWS target
-        shell: bash
+      - name: Read separately verified operational acceptance
         run: |
-          set -euo pipefail
-          account_id="$(aws sts get-caller-identity --query Account --output text)"
-          test "$account_id" = "$EXPECTED_AWS_ACCOUNT_ID"
-          distribution="$(aws cloudfront get-distribution \
-            --id "$AWS_CLOUDFRONT_DISTRIBUTION_ID" \
-            --output json)"
-          jq -e '
-            .Distribution.DomainName == "d14v3l4z5ufdrh.cloudfront.net"
-            and .Distribution.DistributionConfig.Enabled == true
-            and ((.Distribution.DistributionConfig.Aliases.Items | sort) == ["sozorock.com", "www.sozorock.com"])
-          ' <<<"$distribution" >/dev/null
-          target_origin_id="$(jq -r '.Distribution.DistributionConfig.DefaultCacheBehavior.TargetOriginId' <<<"$distribution")"
-          origin_domain="$(jq -r --arg id "$target_origin_id" '[.Distribution.DistributionConfig.Origins.Items[] | select(.Id == $id)][0].DomainName' <<<"$distribution")"
-          origin_path="$(jq -r --arg id "$target_origin_id" '[.Distribution.DistributionConfig.Origins.Items[] | select(.Id == $id)][0].OriginPath // ""' <<<"$distribution")"
-          AWS_S3_BUCKET="${origin_domain%%.s3*}"
-          AWS_S3_PREFIX="${origin_path#/}"
-          if [[ -z "$AWS_S3_PREFIX" ]]; then
-            echo "Refusing a root origin: the release backup must be outside the website prefix." >&2
-            exit 1
-          fi
-          AWS_S3_PREFIX="${AWS_S3_PREFIX%/}/"
-          [[ "$AWS_S3_PREFIX" != "$AWS_BACKUP_ROOT"* && "$AWS_BACKUP_ROOT" != "$AWS_S3_PREFIX"* ]]
-          [[ "$origin_domain" == *.s3.amazonaws.com || "$origin_domain" == *.s3.us-east-1.amazonaws.com || "$origin_domain" == *.s3-us-east-1.amazonaws.com ]]
-          location="$(aws s3api get-bucket-location --bucket "$AWS_S3_BUCKET" --expected-bucket-owner "$EXPECTED_AWS_ACCOUNT_ID" --region "$AWS_REGION" --query LocationConstraint --output text)"
-          [[ "$location" == "None" || "$location" == "us-east-1" ]]
-          echo "AWS_S3_BUCKET=$AWS_S3_BUCKET" >> "$GITHUB_ENV"
-          echo "AWS_S3_PREFIX=$AWS_S3_PREFIX" >> "$GITHUB_ENV"
-          aws s3api list-objects-v2 \
-            --bucket "$AWS_S3_BUCKET" \
-            --prefix "$AWS_S3_PREFIX" \
-            --expected-bucket-owner "$EXPECTED_AWS_ACCOUNT_ID" \
-            --region "$AWS_REGION" \
-            --max-items 1 >/dev/null
-
-      - name: Publish, verify, and roll back automatically
-        id: release
-        shell: bash
+          aws s3api get-object --bucket sozorock-meridian-site --key deployment-backups/sozorock-com/operational-acceptance.json --expected-bucket-owner 791860731989 "$RUNNER_TEMP/evidence/operational-acceptance.json"
+      - name: Stage, activate, verify and recover on failure
         env:
-          DISTRIBUTION_ID: ${{ env.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+          HEADERS_POLICY: ${{ vars.SOZOROCK_HEADERS_POLICY_ID }}
         run: |
-          set -euo pipefail
-          site_uri="s3://${AWS_S3_BUCKET}/${AWS_S3_PREFIX}"
-          backup_prefix="${AWS_BACKUP_ROOT}${GITHUB_RUN_ID}/"
-          backup_uri="s3://${AWS_S3_BUCKET}/${backup_prefix}"
-          backup_complete=0
-          verified=0
-
-          invalidate() {
-            local invalidation_id
-            invalidation_id="$(aws cloudfront create-invalidation \
-              --distribution-id "$DISTRIBUTION_ID" \
-              --paths '/*' \
-              --query 'Invalidation.Id' \
-              --output text)"
-            aws cloudfront wait invalidation-completed \
-              --distribution-id "$DISTRIBUTION_ID" \
-              --id "$invalidation_id"
-          }
-
-          rollback() {
-            local status=$?
-            trap - EXIT
-            if [[ "$backup_complete" = '1' && "$verified" != '1' ]]; then
-              echo "Verification failed. Restoring the previous S3 release."
-              aws s3 sync "$backup_uri" "$site_uri" --delete
-              invalidate
-            fi
-            exit "$status"
-          }
-          trap rollback EXIT
-
-          aws s3api head-object \
-            --bucket "$AWS_S3_BUCKET" \
-            --key "${AWS_S3_PREFIX}index.html" \
-            --expected-bucket-owner "$EXPECTED_AWS_ACCOUNT_ID" \
-            --region "$AWS_REGION" >/dev/null
-          aws s3 sync "$site_uri" "$backup_uri"
-          backup_complete=1
-
-          if aws s3api get-object --bucket "$AWS_S3_BUCKET" --key "${AWS_S3_PREFIX}engagement-config.js" \
-            --expected-bucket-owner "$EXPECTED_AWS_ACCOUNT_ID" --region "$AWS_REGION" \
-            /tmp/existing-engagement-config.js >/dev/null 2>/tmp/engagement-config-error.txt; then
-            cp /tmp/existing-engagement-config.js dist/client/engagement-config.js
-          elif ! grep -Eq '\((NoSuchKey|404|NotFound)\)' /tmp/engagement-config-error.txt; then
-            echo "Unable to verify the existing contact configuration. Stopping to preserve it." >&2
-            exit 1
-          fi
-          if aws s3api get-object --bucket "$AWS_S3_BUCKET" --key "${AWS_S3_PREFIX}applications-config.js" \
-            --expected-bucket-owner "$EXPECTED_AWS_ACCOUNT_ID" --region "$AWS_REGION" \
-            /tmp/existing-applications-config.js >/dev/null 2>/tmp/applications-config-error.txt; then
-            cp /tmp/existing-applications-config.js dist/client/applications-config.js
-          elif ! grep -Eq '\((NoSuchKey|404|NotFound)\)' /tmp/applications-config-error.txt; then
-            echo "Unable to verify the existing application configuration. Stopping to preserve it." >&2
-            exit 1
-          fi
-          aws s3 sync dist/client/ "$site_uri" \
-            --delete \
-            --exclude 'index.html' \
-            --cache-control 'public,max-age=3600'
-
-          aws s3 cp dist/client/index.html "${site_uri}index.html" \
-            --cache-control 'no-cache,no-store,must-revalidate' \
-            --content-type 'text/html; charset=utf-8'
-
-          invalidate
-
-          page=''
-          for attempt in $(seq 1 30); do
-            page="$(curl --proto '=https' --tlsv1.2 --fail --silent --show-error \
-              --max-time 20 "${CANONICAL_URL}/?release=${GITHUB_SHA}" || true)"
-            if grep -Fq '<title>SozoRockSchool | Build the technology. Earn the trust.</title>' <<<"$page" \
-              && grep -Fq 'Applied AI Systems' <<<"$page" \
-              && grep -Fq 'Identity and Access Management' <<<"$page" \
-              && grep -Fq 'AI Governance' <<<"$page"; then
-              verified=1
-              break
-            fi
-            sleep 10
-          done
-
-          test "$verified" = '1'
-          aws s3 rm "$backup_uri" --recursive
-          trap - EXIT
-          echo "verified=true" >> "$GITHUB_OUTPUT"
-
-      - name: Verify public journeys in desktop and mobile Chrome
-        id: public-qa
-        timeout-minutes: 8
-        run: >-
-          python scripts/acceptance-public-site.py
-          --base-url "$CANONICAL_URL"
-          --output-dir "$RUNNER_TEMP/sozorock-public-qa"
-
-      - name: Preserve browser verification screenshots
-        if: always() && steps.release.outputs.verified == 'true'
-        uses: actions/upload-artifact@v4
+          test -n "$HEADERS_POLICY"
+          python scripts/release.py --activate --headers-policy "$HEADERS_POLICY" --evidence-dir "$RUNNER_TEMP/evidence"
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: sozorock-public-qa-${{ github.run_id }}
-          path: ${{ runner.temp }}/sozorock-public-qa/
+          name: sozorock-release-${{ github.sha }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/evidence/
           retention-days: 14
           if-no-files-found: warn
-
-      - name: Record the deployment result
-        if: always()
-        shell: bash
-        run: |
-          if [[ '${{ steps.release.outputs.verified }}' = 'true' ]]; then
-            echo '## AWS deployment verified' >> "$GITHUB_STEP_SUMMARY"
-            echo "Commit \`${GITHUB_SHA}\` is live at ${CANONICAL_URL}." >> "$GITHUB_STEP_SUMMARY"
-            if [[ '${{ steps.public-qa.outcome }}' = 'success' ]]; then
-              echo 'Desktop and mobile browser journeys passed at 1440×1000, 390×844 and 375×667. Screenshots are attached as workflow artifacts.' >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo 'The release is live, but browser acceptance did not pass. Inspect the browser step and screenshot artifacts before considering the release complete.' >> "$GITHUB_STEP_SUMMARY"
-            fi
-          else
-            echo '## AWS deployment did not verify' >> "$GITHUB_STEP_SUMMARY"
-            echo 'The workflow restored the previous S3 release when a backup was available.' >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: Require a verified production release
-        if: always()
-        run: test '${{ steps.release.outputs.verified }}' = 'true'
