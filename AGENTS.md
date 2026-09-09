@@ -1,6 +1,10 @@
 # SozoRockSchool United States
 Four virtual, human-assessed, 12-week AI and cybersecurity Nano-Credentials.
 
+- Corporate pages and navigation: `src/commercial-content.mjs`, assembled by `src/corporate-pages.mjs` and `scripts/build-corporate.mjs`. Corporate styling: `public/corporate.css` and `public/assets/commercial-layout.css`; do not apply these styles to School.
+- CB-CAP interactive demonstration: `src/PlanningExperience.jsx`, bundled through `vite.planning.config.mjs`. Historical ZCTA geography and synthetic scenarios must remain clearly distinguished from validated institutional forecasts. Preserve the existing contact receipt flow.
+- Current commercial visual decisions and release scope: [commercial release](docs/commercial-release-2026-09-09.md). Current visual QA: [design QA](design-qa.md).
+
 - Homepage: `src/SozoRockSchoolHomepage.jsx`; shared footer: `src/SiteFooter.jsx`; styling: `src/open-school.css`.
 - Deep pages: edit `scripts/build-public-pages.mjs`, then rebuild; do not independently edit generated `public/*.html`.
 - Motion sources and reproduction: [Blender guide](artwork/blender/README.md). Visual constraints: [design system](DESIGN-SYSTEM.md). Pricing authority: [US pricing](docs/us-introductory-pricing.md).
