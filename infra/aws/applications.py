@@ -130,7 +130,7 @@ def review(event, issue_offer=False):
     status = data.get('status')
     token = None
     if issue_offer:
-        if item['status'] not in {'under_review', 'waitlisted'}:
+        if item['status'] not in {'under_review', 'waitlisted', 'offered'}:
             return response(409, {'message': 'Review the application before issuing an offer.'})
         # No guessed refund policy or payment obligation is introduced by an offer.
         token = item['id'] + '.' + secrets.token_urlsafe(32)
@@ -226,7 +226,8 @@ def listing(event, enquiries=False):
             if not isinstance(cursor, str) or len(cursor) > 200:
                 raise ValueError()
             decoded = base64.b64decode(cursor, altchars=b'-_', validate=True).decode()
-            if not re.fullmatch(UUID, decoded):
+            cursor_pattern = UUID if enquiries else '(?:' + UUID + r'|(?:rate|duplicate)#[a-f0-9]{64})'
+            if not re.fullmatch(cursor_pattern, decoded):
                 raise ValueError()
             args['ExclusiveStartKey'] = {'id': decoded}
     except (ValueError, TypeError, UnicodeError, binascii.Error):

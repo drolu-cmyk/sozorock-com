@@ -30,5 +30,5 @@ export const schoolFacts = Object.freeze({
   relationship:'Applied learning by SozoRock Technology',
   status:'open',
   // Website collection is separately gated by the verified mutable applications-config.js.
-  availability:'SozoRockSchool is open. See admissions for the current application route.'
+  availability:'Applications are open.'
 });

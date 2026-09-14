@@ -102,6 +102,15 @@ class ApplicationsTests(unittest.TestCase):
             self.assertEqual(self.listing(self.claims(), query)['statusCode'], 400)
         self.table.scan.side_effect = BotoCoreError()
         self.assertEqual(self.listing(self.claims())['statusCode'], 503)
+    def test_empty_guard_page_can_continue_to_later_applications(self):
+        for prefix in ('rate', 'duplicate'):
+            key = prefix + '#' + 'a' * 64
+            self.table.scan.return_value = {'Items': [], 'LastEvaluatedKey': {'id': key}}
+            first = json.loads(self.listing(self.claims())['body'])
+            self.assertEqual(first['items'], [])
+            next_page = self.listing(self.claims(), {'cursor': first['nextCursor']})
+            self.assertEqual(next_page['statusCode'], 200)
+            self.assertEqual(self.table.scan.call_args.kwargs['ExclusiveStartKey'], {'id': key})
     def test_other_origin_and_unknown_route_rejected(self):
         self.assertEqual(app.handler({'headers': {'origin': 'https://canada.sozorock.com'}}, None)['statusCode'], 403)
         self.assertEqual(app.handler({'routeKey': 'DELETE /applications'}, None)['statusCode'], 404)

@@ -89,6 +89,16 @@ class WorkflowTests(unittest.TestCase):
         self.item['status'] = 'withdrawn'
         self.assertEqual(self.call('POST /offers/view', {'token': token})[0], 404)
 
+    def test_lost_offer_link_can_be_rotated_but_old_link_is_invalidated(self):
+        old = self.offer_token()
+        code, value = self.call('POST /admin/applications/{id}/offer', {'expectedVersion': self.item['version']})
+        self.assertEqual(code, 200)
+        new = value['offerUrl'].split('#token=')[1]
+        self.assertNotEqual(old, new)
+        self.assertEqual(self.call('POST /offers/view', {'token': old})[0], 404)
+        self.assertEqual(self.call('POST /offers/accept', {'token': new})[0], 200)
+        self.assertEqual(self.call('POST /admin/applications/{id}/offer', {'expectedVersion': self.item['version']})[0], 409)
+
     def test_ip_quota_returns_429_without_application_write(self):
         self.table.update_item.side_effect = ClientError('ConditionalCheckFailedException')
         self.assertFalse(app.rate_limit({'requestContext': {'http': {'sourceIp': '192.0.2.1'}}}))
