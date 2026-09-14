@@ -249,7 +249,7 @@ def application_contract(browser, base, width=390):
     context = browser.new_context(viewport={"width":width,"height":844}, reduced_motion="reduce")
     endpoint = "https://q9l0fuov97.execute-api.us-east-1.amazonaws.com"
     cfg = {"enabled":True,"apiEndpoint":endpoint,"adminClientId":"testclient", "adminLoginOrigin":"https://sozorock-us-admin-791860731989.auth.us-east-1.amazoncognito.com"}
-    context.route("**/applications-config.js", lambda route: route.fulfill(content_type="application/javascript", body="window.SOZOROCK_APPLICATIONS="+json.dumps(cfg)))
+    context.route("**/applications-config.js*", lambda route: route.fulfill(content_type="application/javascript", body="window.SOZOROCK_APPLICATIONS="+json.dumps(cfg)))
     calls = []
     def submit(route):
         payload = route.request.post_data_json
@@ -304,7 +304,7 @@ def application_contract(browser, base, width=390):
 def offer_contract(browser, base):
     context=browser.new_context(viewport={"width":320,"height":800}, reduced_motion="reduce")
     endpoint="https://q9l0fuov97.execute-api.us-east-1.amazonaws.com"
-    context.route("**/applications-config.js",lambda r:r.fulfill(content_type="application/javascript",body="window.SOZOROCK_APPLICATIONS="+json.dumps({"apiEndpoint":endpoint})))
+    context.route("**/applications-config.js*",lambda r:r.fulfill(content_type="application/javascript",body="window.SOZOROCK_APPLICATIONS="+json.dumps({"apiEndpoint":endpoint})))
     calls=[]
     def reply(route):
         assert route.request.method=='POST'
