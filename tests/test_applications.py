@@ -18,6 +18,7 @@ class BotoCoreError(Exception):
 
 fake_boto = types.ModuleType('boto3')
 fake_boto.resource = Mock()
+fake_boto.client = Mock()
 errors = types.ModuleType('botocore.exceptions')
 errors.ClientError, errors.BotoCoreError = ClientError, BotoCoreError
 with patch.dict(sys.modules, {'boto3': fake_boto, 'botocore.exceptions': errors}), patch.dict(os.environ, {'TABLE_NAME': 'test'}):
@@ -34,7 +35,12 @@ class ApplicationsTests(unittest.TestCase):
         self.addCleanup(self.env.stop)
         self.data = {'requestId': '12345678-1234-1234-1234-123456789abc', 'name': 'Test Applicant',
             'email': 'test@example.invalid', 'programme': 'ai-governance',
+            'state': 'NY', 'role': 'Operations', 'organization': '', 'availability': '3-6-hours',
             'motivation': 'Synthetic application used for regression testing.', 'consent': True}
+        persistence = patch.object(app, 'persist_submission', side_effect=lambda item:
+            self.table.put_item(Item=item, ConditionExpression='attribute_not_exists(id)'))
+        persistence.start()
+        self.addCleanup(persistence.stop)
     def submit(self, **changes):
         return app.handler({'routeKey': 'POST /applications', 'body': json.dumps(dict(self.data, **changes))}, None)
     def listing(self, claims=None, query=None):
@@ -47,6 +53,9 @@ class ApplicationsTests(unittest.TestCase):
         self.assertEqual(result['statusCode'], 200)
         item = self.table.put_item.call_args.kwargs['Item']
         self.assertEqual(item['expiresAt'] - item['createdAt'], 90 * 86400)
+        self.assertEqual(item['market'], 'United States')
+        self.assertEqual(item['consentAt'], item['createdAt'])
+        self.assertEqual(item['consentVersion'], 'us-applications-v2')
         self.assertEqual(self.table.put_item.call_args.kwargs['ConditionExpression'], 'attribute_not_exists(id)')
     def test_write_failure_never_acknowledged(self):
         self.table.put_item.side_effect = ClientError('ProvisionedThroughputExceededException')
@@ -64,7 +73,8 @@ class ApplicationsTests(unittest.TestCase):
         self.assertEqual(self.submit()['statusCode'], 503)
     def test_invalid_input_is_not_persisted(self):
         for changes in ({'consent': 'true'}, {'programme': 'other'}, {'email': 'invalid'},
-                        {'website': 'bot'}, {'requestId': 'bad'}, {'name': ['invalid']}, {'motivation': 'short'}):
+                        {'website': 'bot'}, {'requestId': 'bad'}, {'name': ['invalid']}, {'motivation': 'short'},
+                        {'state': 'ON'}, {'role': ''}, {'availability': '1-hour'}, {'organization': ['invalid']}):
             with self.subTest(changes=changes):
                 self.assertEqual(self.submit(**changes)['statusCode'], 400)
         self.table.put_item.assert_not_called()
