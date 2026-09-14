@@ -46,7 +46,7 @@ resource('ExecutionRole', 'AWS::IAM::Role', {
     'AssumeRolePolicyDocument': {'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow',
         'Principal': {'Service': 'lambda.amazonaws.com'}, 'Action': 'sts:AssumeRole'}]},
     'Policies': [{'PolicyName': 'applications-only', 'PolicyDocument': {'Version': '2012-10-17', 'Statement': [
-        {'Effect': 'Allow', 'Action': ['dynamodb:PutItem', 'dynamodb:GetItem', 'dynamodb:Scan'], 'Resource': arn('Applications')},
+        {'Effect': 'Allow', 'Action': ['dynamodb:PutItem', 'dynamodb:GetItem', 'dynamodb:Scan', 'dynamodb:UpdateItem'], 'Resource': arn('Applications')},
         {'Effect': 'Allow', 'Action': ['logs:CreateLogStream', 'logs:PutLogEvents'],
          'Resource': arn('ApplicationLogs')},
         {'Fn::If': ['ReadEnquiries', {'Effect': 'Allow', 'Action': ['dynamodb:Scan'],
@@ -69,9 +69,13 @@ resource('Authorizer', 'AWS::ApiGatewayV2::Authorizer', {'ApiId': ref('Api'), 'N
     'JwtConfiguration': {'Audience': [ref('AdminClient')],
         'Issuer': sub('https://cognito-idp.${AWS::Region}.amazonaws.com/${Admins}')}})
 for name, route in [('SubmitRoute', 'POST /applications'), ('AdminRoute', 'GET /admin/applications'),
-                    ('EnquiriesAdminRoute', 'GET /admin/enquiries')]:
+                    ('EnquiriesAdminRoute', 'GET /admin/enquiries'),
+                    ('ReviewRoute', 'POST /admin/applications/{id}/status'),
+                    ('OfferRoute', 'POST /admin/applications/{id}/offer'),
+                    ('OfferViewRoute', 'POST /offers/view'), ('OfferAcceptRoute', 'POST /offers/accept'),
+                    ('OfferDeclineRoute', 'POST /offers/decline')]:
     props = {'ApiId': ref('Api'), 'RouteKey': route, 'Target': sub('integrations/${Integration}')}
-    if name != 'SubmitRoute':
+    if '/admin/' in route:
         props.update(AuthorizationType='JWT', AuthorizerId=ref('Authorizer'),
                      AuthorizationScopes=['aws.cognito.signin.user.admin'])
     resource(name, 'AWS::ApiGatewayV2::Route', props)

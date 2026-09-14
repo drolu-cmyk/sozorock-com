@@ -14,8 +14,9 @@ export const LEGACY = Object.freeze({
   '/privacy.html':'/school/privacy', '/terms.html':'/school/terms',
   '/accessibility.html':'/accessibility', '/index.html':'/', '/school/index.html':'/school'
 });
-export const CORPORATE_ROUTES = ['/', '/cb-cap', '/cb-cap/request-demo', '/what-we-do', '/what-we-do/ai-intelligent-systems', '/what-we-do/data-decision-infrastructure', '/what-we-do/cybersecurity-identity', '/what-we-do/product-engineering', '/insights', '/insights/evidence-needs-context', '/about', '/contact', '/privacy', '/terms', '/accessibility', '/legal'];
+export const CORPORATE_ROUTES = ['/', '/cb-cap', '/cb-cap/request-demo', '/what-we-do', '/what-we-do/ai-intelligent-systems', '/what-we-do/data-decision-infrastructure', '/what-we-do/cybersecurity-identity', '/what-we-do/product-engineering', '/insights', '/insights/evidence-needs-context', '/research/autonomous-systems-assurance', '/about', '/contact', '/privacy', '/terms', '/accessibility', '/legal'];
 export const ROUTES = [...new Set([...CORPORATE_ROUTES, SCHOOL, ...Object.values(LEGACY)])];
+export const PRIVATE_ROUTES = ['/school/offer'];
 export const schoolPath = name => LEGACY['/'+name+'.html'];
 export function schoolLinks(html) {
   return html.replace(/(href=["'])\/([^"']*)/g, (all, prefix, rest) => {
@@ -29,5 +30,5 @@ export const schoolFacts = Object.freeze({
   relationship:'Applied learning by SozoRock Technology',
   status:'open',
   // Website collection is separately gated by the verified mutable applications-config.js.
-  availability:'SozoRockSchool is open. See admissions for the current application route.'
+  availability:'Applications are open.'
 });

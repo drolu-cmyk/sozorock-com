@@ -244,9 +244,9 @@ def reduced_motion(browser, base, directory):
         context.close()
 
 
-def application_contract(browser, base):
+def application_contract(browser, base, width=390):
     # All API requests are intercepted: this cannot create a real application.
-    context = browser.new_context(viewport={"width":390,"height":844})
+    context = browser.new_context(viewport={"width":width,"height":844}, reduced_motion="reduce")
     endpoint = "https://q9l0fuov97.execute-api.us-east-1.amazonaws.com"
     cfg = {"enabled":True,"apiEndpoint":endpoint,"adminClientId":"testclient", "adminLoginOrigin":"https://sozorock-us-admin-791860731989.auth.us-east-1.amazoncognito.com"}
     context.route("**/applications-config.js", lambda route: route.fulfill(content_type="application/javascript", body="window.SOZOROCK_APPLICATIONS="+json.dumps(cfg)))
@@ -258,22 +258,73 @@ def application_contract(browser, base):
     context.route(endpoint+"/**", submit)
     page = context.new_page()
     try:
-        page.goto(base+"/school/apply")
-        page.get_by_label("Your name", exact=True).fill("Acceptance Test")
+        page.goto(base+"/school/apply?program=ai-governance")
+        expect(page.get_by_label("Program", exact=True)).to_have_value("ai-governance")
+        page.get_by_role("button", name="Continue", exact=True).click()
+        expect(page.locator('#application-errors')).to_be_visible()
+        page.get_by_label("Full legal name", exact=True).fill("Acceptance Test")
         page.get_by_label("Email address", exact=True).fill("test@example.com")
-        page.get_by_label("What would you like to learn and apply?", exact=True).fill("Learn how to assess applied AI systems responsibly.")
+        page.get_by_label("U.S. state or territory", exact=True).select_option("NY")
+        page.get_by_role("button", name="Continue", exact=True).click()
+        no_overflow(page)
+        page.get_by_label("Current role or area of work", exact=True).fill("Synthetic reviewer")
+        page.get_by_label("What do you want to be able to do, or what responsibility do you want to develop?", exact=True).fill("Learn how to assess applied AI systems responsibly.")
+        page.get_by_role("button", name="Continue", exact=True).click()
+        no_overflow(page)
+        page.get_by_label("Weekly availability", exact=True).select_option("3-6-hours")
+        page.get_by_role("button", name="Continue", exact=True).click()
+        expect(page.locator('#application-review')).to_contain_text('Acceptance Test')
+        expect(page.locator('#application-review')).to_contain_text('AI Governance')
+        if width==1280:
+            page.evaluate("document.documentElement.style.zoom='2'")
+        no_overflow(page)
+        page.get_by_role("button", name="Submit application", exact=True).click()
+        expect(page.locator('#application-errors')).to_be_visible()
+        assert not calls, "Privacy consent must precede a request"
         page.locator('input[name="consent"]').check()
         page.get_by_role("button", name="Submit application", exact=True).click()
         expect(page.locator('form [role="status"]')).to_contain_text("Receipt could not be confirmed")
         page.get_by_role("button", name="Submit application", exact=True).click()
         expect(page.locator('[data-application-root]')).to_contain_text("Your application was received")
         assert len(calls)==2 and calls[0]==calls[1], "Retry must preserve request and reference"
+        assert calls[0]['state']=='NY' and calls[0]['programme']=='ai-governance'
+        assert calls[0]['role']=='Synthetic reviewer' and calls[0]['availability']=='3-6-hours'
+        assert calls[0]['consent'] is True
+        assert page.evaluate('localStorage.length')==0, "No incomplete form storage"
         token_calls=[]
         context.route("https://sozorock-us-admin-791860731989.auth.us-east-1.amazoncognito.com/**", lambda route: (token_calls.append(route.request.url), route.abort()))
         page.goto(base+"/admin.html?code=fake&state=wrong")
         expect(page.locator('#admin-status')).to_contain_text("could not be verified")
         assert not token_calls, "Unverified callback must not exchange a token"
         expect(page.locator('#admin-content')).to_be_hidden()
+    finally:
+        context.close()
+
+
+def offer_contract(browser, base):
+    context=browser.new_context(viewport={"width":320,"height":800}, reduced_motion="reduce")
+    endpoint="https://q9l0fuov97.execute-api.us-east-1.amazonaws.com"
+    context.route("**/applications-config.js",lambda r:r.fulfill(content_type="application/javascript",body="window.SOZOROCK_APPLICATIONS="+json.dumps({"apiEndpoint":endpoint})))
+    calls=[]
+    def reply(route):
+        assert route.request.method=='POST'
+        assert route.request.post_data_json=={'token':'synthetic-private-token'}
+        assert 'synthetic-private-token' not in route.request.url
+        calls.append(route.request.url)
+        data={'status':'offer_accepted','paymentAvailable':False} if route.request.url.endswith('/accept') else {'programme':'ai-governance','status':'offered','fee':{'currency':'USD','enrollment':49,'tuition':250,'total':299},'terms':{'equipment':'Computer and reliable internet. Session arrangements to be confirmed.','cancellationRefund':'No payment is collected. Terms provided before payment.'}}
+        route.fulfill(content_type='application/json',body=json.dumps(data))
+    context.route(endpoint+'/**',reply)
+    try:
+        page=context.new_page();page.goto(base+'/school/offer#token=synthetic-private-token')
+        expect(page.locator('[data-offer-root]')).to_contain_text('AI Governance')
+        assert '#' not in page.url
+        assert page.locator('meta[name=robots]').get_attribute('content').startswith('noindex')
+        no_overflow(page)
+        page.get_by_role('checkbox').check()
+        page.get_by_role('button',name='Accept offer',exact=True).click()
+        expect(page.locator('[data-offer-root] [role=status]')).to_contain_text('Your offer acceptance has been recorded')
+        assert len(calls)==2
+        assert page.get_by_role('button',name='Pay',exact=True).count()==0
     finally:
         context.close()
 
@@ -328,7 +379,10 @@ def main():
             try:
                 reduced_motion(browser, base, directory)
                 scene_recovery(browser, base)
-                application_contract(browser, base)
+
+                for contract_width in (320,375,390,430,768,1024,1280,1440):
+                    application_contract(browser, base, contract_width)
+                offer_contract(browser, base)
                 record["passed"] = True
             except Exception as error:
                 record["error"] = str(error)
