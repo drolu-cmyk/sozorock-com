@@ -1,0 +1,35 @@
+name: Publish synthetic School review US
+on:
+  push:
+    branches: [codex/school-regional-review-20260922]
+    paths: [school-review/**, .github/workflows/school-regional-review.yml]
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: school-review-us
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install boto3==1.43.90
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        with:
+          role-to-assume: arn:aws:iam::791860731989:role/sozorock-com-github-deploy
+          aws-region: us-east-1
+          allowed-account-ids: '791860731989'
+          unset-current-credentials: true
+      - name: Publish isolated review objects and verify readback
+        env:
+          SCHOOL_MARKET: us
+        run: python school-review/deploy.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: school-review-deployment-us
+          path: review-deployment.json
