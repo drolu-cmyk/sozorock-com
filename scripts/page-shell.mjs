@@ -18,7 +18,8 @@ export function metadata({path,title,description,school=false,image,course,noind
   graph.push({'@type':'WebSite','@id':ORIGIN+'/#website',name:'SozoRock Technology',url:ORIGIN+'/',publisher:{'@id':company['@id']},inLanguage:'en-US'},
     {'@type':'ImageObject','@id':url+'#primaryimage',url:ORIGIN+share,width:1200,height:630,caption:title},
     {'@type':pageType,'@id':url+'#page',url,name:title,description,isPartOf:{'@id':ORIGIN+'/#website'},publisher:provider,inLanguage:'en-US',primaryImageOfPage:{'@id':url+'#primaryimage'},...(path==='/about'||path==='/school/about'?{about:[provider,{'@id':personId}]}:{})});
-  if(path==='/cb-cap')graph.push({'@type':'Product','@id':url+'#product',name:'CB-CAP',description,url,brand:{'@id':company['@id']},category:'Spatial intelligence for care access'});
+  // CB-CAP is an inquiry-led planning service, not a retail product offer.
+  if(path==='/cb-cap')graph.push({'@type':'Service','@id':url+'#service',name:'CB-CAP',description,url,provider,serviceType:'Spatial intelligence for care-access planning'});
   if(path.startsWith('/what-we-do/'))graph.push({'@type':'Service','@id':url+'#service',name:title.split(' | ')[0],serviceType:title.split(' | ')[0],description,url,provider});
   if(path.startsWith('/insights/'))graph.push({'@type':'Article','@id':url+'#article',headline:title.split(' | ')[0],description,image:ORIGIN+share,inLanguage:'en-US',datePublished:'2026-09-09',author:{'@id':company['@id']},publisher:{'@id':company['@id']},mainEntityOfPage:{'@id':url+'#page'}});
   if(course)graph.push({'@type':'Course','@id':url+'#course',url,name:course[2],description:course[5],provider,timeRequired:'P12W',inLanguage:'en-US'});
