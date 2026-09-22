@@ -5,10 +5,10 @@ import boto3
 from botocore.exceptions import ClientError
 MARKET=os.environ['SCHOOL_MARKET']
 assert MARKET in ['us','ca']
-VERSION='school-review-20260922-v3'
+VERSION='school-public-20260922-v4'
 TOKEN=hashlib.sha1(VERSION.encode()).hexdigest()
-USPATH=f'/releases/{TOKEN}/assets/school-review/review.html'
-CAPATH=f'/reviews/{VERSION}/review.html'
+USPATH=f'/releases/{TOKEN}/assets/school/index.html'
+CAPATH=f'/learning/{VERSION}/index.html'
 links={'us':'https://d14v3l4z5ufdrh.cloudfront.net'+USPATH,'ca':'https://d198odt0kdua97.cloudfront.net'+CAPATH}
 account,region,bucket=('791860731989','us-east-1','sozorock-meridian-site') if MARKET=='us' else ('891377012881','ca-central-1','sozorock-ca-public-site-891377012881')
 session=boto3.Session(region_name=region)
@@ -27,11 +27,11 @@ before=hashlib.sha256(json.dumps(config,sort_keys=True).encode()).hexdigest()
 source=Path('school-review/files');manifest=json.loads((source/'manifest.json').read_text())
 for name,digest in manifest.items():assert hashlib.sha256((source/name).read_bytes()).hexdigest()==digest
 prefix=(originprefix+path.rsplit('/',1)[0]+'/').lstrip('/')
-assert '/school-review/' in prefix if MARKET=='us' else prefix.startswith('reviews/'+VERSION+'/')
+assert '/school/' in prefix if MARKET=='us' else prefix.startswith('learning/'+VERSION+'/')
 written=[]
-for name in ['review-0.js','review-1.js','review.html']:
+for name in ['settings.js','school.js','index.html']:
  content=(source/name).read_text()
- if name=='review-0.js':content=content.replace('window.SCHOOL_REGION_LINKS={};','window.SCHOOL_REGION_LINKS='+json.dumps(links)+';')
+ if name=='settings.js':content=content.replace('window.SCHOOL_REGION_LINKS={};','window.SCHOOL_REGION_LINKS='+json.dumps(links)+';')
  data=content.encode();key=prefix+name
  try:
   s3.put_object(Bucket=bucket,Key=key,Body=data,ExpectedBucketOwner=account,IfNoneMatch='*',ContentType='text/javascript' if name.endswith('.js') else 'text/html; charset=utf-8',CacheControl='no-store',Metadata={'review-only':'synthetic','sha256':hashlib.sha256(data).hexdigest()})

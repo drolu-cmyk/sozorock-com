@@ -1,0 +1,1 @@
+window.SCHOOL_MARKET="us";window.SCHOOL_REGION_LINKS={};
