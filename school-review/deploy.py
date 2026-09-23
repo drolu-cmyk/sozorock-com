@@ -5,7 +5,7 @@ import boto3
 from botocore.exceptions import ClientError
 MARKET=os.environ['SCHOOL_MARKET']
 assert MARKET in ['us','ca']
-VERSION='school-public-20260922-v4'
+VERSION='school-workspace-20260923-v5'
 TOKEN=hashlib.sha1(VERSION.encode()).hexdigest()
 USPATH=f'/releases/{TOKEN}/assets/school/index.html'
 CAPATH=f'/learning/{VERSION}/index.html'
@@ -45,4 +45,4 @@ url='https://'+info['DomainName']+path
 result={'market':MARKET,'region':region,'url':url,'keys':written,'productionConfigurationUnchanged':True,'syntheticOnly':True}
 Path('review-deployment.json').write_text(json.dumps(result,indent=2))
 print(json.dumps(result))
-with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write(f'## School review — {MARKET.upper()}\n\n[Open review]({url})\n\nSynthetic browser-only review. No learner API or production routing changed.\n')
+with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write(f'## School review — {MARKET.upper()}\n\n[Open review]({url})\n\nTraining-case workbench. No learner API or production routing changed.\n')
