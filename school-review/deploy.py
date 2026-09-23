@@ -5,7 +5,7 @@ import boto3
 from botocore.exceptions import ClientError
 MARKET=os.environ['SCHOOL_MARKET']
 assert MARKET in ['us','ca']
-VERSION='school-workspace-20260923-v6'
+VERSION='school-placement-20260923-v7'
 TOKEN=hashlib.sha1(VERSION.encode()).hexdigest()
 USPATH=f'/releases/{TOKEN}/assets/school/index.html'
 CAPATH=f'/learning/{VERSION}/index.html'
@@ -29,12 +29,12 @@ for name,digest in manifest.items():assert hashlib.sha256((source/name).read_byt
 prefix=(originprefix+path.rsplit('/',1)[0]+'/').lstrip('/')
 assert '/school/' in prefix if MARKET=='us' else prefix.startswith('learning/'+VERSION+'/')
 written=[]
-for name in ['settings.js','school.js','index.html']:
- content=(source/name).read_text()
- if name=='settings.js':content=content.replace('window.SCHOOL_REGION_LINKS={};','window.SCHOOL_REGION_LINKS='+json.dumps(links)+';')
- data=content.encode();key=prefix+name
+for name in ['settings.js','school.js','index.html','briefing-ai.mp4','briefing-iam.mp4','briefing-grc.mp4','briefing-gov.mp4']:
+ data=(source/name).read_bytes()
+ if name=='settings.js':data=data.replace(b'window.SCHOOL_REGION_LINKS={};',('window.SCHOOL_REGION_LINKS='+json.dumps(links)+';').encode())
+ key=prefix+name
  try:
-  s3.put_object(Bucket=bucket,Key=key,Body=data,ExpectedBucketOwner=account,IfNoneMatch='*',ContentType='text/javascript' if name.endswith('.js') else 'text/html; charset=utf-8',CacheControl='no-store',Metadata={'review-only':'synthetic','sha256':hashlib.sha256(data).hexdigest()})
+  s3.put_object(Bucket=bucket,Key=key,Body=data,ExpectedBucketOwner=account,IfNoneMatch='*',ContentType='video/mp4' if name.endswith('.mp4') else 'text/javascript' if name.endswith('.js') else 'text/html; charset=utf-8',CacheControl='no-store',Metadata={'review-only':'synthetic','sha256':hashlib.sha256(data).hexdigest()})
  except ClientError as ex:
   if ex.response['Error']['Code'] not in ['PreconditionFailed','412']:raise
  assert s3.get_object(Bucket=bucket,Key=key,ExpectedBucketOwner=account)['Body'].read()==data,'Review key already contains different bytes; choose a new version'
