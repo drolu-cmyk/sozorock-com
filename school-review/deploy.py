@@ -5,7 +5,7 @@ import boto3
 from botocore.exceptions import ClientError
 MARKET=os.environ['SCHOOL_MARKET']
 assert MARKET in ['us','ca']
-VERSION='school-placement-20260923-v8'
+VERSION='school-placement-20260923-v9'
 TOKEN=hashlib.sha1(VERSION.encode()).hexdigest()
 USPATH=f'/releases/{TOKEN}/assets/school/index.html'
 CAPATH=f'/learning/{VERSION}/index.html'
