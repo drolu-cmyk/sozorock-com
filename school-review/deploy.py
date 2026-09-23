@@ -5,11 +5,12 @@ import boto3
 from botocore.exceptions import ClientError
 MARKET=os.environ['SCHOOL_MARKET']
 assert MARKET in ['us','ca']
-VERSION='school-placement-20260923-v7'
+VERSION='school-placement-20260923-v8'
 TOKEN=hashlib.sha1(VERSION.encode()).hexdigest()
 USPATH=f'/releases/{TOKEN}/assets/school/index.html'
 CAPATH=f'/learning/{VERSION}/index.html'
 links={'us':'https://d14v3l4z5ufdrh.cloudfront.net'+USPATH,'ca':'https://d198odt0kdua97.cloudfront.net'+CAPATH}
+if MARKET=='us':links['ca']='https://d198odt0kdua97.cloudfront.net/learning/school-workspace-20260923-v6/index.html'
 account,region,bucket=('791860731989','us-east-1','sozorock-meridian-site') if MARKET=='us' else ('891377012881','ca-central-1','sozorock-ca-public-site-891377012881')
 session=boto3.Session(region_name=region)
 assert session.client('sts').get_caller_identity()['Account']==account
