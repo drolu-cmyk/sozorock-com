@@ -12,7 +12,7 @@ flowchart TD
   E --> F["Authorized AWS operator"]
   B --> G["Application availability notice"]
 ```
-As of September 8, 2026, the US enquiry service is deployed with verified durable writes, retries and authorized DynamoDB readback. The independent US application service and Cognito administrator shell exist, but public intake is disabled and authenticated staff readback is pending. No enquiry email worker exists. Mail links do not prove mailbox delivery. See [the current release runbook](corporate-release.md).
+On September 8, 2026, the US enquiry service was deployed with verified durable writes, retries and authorized DynamoDB readback. School application intake was later enabled and a September 14 release recorded an authenticated staff readback with MFA. The September 22 website release is blocked by an expired operational acceptance record; see [the current release runbook](corporate-release.md). No enquiry email worker exists. Mail links do not prove mailbox delivery.
 
 ## Work map
 - `src/`: interactive homepage; `scripts/build-public-pages.mjs`: static page source.
@@ -42,13 +42,13 @@ flowchart TD
 ```
 Do not push main before release approval. Preserve existing tests; add checks for demonstrated risks rather than duplicating implementation. Load browser guidance for interactions and Blender guidance for motion; don't load unrelated skills. No new agent orchestration framework is needed.
 
-## Current operations blockers — 2026-09-06
-- No AWS operator access or authenticated Google Workspace session was available during this review. No admin username/password was recovered or created. Passwords must not enter source, logs or review descriptions; issue a secure invitation/reset after confirming the operator identity.
-- US application/admin resources now exist. Public intake remains disabled until the operational route, durable receipts and authenticated staff readback are verified. School-open copy is separate from the online collection gate.
+## September 6 review notes and current release boundary
+- No AWS operator access or authenticated Google Workspace session was available during the September 6 review. No admin username/password was recovered or created. Passwords must not enter source, logs or review descriptions; issue a secure invitation/reset after confirming the operator identity if access recovery is needed.
+- US application/admin resources were subsequently activated and verified on September 14. New site releases still require fresh operational evidence; the September 22 attempt failed because that record expired. Preserve the enabled application configuration and current MFA boundary.
 - Public DNS observed: MX points to Amazon SES inbound in us-east-1; SPF authorizes amazonses.com; DMARC is `p=none`. Google DKIM's common selector was not present; the actual selector and SES receipt rules remain unknown.
 - Do not replace MX blindly: inspect SES forwarding/storage rules and Workspace domain/licence status first. Confirm whether the requested addresses are existing users, aliases or shared mailboxes before purchasing licences.
 - Authenticate every legitimate sender with one complete SPF record and provider-generated DKIM; inspect reports before tightening DMARC. The current monitoring policy does not reject spoofing. Mail delivery and header alignment remain unverified. [Google SPF guidance](https://support.google.com/a/answer/12082590) and [DMARC setup](https://support.google.com/a/answer/2466580).
 
 ## US application preparation
 
-The separate [application service runbook](us-applications.md) owns provisioning, configuration and live acceptance. Public intake remains disabled until durable write, replay and protected administrator readback pass in the US account. The admin shell is `public/admin.html`; its data requires Cognito access tokens and the Admins group.
+The separate [application service runbook](us-applications.md) documents the initial disabled-state provisioning and acceptance steps. Intake was subsequently activated; renewal for website releases follows [the current release runbook](corporate-release.md). The admin shell is `public/admin.html`; its data requires Cognito access tokens and the Admins group.
