@@ -1,0 +1,29 @@
+name: Practice Studio checks
+
+on:
+  pull_request:
+    paths:
+      - "practice-studio/**"
+      - ".github/workflows/practice-studio-checks.yml"
+  push:
+    branches:
+      - "practice-studio-employment-engine"
+    paths:
+      - "practice-studio/**"
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: practice-studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax and engine tests
+        run: npm run check
