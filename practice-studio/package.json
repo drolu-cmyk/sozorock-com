@@ -1,0 +1,11 @@
+{
+  "name": "@sozorock/practice-studio",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Persistent enterprise work simulation platform by SozoRock Technology",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check src/index.mjs && node --test test/*.test.mjs"
+  }
+}
