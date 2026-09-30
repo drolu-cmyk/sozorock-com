@@ -1,0 +1,6 @@
+import test from "node:test";import assert from "node:assert/strict";
+import{createHarborlineWorld}from"../src/world/harborline/index.mjs";
+test("enterprise supports all required functions",()=>{const w=createHarborlineWorld();for(const id of["identity","secops","risk","data-ai","app-eng","legal-privacy","client-ops"])assert.ok(w.functions.some(x=>x.id===id));});
+test("world contains believable imperfections without guaranteed incidents",()=>{const w=createHarborlineWorld();assert.ok(w.imperfections.length>=5);assert.equal(w.imperfections.some(x=>x.fact.includes("guaranteed incident")),false);});
+test("fictional enterprise is not product identity",()=>{const w=createHarborlineWorld();assert.equal(w.company.fictional,true);assert.notEqual(w.company.display_name,"Practice Studio");});
+test("Atlas and Atlas Actions exist in shared enterprise",()=>{const w=createHarborlineWorld();assert.ok(w.technology.ai.some(x=>x.id==="atlas"));assert.ok(w.technology.ai.some(x=>x.id==="atlas-actions"));});
