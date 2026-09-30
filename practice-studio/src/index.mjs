@@ -65,3 +65,8 @@ export * from "./sandbox/budget.mjs";
 export * from "./sandbox/teardown.mjs";
 export * from "./sandbox/kill-switch.mjs";
 export * from "./sandbox/audit.mjs";
+export * from "./identity/principal.mjs";
+export * from "./identity/authorization.mjs";
+export * from "./identity/entitlements.mjs";
+export * from "./identity/temporary-credentials.mjs";
+export * from "./identity/provisioning.mjs";
