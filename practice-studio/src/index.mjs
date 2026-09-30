@@ -28,3 +28,8 @@ export * from "./interactions/meetings.mjs";
 export * from "./interactions/systems.mjs";
 export * from "./interactions/support.mjs";
 export * from "./interactions/controller.mjs";
+export * from "./workflows/access-request.mjs";
+export * from "./workflows/access-decision.mjs";
+export * from "./workflows/access-artifact.mjs";
+export * from "./workflows/access-review.mjs";
+export * from "./support/iam-library.mjs";
