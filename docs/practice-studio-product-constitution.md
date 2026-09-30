@@ -166,9 +166,23 @@ The initial pathways remain:
 
 They are professional roles/pathways inside the same simulated enterprise, not four isolated course worlds. A single organizational event may affect multiple pathways differently.
 
+## Ownership and licensing model
+Practice Studio is a standalone technology product owned and developed by SozoRock Tech Inc. It is not owned by SozoRock School and should not be architected, branded, or described as an education-only platform.
+
+SozoRock School is an initial licensed/operator use case of Practice Studio. Its programs can configure the product for professional pathways and simulated employment experiences under an appropriate internal license or service agreement.
+
+The product must also be capable of serving non-school customers, including employers, workforce programs, professional-services organizations, public-sector organizations, and other authorized institutions for use cases such as onboarding, role readiness, workforce development, cyber exercises, AI readiness, candidate work simulations, and cross-functional practice.
+
+Licensing and commercial terms remain to be formally documented. Public claims must not imply executed third-party licenses before they exist.
+
 ## Product architecture
 Practice Studio should be understood as:
-SozoRock School -> Practice Studio -> Practice Studio Engine -> Simulated Enterprise -> Professional Pathway -> Employment Period -> Work + people + real tools + events + development -> Evidence of demonstrated capability
+SozoRock Technology -> Practice Studio -> Practice Studio Engine -> Licensed Deployment / Tenant -> Simulated Enterprise -> Role / Professional Pathway -> Experience Period -> Work + people + real tools + events + development -> Evidence of demonstrated capability
+
+For the initial School deployment:
+SozoRock School -> licensed Practice Studio tenant -> School professional pathways.
+
+School-specific curriculum, admissions, enrollment, credentials, and program administration must remain outside the core Practice Studio product domain unless exposed through a clean integration contract.
 
 ## Proprietary product layer
 Do not rebuild commodity tools solely to own them. The defensible product is the orchestration layer that connects:
@@ -198,5 +212,8 @@ A workplace you can enter.
 Core statement:
 The environment is simulated. The practice is real.
 
-Elevator pitch:
-SozoRock School is a workplace-practice environment where participants develop professional capability by working inside a persistent simulated enterprise for the duration of their program. Each participant joins as an employee under their own name, receives a role, manager, email, responsibilities and controlled access to real professional tools such as AWS, GitHub and applicable cybersecurity, identity, data and AI systems. They attend meetings and required training, receive briefs and one-page guidance, communicate with colleagues by voice, text and email, investigate evolving workplace situations, make decisions, deliver professional work and participate in debriefs. The workplace remembers what they do, and their decisions can change what happens next. Instead of measuring learning primarily through lectures and quizzes, SozoRock assesses the evidence of work: how participants investigate, use tools, exercise judgment, communicate, respond to changing conditions and produce the artifacts expected in professional practice.
+Technology product description:
+Practice Studio is a persistent enterprise work simulation platform from SozoRock Technology. Organizations configure simulated workplaces in which people enter defined roles, interact with managers, colleagues and stakeholders, work with controlled professional systems, respond to changing conditions, produce professional artifacts, and build an evidence record from the work they perform.
+
+School deployment description:
+SozoRock School licenses Practice Studio for its workplace-practice model. Participants enter a persistent simulated enterprise for the duration of their program, work under their registered identity, use controlled professional tools, communicate with workplace people, attend meetings and required training, investigate evolving situations, make decisions, produce professional work, and participate in grounded debriefs. The workplace remembers what they do, and their decisions can change what happens next.
