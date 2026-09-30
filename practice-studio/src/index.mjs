@@ -94,3 +94,6 @@ export * from "./support/iam.mjs";
 export * from "./support/boundary.mjs";
 export * from "./support/usage.mjs";
 export * from "./ui/support-surface.mjs";
+export * from "./product/identity.mjs";
+export * from "./product/naming.mjs";
+export * from "./product/tenancy.mjs";
