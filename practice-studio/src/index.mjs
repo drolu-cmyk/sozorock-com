@@ -89,3 +89,8 @@ export * from "./ui/waiting-state.mjs";
 export * from "./ui/artifact-submission.mjs";
 export * from "./ui/system-action-link.mjs";
 export * from "./ui/interactive-workspace.mjs";
+export * from "./support/index.mjs";
+export * from "./support/iam.mjs";
+export * from "./support/boundary.mjs";
+export * from "./support/usage.mjs";
+export * from "./ui/support-surface.mjs";
