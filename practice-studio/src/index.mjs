@@ -16,3 +16,4 @@ export * from "./persistence/contracts.mjs";
 export * from "./persistence/memory.mjs";
 export * from "./evidence/reconstruct.mjs";
 export * from "./evidence/debrief.mjs";
+export * from "./ui/workplace-view.mjs";
