@@ -40,6 +40,16 @@ def no_overflow(page):
           .slice(0,12).map(e=>({tag:e.tagName,className:String(e.className),
             text:e.textContent.slice(0,100),right:e.getBoundingClientRect().right,
             width:e.getBoundingClientRect().width,whiteSpace:getComputedStyle(e).whiteSpace}))""")
+        bounds['overflowingText'] = page.evaluate("""() => {
+          const results=[], walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+          while(walker.nextNode()) {const n=walker.currentNode, range=document.createRange();
+            if(!n.textContent.trim())continue;range.selectNodeContents(n);
+            for(const r of range.getClientRects())if(r.right>innerWidth+1&&r.width>0) {
+              results.push({text:n.textContent.slice(0,100),parent:n.parentElement.className,
+                right:r.right,width:r.width,overflow:getComputedStyle(n.parentElement).overflowX});break;}
+            if(results.length>=12)break;
+          } return results;
+        }""")
     assert max(bounds["document"], bounds["body"]) <= bounds["viewport"] + 1, bounds
 
 
