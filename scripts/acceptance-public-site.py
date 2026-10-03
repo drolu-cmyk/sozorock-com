@@ -34,6 +34,12 @@ def validated_base(value):
 def no_overflow(page):
     bounds = page.evaluate("""() => ({viewport:document.documentElement.clientWidth,
       document:document.documentElement.scrollWidth,body:document.body.scrollWidth})""")
+    if max(bounds["document"], bounds["body"]) > bounds["viewport"] + 1:
+        bounds['overflowingElements'] = page.evaluate("""() => [...document.body.querySelectorAll('*')]
+          .filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.right>innerWidth+1;})
+          .slice(0,12).map(e=>({tag:e.tagName,className:String(e.className),
+            text:e.textContent.slice(0,100),right:e.getBoundingClientRect().right,
+            width:e.getBoundingClientRect().width,whiteSpace:getComputedStyle(e).whiteSpace}))""")
     assert max(bounds["document"], bounds["body"]) <= bounds["viewport"] + 1, bounds
 
 
