@@ -125,36 +125,22 @@ def keyboard_menu(page, mobile):
 
 
 def scene_motion(page):
-    control = page.locator("[data-motion-setting]")
-    video = page.locator(".school-blender-video")
-    assert page.locator(".school-hero button").count() == 0, "Hero must have no playback button"
+    assert page.locator('.school-hero button,[data-motion-setting]').count() == 0, 'Retired playback controls remain'
     page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
-    expect(control).to_have_text("Motion: On")
-    expect(control).to_have_attribute("aria-checked", "true")
-    page.wait_for_function("""() => {
-      const v=document.querySelector('.school-blender-video');
-      return v.autoplay && v.muted && v.loop && v.playsInline && v.videoWidth >= 720 && !v.paused && v.currentTime > 0.1;
-    }""")
-    expect(page.locator(".school-hero")).to_have_class(re.compile(r"\bscene-running\b"))
-    page.locator("#teaching-title").scroll_into_view_if_needed()
+    page.wait_for_function("() => {const v=document.querySelector('.school-blender-video'); return v.autoplay && v.muted && v.loop && v.playsInline && !v.paused && v.currentTime > .1 && v.videoWidth >= 720;}")
+    assert not page.locator('footer a[href^="mailto:"]').count(), 'Footer must use contact-page links'
+    page.locator('#teaching-title').scroll_into_view_if_needed()
     page.wait_for_function("() => document.querySelector('.school-blender-video').paused")
     page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
     page.wait_for_function("() => !document.querySelector('.school-blender-video').paused")
-    control.click()
-    expect(control).to_have_text("Motion: Off")
-    expect(control).to_have_attribute("aria-checked", "false")
+    # A preference saved by the removed control must never prevent playback.
+    page.evaluate("localStorage.setItem('sozorock-school-motion','off')")
+    page.reload(wait_until='networkidle')
     page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
-    page.wait_for_function("() => document.querySelector('.school-blender-video').paused")
-    expect(page.locator(".school-hero")).not_to_have_class(re.compile(r"\bscene-running\b"))
-    page.reload(wait_until="domcontentloaded")
-    expect(control).to_have_attribute("aria-checked", "false")
-    assert video.get_attribute("src") is None, "Saved motion-off preference must prevent video loading"
-    control.click()
-    page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
-    page.wait_for_function("() => !document.querySelector('.school-blender-video').paused")
+    page.wait_for_function("() => {const v=document.querySelector('.school-blender-video'); return !v.paused && v.currentTime > .1;}")
     original = page.viewport_size.copy()
-    changed = 390 if original["width"] > 860 else 1440
-    page.set_viewport_size({"width":changed,"height":original["height"]})
+    changed = 390 if original['width'] > 860 else 1440
+    page.set_viewport_size({'width':changed,'height':original['height']})
     page.wait_for_function("mobile => {const v=document.querySelector('.school-blender-video'); return !v.paused && v.currentTime > .1 && v.currentSrc.includes(mobile?'mobile-v1':'blender-v1');}", arg=changed<=860)
     page.set_viewport_size(original)
     page.wait_for_function("() => !document.querySelector('.school-blender-video').paused")
@@ -226,12 +212,10 @@ def scene_recovery(browser, base):
             page = context.new_page()
             page.route("**/*blender*.mp4", lambda route: route.abort())
             open_home(page, base)
-            control = page.locator("[data-motion-setting]")
             expect(page.locator('[role="status"]')).to_contain_text("Motion unavailable")
             expect(page.locator(".school-hero")).not_to_have_class(re.compile(r"\bscene-loaded\b"))
             page.unroute("**/*blender*.mp4")
-            control.click()
-            control.click()
+            page.locator(".school-hero").click(position={"x":5,"y":200})
             page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
             page.wait_for_function("() => {const v=document.querySelector('video'); return v.videoWidth >= 720 && !v.paused && v.currentTime > .1;}")
         finally:
@@ -244,8 +228,7 @@ def reduced_motion(browser, base, directory):
         page = context.new_page()
         open_home(page, base)
         assert page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
-        expect(page.locator("[data-motion-setting]")).to_be_disabled()
-        expect(page.locator("[data-motion-setting]")).to_have_attribute("aria-checked", "false")
+        expect(page.locator("[data-motion-setting]")).to_have_count(0)
         assert page.locator(".school-blender-video").get_attribute("src") is None
         assert page.locator("video[autoplay],audio[autoplay]").count() == 0
         assert page.evaluate("""document.getAnimations().filter(a=>a.playState==='running'
