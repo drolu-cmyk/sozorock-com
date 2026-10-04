@@ -7,14 +7,17 @@ This change serves www.sozorock.com, its School pages and its existing US applic
 ## Verified live
 
 - The browser loads the US four-step application form with its independent US configuration. A crawler included a hidden outage fallback in its extracted text; that was not a verified form outage.
-- Synthetic receipt `ea2ddd31-b308-4e87-a5b1-9b4b7f6afa8c`: initial application HTTP 200, exact replay HTTP 200 with the same reference, changed payload HTTP 409, anonymous administrator listing HTTP 401. This establishes durable service acknowledgment and retry behavior, not authenticated staff readback or email delivery.
+- Synthetic receipt `ea2ddd31-b308-4e87-a5b1-9b4b7f6afa8c`: initial application HTTP 200, exact replay HTTP 200 with the same reference, changed payload HTTP 409, anonymous administrator listing HTTP 401. The synthetic application was also read back in the existing authenticated School staff portal. This does not establish automated email delivery or a newly observed MFA challenge.
 - Live US API: `https://q9l0fuov97.execute-api.us-east-1.amazonaws.com`. Hosting account 791860731989, us-east-1. Existing user pool `us-east-1_6u0ZpZCRF`. No replacement pool or administrator account.
 - Latest main website deployment run 36281274231 failed at activation with **Operational acceptance expired**. Build, unit checks, browser acceptance, AWS authentication and artifact staging succeeded. Do not remove this guard or copy old successful acceptance booleans into a new record.
 - Current School price is USD $299: $49 enrollment following accepted offer, $250 tuition before program start. No application payment or recurring billing. Canada's prices and award do not apply.
 
+- All 34 public canonical routes returned HTTP 200 with matching canonical URLs. Live CB-CAP still uses the old Product schema; the Service correction already exists in main source and awaits a successful release.
+- Synthetic corporate enquiry `d6b750fd-bce9-480c-8fc4-72a7401197a3`: initial receipt HTTP 200, exact replay HTTP 200, changed details HTTP 409, disallowed origin HTTP 403. Protected staff enquiry loading failed in the live portal; no authorized enquiry readback is claimed. Inspect the actual API/stack table configuration before correcting it.
+
 ## Changes prepared
 
-Eight confirmed Workspace aliases are available in both company and School footers, with the same source used for School homepage and generated deep pages. Labels and addresses stack independently, wrap at narrow widths and preserve existing footer typography. School Contact explicitly routes admissions and general/technical/account support. No info/rock alias or catch-all is introduced.
+Eight confirmed Workspace aliases are available in both company and School footers, with the same source used for School homepage and generated deep pages. Labels and addresses stack independently, wrap at narrow widths and preserve existing footer typography. School Contact explicitly routes admissions and general/technical/account support. Its heading uses “Contact the School.” so the brand name does not overflow the 320px viewport. No info/rock alias or catch-all is introduced.
 
 A review concurrency correction limits the legacy missing-version fallback to version zero. Later stale mutations cannot use a missing-version record to bypass compare-and-swap protection. Backend source changes require a separate controlled stack update; a website release cannot publish Lambda code.
 
@@ -44,3 +47,5 @@ The application service currently does not automatically send applicant receipts
 ## Read-only CloudShell diagnostic
 
 Run `python3 scripts/check-us-operations.py` from this reviewed checkout in account 791860731989. It verifies the account before reading any resources, checks the actual application stack/pool/configuration, reads only the synthetic application reference, checks anonymous denial and reports whether the existing acceptance record expired. It does not change DNS, intake, passwords, permissions, Stripe, Lambda, records or deployment acceptance. It does not list applicants or print application personal data. Share its non-secret output to resolve the remaining US release boundary.
+
+If the diagnostic shows an empty EnquiriesTableName parameter, `python3 scripts/connect-us-enquiry-admin.py` verifies the actual live contact endpoint, contact Lambda table and existing JWT route/read-only IAM condition, then prepares a parameter-only change set using the deployed template. It refuses another table, missing protection, any resource replacement, or changes outside the existing application handler and execution role. `--apply` repeats those checks and executes only that bounded update. It preserves code, intake, Cognito, DNS and website configuration. If the deployed template lacks the expected existing parameter/route/permission, it stops rather than guessing or replacing the service; share that error for a separately reviewed template update.

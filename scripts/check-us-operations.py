@@ -52,7 +52,8 @@ def main():
     outputs = {value['OutputKey']: value['OutputValue'] for value in stack.get('Outputs', [])}
     parameters = {value['ParameterKey']: value['ParameterValue'] for value in stack.get('Parameters', [])}
     report['applicationStack'] = {'name': STACK, 'status': stack['StackStatus'],
-                                'intakeEnabled': parameters.get('IntakeEnabled') == 'true'}
+                                'intakeEnabled': parameters.get('IntakeEnabled') == 'true',
+                                'enquiriesTableConfigured': bool(parameters.get('EnquiriesTableName'))}
     api = outputs.get('ApiEndpoint', '')
     if not re.fullmatch(r'https://[a-z0-9]+\.execute-api\.us-east-1\.amazonaws\.com', api):
         raise RuntimeError('Unexpected US API endpoint; no further checks were made.')
