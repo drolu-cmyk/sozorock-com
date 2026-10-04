@@ -50,7 +50,12 @@ def get_application(identifier):
 
 def replace_application(item, previous_version):
     item['version'] = previous_version + 1
-    TABLE.put_item(Item=item, ConditionExpression='attribute_exists(id) AND (version = :v OR attribute_not_exists(version))',
+    # Only the initial migration of a legacy versionless record may use the fallback.
+    # A stale later mutation must never overwrite a record whose version disappeared.
+    condition = 'attribute_exists(id) AND version = :v'
+    if previous_version == 0:
+        condition = 'attribute_exists(id) AND (version = :v OR attribute_not_exists(version))'
+    TABLE.put_item(Item=item, ConditionExpression=condition,
                    ExpressionAttributeValues={':v': previous_version})
 
 
