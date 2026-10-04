@@ -26,7 +26,7 @@ h1,h2,h3,h4{font-weight:650}.school-hero h1{font-weight:650;font-size:clamp(48px
 @media(max-width:860px){.primary-nav{display:none}.primary-nav[data-open]{display:flex}.menu-toggle{display:flex;align-items:center;justify-content:center}.school-hero h1{font-size:clamp(40px,7vw,58px)}.school-hero-content{padding-top:112px}.wordmark-country{font-size:12px}.school-hero::after{background:linear-gradient(180deg,#132b42 0%,#132b42 54%,#132b4200 72%)}}
 @media(max-width:540px){.wordmark{font-size:19px;gap:5px}.wordmark-country{font-size:11px}.school-hero h1{font-size:40px}.school-hero::after{background:linear-gradient(180deg,#132b42 0%,#132b42 64%,#132b4200 81%)}.school-section h2{font-size:34px}.door-name{font-size:21px}.school-selected h3{font-size:33px}.school-close h2{font-size:32px}}
 
-.motion-setting{border:0;background:transparent;color:inherit;padding:0;min-height:44px;font:inherit;text-decoration:underline;text-underline-offset:4px;align-self:flex-start}.motion-setting:disabled{cursor:default;text-decoration:none}.school-selected{scroll-margin-top:96px}
+.school-selected{scroll-margin-top:96px}
 @media(max-width:860px){.school-selected{scroll-margin-top:32px}}
 @media(prefers-reduced-motion:reduce){.scene-running .school-hero-art img{animation:none;transform:none;will-change:auto}}
 

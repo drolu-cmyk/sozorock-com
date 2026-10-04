@@ -23,14 +23,19 @@ export function BlenderScene({heroRef, enabled}) {
   useEffect(()=>{
     const video=videoRef.current;
     let cancelled=false;
-    if(shouldPlay){
-      const source=mobile?'/media/open-school-blender-mobile-v1.mp4':'/media/open-school-blender-v1.mp4';
-      if(video.getAttribute('src')!==source||failed){video.pause();setLoaded(false);video.src=source;video.load();}
+    const source=mobile?'/media/open-school-blender-mobile-v1.mp4':'/media/open-school-blender-v1.mp4';
+    const play=()=>{
+      if(cancelled||!shouldPlay)return;
+      if(video.getAttribute('src')!==source||video.error){video.pause();setLoaded(false);video.src=source;video.load();}
       setFailed(false);
       video.muted=true;
       video.play().catch(error=>{if(!cancelled&&error.name!=='AbortError'){setFailed(true);setLoaded(false);setPlaying(false);}});
+    };
+    const retry=()=>{if(video.paused)play();};
+    if(shouldPlay){
+      play();document.addEventListener('pointerdown',retry);document.addEventListener('keydown',retry);window.addEventListener('online',retry);
     }else video.pause();
-    return()=>{cancelled=true;video.pause();};
+    return()=>{cancelled=true;video.pause();document.removeEventListener('pointerdown',retry);document.removeEventListener('keydown',retry);window.removeEventListener('online',retry);};
   },[shouldPlay,mobile]);
   useEffect(()=>{
     heroRef.current?.classList.toggle('scene-loaded',loaded&&enabled&&!failed);

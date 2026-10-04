@@ -13,18 +13,15 @@ export function SozoRockSchoolHomepage(){
  const [menuOpen,setMenuOpen]=useState(false);
  const nav=useRef(null),menuButton=useRef(null),resultRef=useRef(null),heroRef=useRef(null);
  const [reducedMotion,setReducedMotion]=useState(false);
- const [motionEnabled,setMotionEnabled]=useState(true);
  const [motionReady,setMotionReady]=useState(false);
  const [saveData,setSaveData]=useState(false);
  useEffect(()=>{
   const query=window.matchMedia('(prefers-reduced-motion: reduce)'),connection=navigator.connection;
   const update=()=>{setReducedMotion(query.matches);setSaveData(Boolean(connection?.saveData));};
-  try{setMotionEnabled(localStorage.getItem('sozorock-school-motion')!=='off');}catch{}
   update();setMotionReady(true);query.addEventListener('change',update);connection?.addEventListener?.('change',update);
   return()=>{query.removeEventListener('change',update);connection?.removeEventListener?.('change',update);};
  },[]);
- const motionAllowed=motionReady&&motionEnabled&&!reducedMotion&&!saveData;
- const toggleMotion=()=>{const next=!motionEnabled;setMotionEnabled(next);try{localStorage.setItem('sozorock-school-motion',next?'on':'off');}catch{}};
+ const motionAllowed=motionReady&&!reducedMotion&&!saveData;
  useEffect(()=>{const initial=programs.find(p=>p.slug===new URLSearchParams(window.location.search).get('program'));if(initial)setSelected(initial);},[]);
  const applyHref='/school/apply?program='+selected.slug;
  const choose=id=>{const p=programs.find(p=>p.id===id);if(!p)return;setSelected(p);setAnnouncement(p.title+' selected. Program details and application links updated.');setVisited(old=>new Set([...old,id]));const url=new URL(window.location.href);url.searchParams.set('program',p.slug);window.history.replaceState(null,'',url.pathname+url.search+url.hash);if(window.innerWidth<=860)requestAnimationFrame(()=>resultRef.current?.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'}));};
@@ -64,5 +61,5 @@ export function SozoRockSchoolHomepage(){
 <details><summary>Who is this not for?</summary><p>These programs are not for people seeking a degree, professional license or an automatic certificate for attendance. They require active participation and assessed submissions.</p></details>
 </div></div></section>
 <section className="school-close school-section" aria-labelledby="close-title"><div className="container"><h2 id="close-title">Choose your program.<br />Check admissions availability.</h2><p>{schoolFacts.fee}</p><a className="school-button school-button-light" data-selected-apply href={applyHref}>Apply</a></div></section>
-</main><SiteFooter applyHref={applyHref} motion={{enabled:motionAllowed,restricted:!motionReady||reducedMotion||saveData,onToggle:toggleMotion}} /></div>;
+</main><SiteFooter applyHref={applyHref} /></div>;
 }
