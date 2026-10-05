@@ -18,3 +18,10 @@ test('visible release and snapshot provenance agree with the existing source man
   assert.equal(new Date(countySource.snapshot+' UTC').toISOString().slice(0,10),provenance.snapshot);
   assert.equal(countySource.url,provenance.sourceManifest.indicators.url);
 });
+
+test('the production build includes the reviewed public county snapshot without changing its bytes',()=>{
+  const source=readFileSync(new URL('../public/assets/data/cbcap-counties-2025.json',import.meta.url));
+  const built=readFileSync(new URL('../dist/client/assets/data/cbcap-counties-2025.json',import.meta.url));
+  assert.deepEqual(built,source);
+  assert.equal(validateCountySnapshot(JSON.parse(built)).length,3144);
+});

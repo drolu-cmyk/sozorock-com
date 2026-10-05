@@ -16,6 +16,7 @@ def check_decision_brief(page, currency, artifacts, width):
         if request.method == 'POST': sent.append(request.url)
     page.on('request',record_request)
     for key,value in values.items(): form.locator(f'[name="{key}"]').fill(value)
+    if width in (390,1440): form.screenshot(path=str(artifacts / f'decision-form-{width}.png'))
     page.get_by_role('button',name='Calculate decision brief',exact=True).click()
     result = page.locator('.decision-result')
     result.wait_for()
@@ -64,6 +65,8 @@ def main():
                 assert page.locator('main').inner_text().strip()
                 for script in page.locator('script[type="application/ld+json"]').all_text_contents():json.loads(script)
                 assert page.evaluate("!performance.getEntriesByType('resource').some(r=>/school-|open-school|plus-jakarta/.test(r.name)&&r.initiatorType==='css')")
+                if width in (390,1440) and path in ('/','/cb-cap'):
+                    page.screenshot(path=str(out / f'business-{width}-{path[1:] or "home"}.png'),full_page=True)
                 if path=='/':
                     expect(page.locator('h1')).to_contain_text('Build the systems')
                     assert not page.locator('img[src*="evidence"]').count()
@@ -72,12 +75,17 @@ def main():
                         page.keyboard.press('Shift+Tab');expect(button).to_be_focused();page.keyboard.press('Tab');expect(page.locator('#corporate-nav summary').first).to_be_focused()
                         page.keyboard.press('Escape');expect(button).to_have_attribute('aria-expanded','false');expect(button).to_be_focused()
                 if path=='/cb-cap':
+                    # Preserve the rendered county state even if its contract fails.
+                    if width in (320,390,1440): page.locator('.county-evidence').screenshot(path=str(out / f'county-evidence-{width}.png'))
                     check_decision_brief(page, 'USD', out, width)
+                    snapshot=page.request.get(base+'/assets/data/cbcap-counties-2025.json')
+                    assert snapshot.status==200 and len(snapshot.json())==3144, 'The published county snapshot must be served by the candidate'
                     expect(page.get_by_label('State',exact=True)).to_be_visible()
                     page.get_by_label('State',exact=True).select_option('New York')
                     page.get_by_label('County',exact=True).select_option('36091')
                     expect(page.locator('.county-reading')).to_contain_text('Saratoga County')
                     expect(page.locator('.county-reading')).to_contain_text('5.5%')
+                    if width in (390,1440): page.locator('.county-evidence').screenshot(path=str(out / f'county-selected-{width}.png'))
                     expect(page.locator('#platform')).to_have_count(1)
                     expect(page.locator('#platform h2')).to_contain_text('One planning view')
                     expect(page.get_by_label('Map ZIP area',exact=True)).to_be_visible()

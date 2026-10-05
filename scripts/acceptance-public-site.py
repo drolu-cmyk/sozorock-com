@@ -356,6 +356,8 @@ def main():
                 try:
                     open_home(page, base)
                     record["hero_bounds"] = hero_bounds(page)
+                    if width in (390,1440):
+                        page.screenshot(path=str(directory / f"school-home-{width}.png"),full_page=True)
                     capture_scroll(page, directory, label)
                     keyboard_menu(page, width<=860)
                     scene_motion(page)

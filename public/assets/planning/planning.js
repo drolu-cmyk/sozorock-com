@@ -34,7 +34,7 @@ var hd;
 function cy() {
   return hd || (hd = 1, xr.exports = iy()), xr.exports;
 }
-var A = cy(), Ar = { exports: {} }, rt = {};
+var x = cy(), Ar = { exports: {} }, rt = {};
 /**
  * @license React
  * react.production.js
@@ -472,9 +472,9 @@ function vd(u) {
 `);
 }
 function dy({ currency: u = "CAD" }) {
-  const c = _.useId(), o = _.useRef(null), f = _.useRef(null), d = _.useRef(null), [y, v] = _.useState(null), [m, g] = _.useState(""), h = (H) => H.toLocaleString("en", { maximumFractionDigits: 2 }), p = (H, U, C = {}) => /* @__PURE__ */ A.jsxs("label", { htmlFor: `${c}-${H}`, children: [
+  const c = _.useId(), o = _.useRef(null), f = _.useRef(null), d = _.useRef(null), [y, v] = _.useState(null), [m, g] = _.useState(""), h = (H) => H.toLocaleString("en", { maximumFractionDigits: 2 }), p = (H, U, C = {}) => /* @__PURE__ */ x.jsxs("label", { htmlFor: `${c}-${H}`, children: [
     U,
-    /* @__PURE__ */ A.jsx("input", { id: `${c}-${H}`, name: H, required: !0, autoComplete: "off", maxLength: 120, ...C })
+    /* @__PURE__ */ x.jsx("input", { id: `${c}-${H}`, name: H, required: !0, autoComplete: "off", maxLength: 120, ...C })
   ] }, H);
   function S(H) {
     H.preventDefault();
@@ -494,29 +494,29 @@ function dy({ currency: u = "CAD" }) {
     const H = URL.createObjectURL(new Blob([vd(y)], { type: "text/plain;charset=utf-8" })), U = document.createElement("a");
     U.href = H, U.download = "cb-cap-decision-brief.txt", U.click(), setTimeout(() => URL.revokeObjectURL(H), 1e3);
   }
-  return /* @__PURE__ */ A.jsxs("section", { className: "decision-brief", id: "decision-brief", "aria-labelledby": `${c}-title`, children: [
-    /* @__PURE__ */ A.jsxs("header", { children: [
-      /* @__PURE__ */ A.jsx("p", { className: "eyebrow", children: "FROM EVIDENCE TO A DECISION" }),
-      /* @__PURE__ */ A.jsx("h2", { id: `${c}-title`, children: "Build a service capacity brief." }),
-      /* @__PURE__ */ A.jsx("p", { children: "Use your own aggregate figures to compare one capacity change, its operating cost and the result your team will review." })
+  return /* @__PURE__ */ x.jsxs("section", { className: "decision-brief", id: "decision-brief", "aria-labelledby": `${c}-title`, children: [
+    /* @__PURE__ */ x.jsxs("header", { children: [
+      /* @__PURE__ */ x.jsx("p", { className: "eyebrow", children: "FROM EVIDENCE TO A DECISION" }),
+      /* @__PURE__ */ x.jsx("h2", { id: `${c}-title`, children: "Build a service capacity brief." }),
+      /* @__PURE__ */ x.jsx("p", { children: "Use your own aggregate figures to compare one capacity change, its operating cost and the result your team will review." })
     ] }),
-    /* @__PURE__ */ A.jsx("p", { className: "decision-privacy", children: "Enter public or approved aggregate information only. Use a team or role for accountability; do not enter names, contact details or patient records. Entries are processed in your browser and are not sent to SozoRock. Use Clear entries when finished, or download a brief to retain it." }),
-    /* @__PURE__ */ A.jsxs("form", { ref: o, onSubmit: S, onChange: () => {
+    /* @__PURE__ */ x.jsx("p", { className: "decision-privacy", children: "Enter public or approved aggregate information only. Use a team or role for accountability; do not enter names, contact details or patient records. Entries are processed in your browser and are not sent to SozoRock. Use Clear entries when finished, or download a brief to retain it." }),
+    /* @__PURE__ */ x.jsxs("form", { ref: o, onSubmit: S, onChange: () => {
       v(null), g("");
     }, children: [
-      /* @__PURE__ */ A.jsxs("fieldset", { children: [
-        /* @__PURE__ */ A.jsx("legend", { children: "1. Define the evidence" }),
-        /* @__PURE__ */ A.jsxs("div", { className: "decision-fields", children: [
+      /* @__PURE__ */ x.jsxs("fieldset", { children: [
+        /* @__PURE__ */ x.jsx("legend", { children: "1. Define the evidence" }),
+        /* @__PURE__ */ x.jsxs("div", { className: "decision-fields", children: [
           p("service", "Service being planned", { placeholder: "e.g. community transport trips" }),
           p("area", "Operating area", { maxLength: 160, placeholder: "Use your actual service boundary" }),
           p("source", "Source and reporting period", { maxLength: 300, placeholder: "e.g. published monthly service report, July 2026" }),
           p("sourceDate", "Source as of", { type: "date" })
         ] }),
-        /* @__PURE__ */ A.jsx("p", { children: "Use the same service definition, area and monthly period for demand and capacity. The sample map is separate from your calculations." })
+        /* @__PURE__ */ x.jsx("p", { children: "Use the same service definition, area and monthly period for demand and capacity. The sample map is separate from your calculations." })
       ] }),
-      /* @__PURE__ */ A.jsxs("fieldset", { children: [
-        /* @__PURE__ */ A.jsx("legend", { children: "2. Compare capacity and cost" }),
-        /* @__PURE__ */ A.jsxs("div", { className: "decision-fields", children: [
+      /* @__PURE__ */ x.jsxs("fieldset", { children: [
+        /* @__PURE__ */ x.jsx("legend", { children: "2. Compare capacity and cost" }),
+        /* @__PURE__ */ x.jsxs("div", { className: "decision-fields", children: [
           p("demand", "Monthly service requests", { type: "number", min: 0, max: 1e9, step: "any", inputMode: "decimal" }),
           p("capacity", "Current capacity (requests/month)", { type: "number", min: 0, max: 1e9, step: "any", inputMode: "decimal" }),
           p("added", "Proposed added capacity (requests/month)", { type: "number", min: 0, max: 1e9, step: "any", inputMode: "decimal" }),
@@ -524,48 +524,48 @@ function dy({ currency: u = "CAD" }) {
           p("months", "Planning period (months)", { type: "number", min: 1, max: 36, step: 1, inputMode: "numeric" })
         ] })
       ] }),
-      /* @__PURE__ */ A.jsxs("fieldset", { children: [
-        /* @__PURE__ */ A.jsx("legend", { children: "3. Assign the review" }),
-        /* @__PURE__ */ A.jsxs("div", { className: "decision-fields", children: [
+      /* @__PURE__ */ x.jsxs("fieldset", { children: [
+        /* @__PURE__ */ x.jsx("legend", { children: "3. Assign the review" }),
+        /* @__PURE__ */ x.jsxs("div", { className: "decision-fields", children: [
           p("owner", "Accountable team or role", { placeholder: "e.g. service planning team" }),
           p("outcome", "Outcome measure", { maxLength: 200, placeholder: "e.g. completed transport requests per month" }),
           p("target", "Target to assess at review", { placeholder: "e.g. 120 completed requests per month" }),
           p("reviewDate", "Review date", { type: "date" })
         ] })
       ] }),
-      m && /* @__PURE__ */ A.jsx("p", { className: "decision-error", role: "alert", tabIndex: -1, ref: d, children: m }),
-      /* @__PURE__ */ A.jsxs("div", { className: "decision-actions", children: [
-        /* @__PURE__ */ A.jsx("button", { className: "primary", type: "submit", children: "Calculate decision brief" }),
-        /* @__PURE__ */ A.jsx("button", { className: "text-link", type: "reset", onClick: () => {
+      m && /* @__PURE__ */ x.jsx("p", { className: "decision-error", role: "alert", tabIndex: -1, ref: d, children: m }),
+      /* @__PURE__ */ x.jsxs("div", { className: "decision-actions", children: [
+        /* @__PURE__ */ x.jsx("button", { className: "primary", type: "submit", children: "Calculate decision brief" }),
+        /* @__PURE__ */ x.jsx("button", { className: "text-link", type: "reset", onClick: () => {
           v(null), g("");
         }, children: "Clear entries" })
       ] })
     ] }),
-    y && /* @__PURE__ */ A.jsxs("section", { className: "decision-result", ref: f, tabIndex: -1, "aria-labelledby": `${c}-result`, children: [
-      /* @__PURE__ */ A.jsx("p", { className: "eyebrow", children: "YOUR INPUTS · CONDITIONAL CALCULATION" }),
-      /* @__PURE__ */ A.jsx("h3", { id: `${c}-result`, children: "Capacity and budget comparison" }),
-      /* @__PURE__ */ A.jsxs("dl", { className: "decision-metrics", children: [
-        /* @__PURE__ */ A.jsxs("div", { children: [
-          /* @__PURE__ */ A.jsx("dt", { children: "Current capacity gap" }),
-          /* @__PURE__ */ A.jsxs("dd", { children: [
+    y && /* @__PURE__ */ x.jsxs("section", { className: "decision-result", ref: f, tabIndex: -1, "aria-labelledby": `${c}-result`, children: [
+      /* @__PURE__ */ x.jsx("p", { className: "eyebrow", children: "YOUR INPUTS · CONDITIONAL CALCULATION" }),
+      /* @__PURE__ */ x.jsx("h3", { id: `${c}-result`, children: "Capacity and budget comparison" }),
+      /* @__PURE__ */ x.jsxs("dl", { className: "decision-metrics", children: [
+        /* @__PURE__ */ x.jsxs("div", { children: [
+          /* @__PURE__ */ x.jsx("dt", { children: "Current capacity gap" }),
+          /* @__PURE__ */ x.jsxs("dd", { children: [
             h(y.currentGap),
-            /* @__PURE__ */ A.jsx("small", { children: " requests/month" })
+            /* @__PURE__ */ x.jsx("small", { children: " requests/month" })
           ] })
         ] }),
-        /* @__PURE__ */ A.jsxs("div", { children: [
-          /* @__PURE__ */ A.jsx("dt", { children: "Planned capacity gap" }),
-          /* @__PURE__ */ A.jsxs("dd", { children: [
+        /* @__PURE__ */ x.jsxs("div", { children: [
+          /* @__PURE__ */ x.jsx("dt", { children: "Planned capacity gap" }),
+          /* @__PURE__ */ x.jsxs("dd", { children: [
             h(y.plannedGap),
-            /* @__PURE__ */ A.jsx("small", { children: " requests/month" })
+            /* @__PURE__ */ x.jsx("small", { children: " requests/month" })
           ] })
         ] }),
-        /* @__PURE__ */ A.jsxs("div", { children: [
-          /* @__PURE__ */ A.jsx("dt", { children: "Additional operating budget" }),
-          /* @__PURE__ */ A.jsxs("dd", { children: [
+        /* @__PURE__ */ x.jsxs("div", { children: [
+          /* @__PURE__ */ x.jsx("dt", { children: "Additional operating budget" }),
+          /* @__PURE__ */ x.jsxs("dd", { children: [
             u,
             " ",
             h(y.totalCost),
-            /* @__PURE__ */ A.jsxs("small", { children: [
+            /* @__PURE__ */ x.jsxs("small", { children: [
               " over ",
               y.inputs.months,
               " months"
@@ -573,31 +573,31 @@ function dy({ currency: u = "CAD" }) {
           ] })
         ] })
       ] }),
-      /* @__PURE__ */ A.jsxs("p", { children: [
+      /* @__PURE__ */ x.jsxs("p", { children: [
         "Added capacity applicable to the current gap: ",
-        /* @__PURE__ */ A.jsxs("strong", { children: [
+        /* @__PURE__ */ x.jsxs("strong", { children: [
           h(y.capacityApplied),
           " requests/month"
         ] }),
         ". Operating cost per additional request capacity: ",
-        /* @__PURE__ */ A.jsx("strong", { children: y.costPerRequest === null ? "not applicable (no gap reduction)" : `${u} ${h(y.costPerRequest)}` }),
+        /* @__PURE__ */ x.jsx("strong", { children: y.costPerRequest === null ? "not applicable (no gap reduction)" : `${u} ${h(y.costPerRequest)}` }),
         "."
       ] }),
-      /* @__PURE__ */ A.jsx("p", { children: "This calculates capacity under your assumptions. It does not establish that requests will be completed or that health outcomes will improve." }),
-      /* @__PURE__ */ A.jsx("button", { className: "primary", type: "button", onClick: M, children: "Download decision brief" }),
-      /* @__PURE__ */ A.jsxs("details", { children: [
-        /* @__PURE__ */ A.jsx("summary", { children: "Read or copy the full brief" }),
-        /* @__PURE__ */ A.jsxs("label", { htmlFor: `${c}-export`, children: [
+      /* @__PURE__ */ x.jsx("p", { children: "This calculates capacity under your assumptions. It does not establish that requests will be completed or that health outcomes will improve." }),
+      /* @__PURE__ */ x.jsx("button", { className: "primary", type: "button", onClick: M, children: "Download decision brief" }),
+      /* @__PURE__ */ x.jsxs("details", { children: [
+        /* @__PURE__ */ x.jsx("summary", { children: "Read or copy the full brief" }),
+        /* @__PURE__ */ x.jsxs("label", { htmlFor: `${c}-export`, children: [
           "Decision brief",
-          /* @__PURE__ */ A.jsx("textarea", { id: `${c}-export`, readOnly: !0, rows: 15, value: vd(y) })
+          /* @__PURE__ */ x.jsx("textarea", { id: `${c}-export`, readOnly: !0, rows: 15, value: vd(y) })
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ A.jsxs("details", { className: "decision-method", children: [
-      /* @__PURE__ */ A.jsx("summary", { children: "Method and assumptions" }),
-      /* @__PURE__ */ A.jsx("p", { children: "Current gap = the greater of monthly requests minus current capacity, or zero. Planned gap also subtracts proposed added capacity. The budget multiplies additional monthly cost by the planning period. Unit cost divides monthly cost by added capacity applicable to the current gap." }),
-      /* @__PURE__ */ A.jsx("ul", { children: ah.map((H) => /* @__PURE__ */ A.jsx("li", { children: H }, H)) }),
-      /* @__PURE__ */ A.jsx("p", { children: "Source quality, local constraints and the review target remain your team's responsibility. Keep the source date and outcome review attached when sharing a brief." })
+    /* @__PURE__ */ x.jsxs("details", { className: "decision-method", children: [
+      /* @__PURE__ */ x.jsx("summary", { children: "Method and assumptions" }),
+      /* @__PURE__ */ x.jsx("p", { children: "Current gap = the greater of monthly requests minus current capacity, or zero. Planned gap also subtracts proposed added capacity. The budget multiplies additional monthly cost by the planning period. Unit cost divides monthly cost by added capacity applicable to the current gap." }),
+      /* @__PURE__ */ x.jsx("ul", { children: ah.map((H) => /* @__PURE__ */ x.jsx("li", { children: H }, H)) }),
+      /* @__PURE__ */ x.jsx("p", { children: "Source quality, local constraints and the review target remain your team's responsibility. Keep the source date and outcome review attached when sharing a brief." })
     ] })
   ] });
 }
@@ -640,52 +640,52 @@ function yy() {
     };
   }, [y]);
   const H = (c == null ? void 0 : c.find((V) => V.fips === h)) || my, U = H[S], C = c ? [...new Set(c.map((V) => V.state))].sort() : [], L = (c == null ? void 0 : c.filter((V) => V.state === m).sort((V, Q) => V.county.localeCompare(Q.county))) || [];
-  return /* @__PURE__ */ A.jsxs("section", { className: "county-evidence", "aria-labelledby": `${u}-title`, children: [
-    /* @__PURE__ */ A.jsx("p", { className: "eyebrow", children: "PUBLISHED COUNTY EVIDENCE" }),
-    /* @__PURE__ */ A.jsx("h2", { id: `${u}-title`, children: "Check the local context." }),
-    /* @__PURE__ */ A.jsx("p", { children: "Explore three population estimates before defining a service question. Keep county evidence separate from the sample ZIP-area scenarios." }),
-    c && /* @__PURE__ */ A.jsxs("div", { className: "county-fields", children: [
-      /* @__PURE__ */ A.jsxs("label", { htmlFor: `${u}-state`, children: [
-        "State",
-        /* @__PURE__ */ A.jsx("select", { id: `${u}-state`, value: m, onChange: (V) => {
+  return /* @__PURE__ */ x.jsxs("section", { className: "county-evidence", "aria-labelledby": `${u}-title`, children: [
+    /* @__PURE__ */ x.jsx("p", { className: "eyebrow", children: "PUBLISHED COUNTY EVIDENCE" }),
+    /* @__PURE__ */ x.jsx("h2", { id: `${u}-title`, children: "Check the local context." }),
+    /* @__PURE__ */ x.jsx("p", { children: "Explore three population estimates before defining a service question. Keep county evidence separate from the sample ZIP-area scenarios." }),
+    c && /* @__PURE__ */ x.jsxs("div", { className: "county-fields", children: [
+      /* @__PURE__ */ x.jsxs("div", { className: "county-field", children: [
+        /* @__PURE__ */ x.jsx("label", { htmlFor: `${u}-state`, children: "State" }),
+        /* @__PURE__ */ x.jsx("select", { id: `${u}-state`, value: m, onChange: (V) => {
           g(V.target.value), p(c.filter((Q) => Q.state === V.target.value).sort((Q, K) => Q.county.localeCompare(K.county))[0].fips);
-        }, children: C.map((V) => /* @__PURE__ */ A.jsx("option", { children: V }, V)) })
+        }, children: C.map((V) => /* @__PURE__ */ x.jsx("option", { children: V }, V)) })
       ] }),
-      /* @__PURE__ */ A.jsxs("label", { htmlFor: `${u}-county`, children: [
-        "County",
-        /* @__PURE__ */ A.jsx("select", { id: `${u}-county`, value: h, onChange: (V) => p(V.target.value), children: L.map((V) => /* @__PURE__ */ A.jsx("option", { value: V.fips, children: V.county }, V.fips)) })
+      /* @__PURE__ */ x.jsxs("div", { className: "county-field", children: [
+        /* @__PURE__ */ x.jsx("label", { htmlFor: `${u}-county`, children: "County" }),
+        /* @__PURE__ */ x.jsx("select", { id: `${u}-county`, value: h, onChange: (V) => p(V.target.value), children: L.map((V) => /* @__PURE__ */ x.jsx("option", { value: V.fips, children: V.county }, V.fips)) })
       ] }),
-      /* @__PURE__ */ A.jsxs("label", { htmlFor: `${u}-measure`, children: [
-        "Population measure",
-        /* @__PURE__ */ A.jsx("select", { id: `${u}-measure`, value: S, onChange: (V) => M(V.target.value), children: Object.entries(Ur).map(([V, Q]) => /* @__PURE__ */ A.jsx("option", { value: V, children: Q }, V)) })
+      /* @__PURE__ */ x.jsxs("div", { className: "county-field", children: [
+        /* @__PURE__ */ x.jsx("label", { htmlFor: `${u}-measure`, children: "Population measure" }),
+        /* @__PURE__ */ x.jsx("select", { id: `${u}-measure`, value: S, onChange: (V) => M(V.target.value), children: Object.entries(Ur).map(([V, Q]) => /* @__PURE__ */ x.jsx("option", { value: V, children: Q }, V)) })
       ] })
     ] }),
-    /* @__PURE__ */ A.jsxs("div", { className: "county-reading", "aria-live": "polite", children: [
-      /* @__PURE__ */ A.jsxs("h3", { children: [
+    /* @__PURE__ */ x.jsxs("div", { className: "county-reading", "aria-live": "polite", children: [
+      /* @__PURE__ */ x.jsxs("h3", { children: [
         H.county,
         ", ",
         H.state
       ] }),
-      /* @__PURE__ */ A.jsx("p", { className: "county-value", children: U[0] === null ? "Estimate unavailable" : `${U[0].toFixed(1)}%` }),
-      /* @__PURE__ */ A.jsxs("p", { children: [
+      /* @__PURE__ */ x.jsx("p", { className: "county-value", children: U[0] === null ? "Estimate unavailable" : `${U[0].toFixed(1)}%` }),
+      /* @__PURE__ */ x.jsxs("p", { children: [
         Ur[S],
         " · ",
         S === "uninsured" ? "Adults aged 18–64" : "Adults aged 18 and older"
       ] }),
-      /* @__PURE__ */ A.jsxs("p", { children: [
+      /* @__PURE__ */ x.jsxs("p", { children: [
         U[0] === null ? "Missing data is not zero." : `95% confidence interval: ${U[1].toFixed(1)}%–${U[2].toFixed(1)}%.`,
         " County FIPS ",
         H.fips,
         "."
       ] })
     ] }),
-    !c && (f ? /* @__PURE__ */ A.jsxs("p", { role: "alert", children: [
+    !c && (f ? /* @__PURE__ */ x.jsxs("p", { role: "alert", children: [
       "County selection could not load. The Albany County transportation snapshot remains available. ",
-      /* @__PURE__ */ A.jsx("button", { className: "text-link", onClick: () => v(y + 1), children: "Retry county selection" })
-    ] }) : /* @__PURE__ */ A.jsx("p", { role: "status", children: "Loading county selection…" })),
-    /* @__PURE__ */ A.jsxs("p", { className: "county-source", children: [
+      /* @__PURE__ */ x.jsx("button", { className: "text-link", onClick: () => v(y + 1), children: "Retry county selection" })
+    ] }) : /* @__PURE__ */ x.jsx("p", { role: "status", children: "Loading county selection…" })),
+    /* @__PURE__ */ x.jsxs("p", { className: "county-source", children: [
       "Source: ",
-      /* @__PURE__ */ A.jsxs("a", { href: Wn.url, children: [
+      /* @__PURE__ */ x.jsxs("a", { href: Wn.url, children: [
         Wn.publisher,
         ", ",
         Wn.release
@@ -5216,135 +5216,135 @@ Error generating stack: ` + n.message + `
     ));
   }
   function To(t) {
-    function e(z, x) {
+    function e(z, A) {
       if (t) {
         var N = z.deletions;
-        N === null ? (z.deletions = [x], z.flags |= 16) : N.push(x);
+        N === null ? (z.deletions = [A], z.flags |= 16) : N.push(A);
       }
     }
-    function l(z, x) {
+    function l(z, A) {
       if (!t) return null;
-      for (; x !== null; )
-        e(z, x), x = x.sibling;
+      for (; A !== null; )
+        e(z, A), A = A.sibling;
       return null;
     }
     function n(z) {
-      for (var x = /* @__PURE__ */ new Map(); z !== null; )
-        z.key !== null ? x.set(z.key, z) : x.set(z.index, z), z = z.sibling;
-      return x;
+      for (var A = /* @__PURE__ */ new Map(); z !== null; )
+        z.key !== null ? A.set(z.key, z) : A.set(z.index, z), z = z.sibling;
+      return A;
     }
-    function a(z, x) {
-      return z = Pe(z, x), z.index = 0, z.sibling = null, z;
+    function a(z, A) {
+      return z = Pe(z, A), z.index = 0, z.sibling = null, z;
     }
-    function i(z, x, N) {
-      return z.index = N, t ? (N = z.alternate, N !== null ? (N = N.index, N < x ? (z.flags |= 67108866, x) : N) : (z.flags |= 67108866, x)) : (z.flags |= 1048576, x);
+    function i(z, A, N) {
+      return z.index = N, t ? (N = z.alternate, N !== null ? (N = N.index, N < A ? (z.flags |= 67108866, A) : N) : (z.flags |= 67108866, A)) : (z.flags |= 1048576, A);
     }
     function r(z) {
       return t && z.alternate === null && (z.flags |= 67108866), z;
     }
-    function s(z, x, N, B) {
-      return x === null || x.tag !== 6 ? (x = Zc(N, z.mode, B), x.return = z, x) : (x = a(x, N), x.return = z, x);
+    function s(z, A, N, B) {
+      return A === null || A.tag !== 6 ? (A = Zc(N, z.mode, B), A.return = z, A) : (A = a(A, N), A.return = z, A);
     }
-    function b(z, x, N, B) {
+    function b(z, A, N, B) {
       var et = N.type;
       return et === C ? R(
         z,
-        x,
+        A,
         N.props.children,
         B,
         N.key
-      ) : x !== null && (x.elementType === et || typeof et == "object" && et !== null && et.$$typeof === it && Pl(et) === x.type) ? (x = a(x, N.props), Ta(x, N), x.return = z, x) : (x = Uu(
+      ) : A !== null && (A.elementType === et || typeof et == "object" && et !== null && et.$$typeof === it && Pl(et) === A.type) ? (A = a(A, N.props), Ta(A, N), A.return = z, A) : (A = Uu(
         N.type,
         N.key,
         N.props,
         null,
         z.mode,
         B
-      ), Ta(x, N), x.return = z, x);
+      ), Ta(A, N), A.return = z, A);
     }
-    function O(z, x, N, B) {
-      return x === null || x.tag !== 4 || x.stateNode.containerInfo !== N.containerInfo || x.stateNode.implementation !== N.implementation ? (x = Yc(N, z.mode, B), x.return = z, x) : (x = a(x, N.children || []), x.return = z, x);
+    function O(z, A, N, B) {
+      return A === null || A.tag !== 4 || A.stateNode.containerInfo !== N.containerInfo || A.stateNode.implementation !== N.implementation ? (A = Yc(N, z.mode, B), A.return = z, A) : (A = a(A, N.children || []), A.return = z, A);
     }
-    function R(z, x, N, B, et) {
-      return x === null || x.tag !== 7 ? (x = $l(
+    function R(z, A, N, B, et) {
+      return A === null || A.tag !== 7 ? (A = $l(
         N,
         z.mode,
         B,
         et
-      ), x.return = z, x) : (x = a(x, N), x.return = z, x);
+      ), A.return = z, A) : (A = a(A, N), A.return = z, A);
     }
-    function Z(z, x, N) {
-      if (typeof x == "string" && x !== "" || typeof x == "number" || typeof x == "bigint")
-        return x = Zc(
-          "" + x,
+    function Z(z, A, N) {
+      if (typeof A == "string" && A !== "" || typeof A == "number" || typeof A == "bigint")
+        return A = Zc(
+          "" + A,
           z.mode,
           N
-        ), x.return = z, x;
-      if (typeof x == "object" && x !== null) {
-        switch (x.$$typeof) {
+        ), A.return = z, A;
+      if (typeof A == "object" && A !== null) {
+        switch (A.$$typeof) {
           case H:
             return N = Uu(
-              x.type,
-              x.key,
-              x.props,
+              A.type,
+              A.key,
+              A.props,
               null,
               z.mode,
               N
-            ), Ta(N, x), N.return = z, N;
+            ), Ta(N, A), N.return = z, N;
           case U:
-            return x = Yc(
-              x,
+            return A = Yc(
+              A,
               z.mode,
               N
-            ), x.return = z, x;
+            ), A.return = z, A;
           case it:
-            return x = Pl(x), Z(z, x, N);
+            return A = Pl(A), Z(z, A, N);
         }
-        if (Y(x) || I(x))
-          return x = $l(
-            x,
+        if (Y(A) || I(A))
+          return A = $l(
+            A,
             z.mode,
             N,
             null
-          ), x.return = z, x;
-        if (typeof x.then == "function")
-          return Z(z, Gu(x), N);
-        if (x.$$typeof === K)
+          ), A.return = z, A;
+        if (typeof A.then == "function")
+          return Z(z, Gu(A), N);
+        if (A.$$typeof === K)
           return Z(
             z,
-            Bu(z, x),
+            Bu(z, A),
             N
           );
-        Vu(z, x);
+        Vu(z, A);
       }
       return null;
     }
-    function D(z, x, N, B) {
-      var et = x !== null ? x.key : null;
+    function D(z, A, N, B) {
+      var et = A !== null ? A.key : null;
       if (typeof N == "string" && N !== "" || typeof N == "number" || typeof N == "bigint")
-        return et !== null ? null : s(z, x, "" + N, B);
+        return et !== null ? null : s(z, A, "" + N, B);
       if (typeof N == "object" && N !== null) {
         switch (N.$$typeof) {
           case H:
-            return N.key === et ? b(z, x, N, B) : null;
+            return N.key === et ? b(z, A, N, B) : null;
           case U:
-            return N.key === et ? O(z, x, N, B) : null;
+            return N.key === et ? O(z, A, N, B) : null;
           case it:
-            return N = Pl(N), D(z, x, N, B);
+            return N = Pl(N), D(z, A, N, B);
         }
         if (Y(N) || I(N))
-          return et !== null ? null : R(z, x, N, B, null);
+          return et !== null ? null : R(z, A, N, B, null);
         if (typeof N.then == "function")
           return D(
             z,
-            x,
+            A,
             Gu(N),
             B
           );
         if (N.$$typeof === K)
           return D(
             z,
-            x,
+            A,
             Bu(z, N),
             B
           );
@@ -5352,34 +5352,34 @@ Error generating stack: ` + n.message + `
       }
       return null;
     }
-    function j(z, x, N, B, et) {
+    function j(z, A, N, B, et) {
       if (typeof B == "string" && B !== "" || typeof B == "number" || typeof B == "bigint")
-        return z = z.get(N) || null, s(x, z, "" + B, et);
+        return z = z.get(N) || null, s(A, z, "" + B, et);
       if (typeof B == "object" && B !== null) {
         switch (B.$$typeof) {
           case H:
             return z = z.get(
               B.key === null ? N : B.key
-            ) || null, b(x, z, B, et);
+            ) || null, b(A, z, B, et);
           case U:
             return z = z.get(
               B.key === null ? N : B.key
-            ) || null, O(x, z, B, et);
+            ) || null, O(A, z, B, et);
           case it:
             return B = Pl(B), j(
               z,
-              x,
+              A,
               N,
               B,
               et
             );
         }
         if (Y(B) || I(B))
-          return z = z.get(N) || null, R(x, z, B, et, null);
+          return z = z.get(N) || null, R(A, z, B, et, null);
         if (typeof B.then == "function")
           return j(
             z,
-            x,
+            A,
             N,
             Gu(B),
             et
@@ -5387,17 +5387,17 @@ Error generating stack: ` + n.message + `
         if (B.$$typeof === K)
           return j(
             z,
-            x,
+            A,
             N,
-            Bu(x, B),
+            Bu(A, B),
             et
           );
-        Vu(x, B);
+        Vu(A, B);
       }
       return null;
     }
-    function W(z, x, N, B) {
-      for (var et = null, xt = null, P = x, dt = x = 0, pt = null; P !== null && dt < N.length; dt++) {
+    function W(z, A, N, B) {
+      for (var et = null, xt = null, P = A, dt = A = 0, pt = null; P !== null && dt < N.length; dt++) {
         P.index > dt ? (pt = P, P = null) : pt = P.sibling;
         var At = D(
           z,
@@ -5409,15 +5409,15 @@ Error generating stack: ` + n.message + `
           P === null && (P = pt);
           break;
         }
-        t && P && At.alternate === null && e(z, P), x = i(At, x, dt), xt === null ? et = At : xt.sibling = At, xt = At, P = pt;
+        t && P && At.alternate === null && e(z, P), A = i(At, A, dt), xt === null ? et = At : xt.sibling = At, xt = At, P = pt;
       }
       if (dt === N.length)
         return l(z, P), St && tl(z, dt), et;
       if (P === null) {
         for (; dt < N.length; dt++)
-          P = Z(z, N[dt], B), P !== null && (x = i(
+          P = Z(z, N[dt], B), P !== null && (A = i(
             P,
-            x,
+            A,
             dt
           ), xt === null ? et = P : xt.sibling = P, xt = P);
         return St && tl(z, dt), et;
@@ -5431,68 +5431,68 @@ Error generating stack: ` + n.message + `
           B
         ), pt !== null && (t && pt.alternate !== null && P.delete(
           pt.key === null ? dt : pt.key
-        ), x = i(
+        ), A = i(
           pt,
-          x,
+          A,
           dt
         ), xt === null ? et = pt : xt.sibling = pt, xt = pt);
       return t && P.forEach(function(Yl) {
         return e(z, Yl);
       }), St && tl(z, dt), et;
     }
-    function nt(z, x, N, B) {
+    function nt(z, A, N, B) {
       if (N == null) throw Error(f(151));
-      for (var et = null, xt = null, P = x, dt = x = 0, pt = null, At = N.next(); P !== null && !At.done; dt++, At = N.next()) {
+      for (var et = null, xt = null, P = A, dt = A = 0, pt = null, At = N.next(); P !== null && !At.done; dt++, At = N.next()) {
         P.index > dt ? (pt = P, P = null) : pt = P.sibling;
         var Yl = D(z, P, At.value, B);
         if (Yl === null) {
           P === null && (P = pt);
           break;
         }
-        t && P && Yl.alternate === null && e(z, P), x = i(Yl, x, dt), xt === null ? et = Yl : xt.sibling = Yl, xt = Yl, P = pt;
+        t && P && Yl.alternate === null && e(z, P), A = i(Yl, A, dt), xt === null ? et = Yl : xt.sibling = Yl, xt = Yl, P = pt;
       }
       if (At.done)
         return l(z, P), St && tl(z, dt), et;
       if (P === null) {
         for (; !At.done; dt++, At = N.next())
-          At = Z(z, At.value, B), At !== null && (x = i(At, x, dt), xt === null ? et = At : xt.sibling = At, xt = At);
+          At = Z(z, At.value, B), At !== null && (A = i(At, A, dt), xt === null ? et = At : xt.sibling = At, xt = At);
         return St && tl(z, dt), et;
       }
       for (P = n(P); !At.done; dt++, At = N.next())
-        At = j(P, z, dt, At.value, B), At !== null && (t && At.alternate !== null && P.delete(At.key === null ? dt : At.key), x = i(At, x, dt), xt === null ? et = At : xt.sibling = At, xt = At);
+        At = j(P, z, dt, At.value, B), At !== null && (t && At.alternate !== null && P.delete(At.key === null ? dt : At.key), A = i(At, A, dt), xt === null ? et = At : xt.sibling = At, xt = At);
       return t && P.forEach(function(uy) {
         return e(z, uy);
       }), St && tl(z, dt), et;
     }
-    function Dt(z, x, N, B) {
+    function Dt(z, A, N, B) {
       if (typeof N == "object" && N !== null && N.type === C && N.key === null && (N = N.props.children), typeof N == "object" && N !== null) {
         switch (N.$$typeof) {
           case H:
             t: {
-              for (var et = N.key; x !== null; ) {
-                if (x.key === et) {
+              for (var et = N.key; A !== null; ) {
+                if (A.key === et) {
                   if (et = N.type, et === C) {
-                    if (x.tag === 7) {
+                    if (A.tag === 7) {
                       l(
                         z,
-                        x.sibling
+                        A.sibling
                       ), B = a(
-                        x,
+                        A,
                         N.props.children
                       ), B.return = z, z = B;
                       break t;
                     }
-                  } else if (x.elementType === et || typeof et == "object" && et !== null && et.$$typeof === it && Pl(et) === x.type) {
+                  } else if (A.elementType === et || typeof et == "object" && et !== null && et.$$typeof === it && Pl(et) === A.type) {
                     l(
                       z,
-                      x.sibling
-                    ), B = a(x, N.props), Ta(B, N), B.return = z, z = B;
+                      A.sibling
+                    ), B = a(A, N.props), Ta(B, N), B.return = z, z = B;
                     break t;
                   }
-                  l(z, x);
+                  l(z, A);
                   break;
-                } else e(z, x);
-                x = x.sibling;
+                } else e(z, A);
+                A = A.sibling;
               }
               N.type === C ? (B = $l(
                 N.props.children,
@@ -5511,20 +5511,20 @@ Error generating stack: ` + n.message + `
             return r(z);
           case U:
             t: {
-              for (et = N.key; x !== null; ) {
-                if (x.key === et)
-                  if (x.tag === 4 && x.stateNode.containerInfo === N.containerInfo && x.stateNode.implementation === N.implementation) {
+              for (et = N.key; A !== null; ) {
+                if (A.key === et)
+                  if (A.tag === 4 && A.stateNode.containerInfo === N.containerInfo && A.stateNode.implementation === N.implementation) {
                     l(
                       z,
-                      x.sibling
-                    ), B = a(x, N.children || []), B.return = z, z = B;
+                      A.sibling
+                    ), B = a(A, N.children || []), B.return = z, z = B;
                     break t;
                   } else {
-                    l(z, x);
+                    l(z, A);
                     break;
                   }
-                else e(z, x);
-                x = x.sibling;
+                else e(z, A);
+                A = A.sibling;
               }
               B = Yc(N, z.mode, B), B.return = z, z = B;
             }
@@ -5532,7 +5532,7 @@ Error generating stack: ` + n.message + `
           case it:
             return N = Pl(N), Dt(
               z,
-              x,
+              A,
               N,
               B
             );
@@ -5540,7 +5540,7 @@ Error generating stack: ` + n.message + `
         if (Y(N))
           return W(
             z,
-            x,
+            A,
             N,
             B
           );
@@ -5548,7 +5548,7 @@ Error generating stack: ` + n.message + `
           if (et = I(N), typeof et != "function") throw Error(f(150));
           return N = et.call(N), nt(
             z,
-            x,
+            A,
             N,
             B
           );
@@ -5556,27 +5556,27 @@ Error generating stack: ` + n.message + `
         if (typeof N.then == "function")
           return Dt(
             z,
-            x,
+            A,
             Gu(N),
             B
           );
         if (N.$$typeof === K)
           return Dt(
             z,
-            x,
+            A,
             Bu(z, N),
             B
           );
         Vu(z, N);
       }
-      return typeof N == "string" && N !== "" || typeof N == "number" || typeof N == "bigint" ? (N = "" + N, x !== null && x.tag === 6 ? (l(z, x.sibling), B = a(x, N), B.return = z, z = B) : (l(z, x), B = Zc(N, z.mode, B), B.return = z, z = B), r(z)) : l(z, x);
+      return typeof N == "string" && N !== "" || typeof N == "number" || typeof N == "bigint" ? (N = "" + N, A !== null && A.tag === 6 ? (l(z, A.sibling), B = a(A, N), B.return = z, z = B) : (l(z, A), B = Zc(N, z.mode, B), B.return = z, z = B), r(z)) : l(z, A);
     }
-    return function(z, x, N, B) {
+    return function(z, A, N, B) {
       try {
         za = 0;
         var et = Dt(
           z,
-          x,
+          A,
           N,
           B
         );
@@ -10109,13 +10109,13 @@ Error generating stack: ` + n.message + `
                   var z = P0(
                     s,
                     nt
-                  ), x = P0(
+                  ), A = P0(
                     s,
                     Dt
                   );
-                  if (z && x && (j.rangeCount !== 1 || j.anchorNode !== z.node || j.anchorOffset !== z.offset || j.focusNode !== x.node || j.focusOffset !== x.offset)) {
+                  if (z && A && (j.rangeCount !== 1 || j.anchorNode !== z.node || j.anchorOffset !== z.offset || j.focusNode !== A.node || j.focusOffset !== A.offset)) {
                     var N = Z.createRange();
-                    N.setStart(z.node, z.offset), j.removeAllRanges(), nt > Dt ? (j.addRange(N), j.extend(x.node, x.offset)) : (N.setEnd(x.node, x.offset), j.addRange(N));
+                    N.setStart(z.node, z.offset), j.removeAllRanges(), nt > Dt ? (j.addRange(N), j.extend(A.node, A.offset)) : (N.setEnd(A.node, A.offset), j.addRange(N));
                   }
                 }
               }
@@ -10691,12 +10691,12 @@ Error generating stack: ` + n.message + `
           }
           var nt = (e & 4) !== 0, Dt = !nt && (t === "scroll" || t === "scrollend"), z = nt ? D !== null ? D + "Capture" : null : D;
           nt = [];
-          for (var x = O, N; x !== null; ) {
-            var B = x;
-            if (N = B.stateNode, B = B.tag, B !== 5 && B !== 26 && B !== 27 || N === null || z === null || (B = da(x, z), B != null && nt.push(
-              wa(x, B, N)
+          for (var A = O, N; A !== null; ) {
+            var B = A;
+            if (N = B.stateNode, B = B.tag, B !== 5 && B !== 26 && B !== 27 || N === null || z === null || (B = da(A, z), B != null && nt.push(
+              wa(A, B, N)
             )), Dt) break;
-            x = x.return;
+            A = A.return;
           }
           0 < nt.length && (D = new j(
             D,
@@ -10712,35 +10712,35 @@ Error generating stack: ` + n.message + `
           if (D = t === "mouseover" || t === "pointerover", j = t === "mouseout" || t === "pointerout", D && l !== pc && (W = l.relatedTarget || l.fromElement) && (mn(W) || W[hn]))
             break t;
           if ((j || D) && (D = R.window === R ? R : (D = R.ownerDocument) ? D.defaultView || D.parentWindow : window, j ? (W = l.relatedTarget || l.toElement, j = O, W = W ? mn(W) : null, W !== null && (Dt = y(W), nt = W.tag, W !== Dt || nt !== 5 && nt !== 27 && nt !== 6) && (W = null)) : (j = null, W = O), j !== W)) {
-            if (nt = B0, B = "onMouseLeave", z = "onMouseEnter", x = "mouse", (t === "pointerout" || t === "pointerover") && (nt = Y0, B = "onPointerLeave", z = "onPointerEnter", x = "pointer"), Dt = j == null ? D : sa(j), N = W == null ? D : sa(W), D = new nt(
+            if (nt = B0, B = "onMouseLeave", z = "onMouseEnter", A = "mouse", (t === "pointerout" || t === "pointerover") && (nt = Y0, B = "onPointerLeave", z = "onPointerEnter", A = "pointer"), Dt = j == null ? D : sa(j), N = W == null ? D : sa(W), D = new nt(
               B,
-              x + "leave",
+              A + "leave",
               j,
               l,
               R
             ), D.target = Dt, D.relatedTarget = N, B = null, mn(R) === O && (nt = new nt(
               z,
-              x + "enter",
+              A + "enter",
               W,
               l,
               R
             ), nt.target = N, nt.relatedTarget = Dt, B = nt), Dt = B, j && W)
               e: {
-                for (nt = T2, z = j, x = W, N = 0, B = z; B; B = nt(B))
+                for (nt = T2, z = j, A = W, N = 0, B = z; B; B = nt(B))
                   N++;
                 B = 0;
-                for (var et = x; et; et = nt(et))
+                for (var et = A; et; et = nt(et))
                   B++;
                 for (; 0 < N - B; )
                   z = nt(z), N--;
                 for (; 0 < B - N; )
-                  x = nt(x), B--;
+                  A = nt(A), B--;
                 for (; N--; ) {
-                  if (z === x || x !== null && z === x.alternate) {
+                  if (z === A || A !== null && z === A.alternate) {
                     nt = z;
                     break e;
                   }
-                  z = nt(z), x = nt(x);
+                  z = nt(z), A = nt(A);
                 }
                 nt = null;
               }
@@ -12931,43 +12931,43 @@ function Mg() {
   return u(), Dr.exports = Ag(), Dr.exports;
 }
 var zg = Mg();
-const Ll = { transport: { name: "Add community transport", short: "Transport scenario", factor: 0.77, coverage: 1.65, detail: "Two additional weekday routes connect selected communities to existing service locations." }, capacity: { name: "Extend service hours", short: "Capacity scenario", factor: 0.86, coverage: 1.22, detail: "Evening appointments add capacity at existing service locations." }, mobile: { name: "Deploy a mobile care team", short: "Mobile care scenario", factor: 0.68, coverage: 2.05, detail: "A mobile team adds recurring visits in areas beyond the existing service footprint." } }, t0 = ["Transportation", "Service capacity", "Digital access"], Ch = (u, c = 0) => 36 + (Number(u) * 7 + c * 19) % 58, nh = () => /* @__PURE__ */ A.jsx(mg, { size: 23, "aria-hidden": "true" });
+const Ll = { transport: { name: "Add community transport", short: "Transport scenario", factor: 0.77, coverage: 1.65, detail: "Two additional weekday routes connect selected communities to existing service locations." }, capacity: { name: "Extend service hours", short: "Capacity scenario", factor: 0.86, coverage: 1.22, detail: "Evening appointments add capacity at existing service locations." }, mobile: { name: "Deploy a mobile care team", short: "Mobile care scenario", factor: 0.68, coverage: 2.05, detail: "A mobile team adds recurring visits in areas beyond the existing service footprint." } }, t0 = ["Transportation", "Service capacity", "Digital access"], Ch = (u, c = 0) => 36 + (Number(u) * 7 + c * 19) % 58, nh = () => /* @__PURE__ */ x.jsx(mg, { size: 23, "aria-hidden": "true" });
 function qh({ zip: u, scenario: c, horizon: o = 6 }) {
   const f = 105 + Number(u) % 35, d = Math.round(f * (1 + 0.32 * o / 6)), y = Math.round(f * (1 + (Ll[c].factor - 1) * o / 6)), v = lc().domain([-6, o]).range([48, 380]), m = lc().domain([0, 220]).range([218, 38]), g = (h) => h.map((p, S) => `${S ? "L" : "M"}${v(p[0])},${m(p[1])}`).join(" ");
-  return /* @__PURE__ */ A.jsxs("div", { className: "chart", children: [
-    /* @__PURE__ */ A.jsx("h3", { children: "Compare sample demand" }),
-    /* @__PURE__ */ A.jsxs("svg", { viewBox: "0 0 414 250", role: "img", "aria-label": `Illustrative demand index for ${u}: current plan ${d}; ${Ll[c].short} ${y} at ${o} months.`, children: [
-      [0, 50, 100, 150, 200].map((h) => /* @__PURE__ */ A.jsxs("g", { children: [
-        /* @__PURE__ */ A.jsx("line", { x1: "48", x2: "380", y1: m(h), y2: m(h), stroke: "#e1e8ee" }),
-        /* @__PURE__ */ A.jsx("text", { x: "35", y: m(h) + 4, textAnchor: "end", children: h })
+  return /* @__PURE__ */ x.jsxs("div", { className: "chart", children: [
+    /* @__PURE__ */ x.jsx("h3", { children: "Compare sample demand" }),
+    /* @__PURE__ */ x.jsxs("svg", { viewBox: "0 0 414 250", role: "img", "aria-label": `Illustrative demand index for ${u}: current plan ${d}; ${Ll[c].short} ${y} at ${o} months.`, children: [
+      [0, 50, 100, 150, 200].map((h) => /* @__PURE__ */ x.jsxs("g", { children: [
+        /* @__PURE__ */ x.jsx("line", { x1: "48", x2: "380", y1: m(h), y2: m(h), stroke: "#e1e8ee" }),
+        /* @__PURE__ */ x.jsx("text", { x: "35", y: m(h) + 4, textAnchor: "end", children: h })
       ] }, h)),
-      /* @__PURE__ */ A.jsx("text", { x: (48 + v(0)) / 2, y: "17", textAnchor: "middle", children: "Synthetic baseline" }),
-      /* @__PURE__ */ A.jsx("text", { x: (380 + v(0)) / 2, y: "17", textAnchor: "middle", children: "Sample projection" }),
-      /* @__PURE__ */ A.jsx("line", { x1: v(0), x2: v(0), y1: "30", y2: "218", stroke: "#a8b8cb", strokeDasharray: "5 5" }),
-      /* @__PURE__ */ A.jsx("path", { d: g([[-6, f * 0.74], [-3, f * 0.88], [0, f]]), fill: "none", stroke: "var(--blue)", strokeWidth: "2.5" }),
-      /* @__PURE__ */ A.jsx("path", { d: g([[0, f], [o, d]]), fill: "none", stroke: "var(--blue)", strokeWidth: "2.5", strokeDasharray: "7 5" }),
-      /* @__PURE__ */ A.jsx("path", { d: g([[0, f], [o, y]]), fill: "none", stroke: "var(--teal)", strokeWidth: "2.5", strokeDasharray: "7 5" }),
-      [[-6, f * 0.74, "var(--blue)"], [0, f, "var(--blue)"], [o, d, "var(--blue)"], [o, y, "var(--teal)"]].map(([h, p, S], M) => /* @__PURE__ */ A.jsx("circle", { cx: v(h), cy: m(p), r: "4.5", fill: S }, M)),
-      /* @__PURE__ */ A.jsx("text", { x: "48", y: "240", children: "-6 months" }),
-      /* @__PURE__ */ A.jsx("text", { x: v(0), y: "240", textAnchor: "middle", children: "Now" }),
-      /* @__PURE__ */ A.jsxs("text", { x: "380", y: "240", textAnchor: "end", children: [
+      /* @__PURE__ */ x.jsx("text", { x: (48 + v(0)) / 2, y: "17", textAnchor: "middle", children: "Synthetic baseline" }),
+      /* @__PURE__ */ x.jsx("text", { x: (380 + v(0)) / 2, y: "17", textAnchor: "middle", children: "Sample projection" }),
+      /* @__PURE__ */ x.jsx("line", { x1: v(0), x2: v(0), y1: "30", y2: "218", stroke: "#a8b8cb", strokeDasharray: "5 5" }),
+      /* @__PURE__ */ x.jsx("path", { d: g([[-6, f * 0.74], [-3, f * 0.88], [0, f]]), fill: "none", stroke: "var(--blue)", strokeWidth: "2.5" }),
+      /* @__PURE__ */ x.jsx("path", { d: g([[0, f], [o, d]]), fill: "none", stroke: "var(--blue)", strokeWidth: "2.5", strokeDasharray: "7 5" }),
+      /* @__PURE__ */ x.jsx("path", { d: g([[0, f], [o, y]]), fill: "none", stroke: "var(--teal)", strokeWidth: "2.5", strokeDasharray: "7 5" }),
+      [[-6, f * 0.74, "var(--blue)"], [0, f, "var(--blue)"], [o, d, "var(--blue)"], [o, y, "var(--teal)"]].map(([h, p, S], M) => /* @__PURE__ */ x.jsx("circle", { cx: v(h), cy: m(p), r: "4.5", fill: S }, M)),
+      /* @__PURE__ */ x.jsx("text", { x: "48", y: "240", children: "-6 months" }),
+      /* @__PURE__ */ x.jsx("text", { x: v(0), y: "240", textAnchor: "middle", children: "Now" }),
+      /* @__PURE__ */ x.jsxs("text", { x: "380", y: "240", textAnchor: "end", children: [
         "+",
         o,
         " months"
       ] }),
-      /* @__PURE__ */ A.jsx("text", { transform: "translate(12,155) rotate(-90)", textAnchor: "middle", children: "Demand index" })
+      /* @__PURE__ */ x.jsx("text", { transform: "translate(12,155) rotate(-90)", textAnchor: "middle", children: "Demand index" })
     ] }),
-    /* @__PURE__ */ A.jsxs("div", { className: "chart-legend", children: [
-      /* @__PURE__ */ A.jsxs("span", { children: [
-        /* @__PURE__ */ A.jsx("i", {}),
+    /* @__PURE__ */ x.jsxs("div", { className: "chart-legend", children: [
+      /* @__PURE__ */ x.jsxs("span", { children: [
+        /* @__PURE__ */ x.jsx("i", {}),
         "Current plan"
       ] }),
-      /* @__PURE__ */ A.jsxs("span", { children: [
-        /* @__PURE__ */ A.jsx("i", { className: "teal" }),
+      /* @__PURE__ */ x.jsxs("span", { children: [
+        /* @__PURE__ */ x.jsx("i", { className: "teal" }),
         Ll[c].short
       ] })
     ] }),
-    /* @__PURE__ */ A.jsx("small", { children: "Synthetic projection · index, not a count of people" })
+    /* @__PURE__ */ x.jsx("small", { children: "Synthetic projection · index, not a count of people" })
   ] });
 }
 function Tg({ data: u, zip: c, setZip: o, layer: f, barrier: d, scenario: y, compact: v = !1 }) {
@@ -12975,27 +12975,27 @@ function Tg({ data: u, zip: c, setZip: o, layer: f, barrier: d, scenario: y, com
     const C = dv();
     return u && C.fitExtent([[18, 20], [882, 442]], u), { projection: C, path: tv(C) };
   }, [u]), S = lc().domain([30, 65, 100]).range(["#e4f0fc", "#9bc3ee", "#396cd2"]), M = u == null ? void 0 : u.features.find((C) => C.properties.ZCTA5CE10 === c), H = M ? [+M.properties.INTPTLON10, +M.properties.INTPTLAT10] : [-73.82, 42.72], U = (u == null ? void 0 : u.features.filter((C, L) => L % 5 === 0).map((C) => [+C.properties.INTPTLON10, +C.properties.INTPTLAT10])) || [];
-  return /* @__PURE__ */ A.jsxs("div", { className: "map-shell " + (v ? "compact" : ""), children: [
-    /* @__PURE__ */ A.jsxs("div", { className: "map-tools", children: [
-      /* @__PURE__ */ A.jsxs("label", { className: "map-location", children: [
-        /* @__PURE__ */ A.jsx("span", { className: "sr-only", children: "Map ZIP area" }),
-        /* @__PURE__ */ A.jsx("select", { "aria-label": "Map ZIP area", value: c, onChange: (C) => o(C.target.value), children: u == null ? void 0 : u.features.map((C) => C.properties.ZCTA5CE10).sort().map((C) => /* @__PURE__ */ A.jsxs("option", { value: C, children: [
+  return /* @__PURE__ */ x.jsxs("div", { className: "map-shell " + (v ? "compact" : ""), children: [
+    /* @__PURE__ */ x.jsxs("div", { className: "map-tools", children: [
+      /* @__PURE__ */ x.jsxs("label", { className: "map-location", children: [
+        /* @__PURE__ */ x.jsx("span", { className: "sr-only", children: "Map ZIP area" }),
+        /* @__PURE__ */ x.jsx("select", { "aria-label": "Map ZIP area", value: c, onChange: (C) => o(C.target.value), children: u == null ? void 0 : u.features.map((C) => C.properties.ZCTA5CE10).sort().map((C) => /* @__PURE__ */ x.jsxs("option", { value: C, children: [
           "ZIP area ",
           C
         ] }, C)) })
       ] }),
-      /* @__PURE__ */ A.jsxs("div", { children: [
-        /* @__PURE__ */ A.jsx("button", { "aria-label": "Zoom in", disabled: m >= 3.2, onClick: () => g(Math.min(3.2, m + 0.3)), children: /* @__PURE__ */ A.jsx(gg, {}) }),
-        /* @__PURE__ */ A.jsx("button", { "aria-label": "Zoom out", disabled: m <= 1, onClick: () => g(Math.max(1, m - 0.3)), children: /* @__PURE__ */ A.jsx(vg, {}) }),
-        /* @__PURE__ */ A.jsx("button", { "aria-label": "Reset map zoom", onClick: () => g(1.85), children: /* @__PURE__ */ A.jsx(hg, {}) })
+      /* @__PURE__ */ x.jsxs("div", { children: [
+        /* @__PURE__ */ x.jsx("button", { "aria-label": "Zoom in", disabled: m >= 3.2, onClick: () => g(Math.min(3.2, m + 0.3)), children: /* @__PURE__ */ x.jsx(gg, {}) }),
+        /* @__PURE__ */ x.jsx("button", { "aria-label": "Zoom out", disabled: m <= 1, onClick: () => g(Math.max(1, m - 0.3)), children: /* @__PURE__ */ x.jsx(vg, {}) }),
+        /* @__PURE__ */ x.jsx("button", { "aria-label": "Reset map zoom", onClick: () => g(1.85), children: /* @__PURE__ */ x.jsx(hg, {}) })
       ] })
     ] }),
-    u ? /* @__PURE__ */ A.jsx("svg", { className: "map", viewBox: "0 0 900 470", "aria-label": "Interactive ZIP tabulation area map", children: /* @__PURE__ */ A.jsxs("g", { transform: `translate(${450 * (1 - m)},${235 * (1 - m)}) scale(${m})`, children: [
+    u ? /* @__PURE__ */ x.jsx("svg", { className: "map", viewBox: "0 0 900 470", "aria-label": "Interactive ZIP tabulation area map", children: /* @__PURE__ */ x.jsxs("g", { transform: `translate(${450 * (1 - m)},${235 * (1 - m)}) scale(${m})`, children: [
       u.features.map((C) => {
         const L = C.properties.ZCTA5CE10, V = Ch(L, d);
-        return /* @__PURE__ */ A.jsx("path", { d: h(C), fill: L === c ? "#214fcc" : S(f === "Forecast" ? Math.min(100, V + 12) : V), stroke: L === c ? "#132b42" : "#fff", strokeWidth: L === c ? 2 : 1, tabIndex: L === c ? 0 : -1, role: "button", "aria-label": `Select ZIP area ${L}`, "aria-pressed": L === c, onClick: () => o(L), onKeyDown: (Q) => {
+        return /* @__PURE__ */ x.jsx("path", { d: h(C), fill: L === c ? "#214fcc" : S(f === "Forecast" ? Math.min(100, V + 12) : V), stroke: L === c ? "#132b42" : "#fff", strokeWidth: L === c ? 2 : 1, tabIndex: L === c ? 0 : -1, role: "button", "aria-label": `Select ZIP area ${L}`, "aria-pressed": L === c, onClick: () => o(L), onKeyDown: (Q) => {
           (Q.key === "Enter" || Q.key === " ") && (Q.preventDefault(), o(L));
-        }, children: /* @__PURE__ */ A.jsxs("title", { children: [
+        }, children: /* @__PURE__ */ x.jsxs("title", { children: [
           "ZIP area ",
           L,
           " · illustrative ",
@@ -13004,45 +13004,45 @@ function Tg({ data: u, zip: c, setZip: o, layer: f, barrier: d, scenario: y, com
           V
         ] }) }, L);
       }),
-      f === "Resource planning" && U.map((C, L) => /* @__PURE__ */ A.jsx("path", { d: h(Ry().center(C).radius(0.025 * Ll[y].coverage)()), fill: "#23616b", fillOpacity: ".09", stroke: "#23616b", strokeWidth: "1.3", strokeDasharray: "5 4", pointerEvents: "none" }, "c" + L)),
-      U.map((C, L) => /* @__PURE__ */ A.jsx("circle", { cx: p(C)[0], cy: p(C)[1], r: "5", fill: "#23616b", stroke: "white", strokeWidth: "1.5", pointerEvents: "none" }, L)),
-      M && /* @__PURE__ */ A.jsxs("g", { pointerEvents: "none", transform: `translate(${p(H)[0]},${p(H)[1]})`, children: [
-        /* @__PURE__ */ A.jsx("circle", { r: "6", fill: "#132b42", stroke: "white", strokeWidth: "2" }),
-        /* @__PURE__ */ A.jsx("rect", { x: "-59", y: "-39", width: "118", height: "26", fill: "#214fcc" }),
-        /* @__PURE__ */ A.jsxs("text", { x: "0", y: "-21", textAnchor: "middle", fill: "white", fontSize: "13", children: [
+      f === "Resource planning" && U.map((C, L) => /* @__PURE__ */ x.jsx("path", { d: h(Ry().center(C).radius(0.025 * Ll[y].coverage)()), fill: "#23616b", fillOpacity: ".09", stroke: "#23616b", strokeWidth: "1.3", strokeDasharray: "5 4", pointerEvents: "none" }, "c" + L)),
+      U.map((C, L) => /* @__PURE__ */ x.jsx("circle", { cx: p(C)[0], cy: p(C)[1], r: "5", fill: "#23616b", stroke: "white", strokeWidth: "1.5", pointerEvents: "none" }, L)),
+      M && /* @__PURE__ */ x.jsxs("g", { pointerEvents: "none", transform: `translate(${p(H)[0]},${p(H)[1]})`, children: [
+        /* @__PURE__ */ x.jsx("circle", { r: "6", fill: "#132b42", stroke: "white", strokeWidth: "2" }),
+        /* @__PURE__ */ x.jsx("rect", { x: "-59", y: "-39", width: "118", height: "26", fill: "#214fcc" }),
+        /* @__PURE__ */ x.jsxs("text", { x: "0", y: "-21", textAnchor: "middle", fill: "white", fontSize: "13", children: [
           "ZIP area ",
           c
         ] })
       ] })
-    ] }) }) : /* @__PURE__ */ A.jsx("p", { className: "map-loading", children: "Loading geographic boundaries…" }),
-    /* @__PURE__ */ A.jsxs("div", { className: "map-legend", children: [
-      /* @__PURE__ */ A.jsxs("span", { children: [
-        /* @__PURE__ */ A.jsx("i", { className: "high" }),
+    ] }) }) : /* @__PURE__ */ x.jsx("p", { className: "map-loading", children: "Loading geographic boundaries…" }),
+    /* @__PURE__ */ x.jsxs("div", { className: "map-legend", children: [
+      /* @__PURE__ */ x.jsxs("span", { children: [
+        /* @__PURE__ */ x.jsx("i", { className: "high" }),
         "Higher barriers"
       ] }),
-      /* @__PURE__ */ A.jsxs("span", { children: [
-        /* @__PURE__ */ A.jsx("i", { className: "low" }),
+      /* @__PURE__ */ x.jsxs("span", { children: [
+        /* @__PURE__ */ x.jsx("i", { className: "low" }),
         "Lower barriers"
       ] }),
-      /* @__PURE__ */ A.jsxs("span", { children: [
-        /* @__PURE__ */ A.jsx("i", { className: "point" }),
+      /* @__PURE__ */ x.jsxs("span", { children: [
+        /* @__PURE__ */ x.jsx("i", { className: "point" }),
         "Sample service location"
       ] }),
-      f === "Resource planning" && /* @__PURE__ */ A.jsxs("span", { children: [
-        /* @__PURE__ */ A.jsx("i", { className: "coverage" }),
+      f === "Resource planning" && /* @__PURE__ */ x.jsxs("span", { children: [
+        /* @__PURE__ */ x.jsx("i", { className: "coverage" }),
         "Scenario coverage"
       ] })
     ] }),
-    /* @__PURE__ */ A.jsx("div", { className: "map-caption", children: "Illustrative planning scenario" })
+    /* @__PURE__ */ x.jsx("div", { className: "map-caption", children: "Illustrative planning scenario" })
   ] });
 }
 function Ng({ data: u, compact: c = !1, onExplore: o, onReview: f }) {
   const [d, y] = _.useState("12205"), [v, m] = _.useState(c ? "Barriers" : "Resource planning"), [g, h] = _.useState("transport"), [p, S] = _.useState(0), [M, H] = _.useState(6), U = (u == null ? void 0 : u.features.map((C) => C.properties.ZCTA5CE10).sort()) || ["12205"];
-  return /* @__PURE__ */ A.jsxs("div", { "data-layer": v, className: "workspace " + (c ? "workspace-compact" : ""), id: c ? void 0 : "planning", children: [
-    /* @__PURE__ */ A.jsxs("div", { className: "geo-panel", children: [
-      /* @__PURE__ */ A.jsxs("div", { className: "workspace-toolbar", children: [
-        !c && /* @__PURE__ */ A.jsx("strong", { children: "Access planning" }),
-        /* @__PURE__ */ A.jsx("div", { className: "tabs", role: "tablist", "aria-label": "Map view", children: ["Barriers", "Forecast", "Resource planning"].map((C) => /* @__PURE__ */ A.jsx("button", { onKeyDown: (L) => {
+  return /* @__PURE__ */ x.jsxs("div", { "data-layer": v, className: "workspace " + (c ? "workspace-compact" : ""), id: c ? void 0 : "planning", children: [
+    /* @__PURE__ */ x.jsxs("div", { className: "geo-panel", children: [
+      /* @__PURE__ */ x.jsxs("div", { className: "workspace-toolbar", children: [
+        !c && /* @__PURE__ */ x.jsx("strong", { children: "Access planning" }),
+        /* @__PURE__ */ x.jsx("div", { className: "tabs", role: "tablist", "aria-label": "Map view", children: ["Barriers", "Forecast", "Resource planning"].map((C) => /* @__PURE__ */ x.jsx("button", { onKeyDown: (L) => {
           if (L.key === "ArrowRight" || L.key === "ArrowLeft") {
             L.preventDefault();
             const V = Array.from(L.currentTarget.parentElement.children), Q = V.indexOf(L.currentTarget), K = V[(Q + (L.key === "ArrowRight" ? 1 : V.length - 1)) % V.length];
@@ -13050,52 +13050,52 @@ function Ng({ data: u, compact: c = !1, onExplore: o, onReview: f }) {
           }
         }, role: "tab", "aria-selected": v === C, onClick: () => m(C), children: C }, C)) })
       ] }),
-      /* @__PURE__ */ A.jsx(Tg, { data: u, zip: d, setZip: y, layer: v, barrier: p, scenario: g, compact: c }),
-      !c && /* @__PURE__ */ A.jsxs("div", { className: "map-filters", children: [
-        /* @__PURE__ */ A.jsxs("label", { children: [
+      /* @__PURE__ */ x.jsx(Tg, { data: u, zip: d, setZip: y, layer: v, barrier: p, scenario: g, compact: c }),
+      !c && /* @__PURE__ */ x.jsxs("div", { className: "map-filters", children: [
+        /* @__PURE__ */ x.jsxs("label", { children: [
           "ZIP area",
-          /* @__PURE__ */ A.jsx("select", { "aria-label": "ZIP area", value: d, onChange: (C) => y(C.target.value), children: U.map((C) => /* @__PURE__ */ A.jsx("option", { children: C }, C)) })
+          /* @__PURE__ */ x.jsx("select", { "aria-label": "ZIP area", value: d, onChange: (C) => y(C.target.value), children: U.map((C) => /* @__PURE__ */ x.jsx("option", { children: C }, C)) })
         ] }),
-        /* @__PURE__ */ A.jsxs("label", { children: [
+        /* @__PURE__ */ x.jsxs("label", { children: [
           "Barrier",
-          /* @__PURE__ */ A.jsx("select", { "aria-label": "Barrier", value: p, onChange: (C) => S(+C.target.value), children: t0.map((C, L) => /* @__PURE__ */ A.jsx("option", { value: L, children: C }, C)) })
+          /* @__PURE__ */ x.jsx("select", { "aria-label": "Barrier", value: p, onChange: (C) => S(+C.target.value), children: t0.map((C, L) => /* @__PURE__ */ x.jsx("option", { value: L, children: C }, C)) })
         ] }),
-        /* @__PURE__ */ A.jsxs("p", { "aria-live": "polite", children: [
-          /* @__PURE__ */ A.jsx("strong", { children: Ch(d, p) }),
+        /* @__PURE__ */ x.jsxs("p", { "aria-live": "polite", children: [
+          /* @__PURE__ */ x.jsx("strong", { children: Ch(d, p) }),
           " / 100",
-          /* @__PURE__ */ A.jsx("br", {}),
-          /* @__PURE__ */ A.jsx("small", { children: "Illustrative barrier index" })
+          /* @__PURE__ */ x.jsx("br", {}),
+          /* @__PURE__ */ x.jsx("small", { children: "Illustrative barrier index" })
         ] })
       ] })
     ] }),
-    !c && /* @__PURE__ */ A.jsxs("aside", { className: "response-panel", children: [
-      /* @__PURE__ */ A.jsx("h2", { children: v === "Barriers" ? "Understand the barriers" : v === "Forecast" ? "Look ahead" : "Compare the response" }),
-      /* @__PURE__ */ A.jsx("label", { className: "sr-only", htmlFor: "scenario", children: "Planning scenario" }),
-      /* @__PURE__ */ A.jsx("select", { id: "scenario", value: g, onChange: (C) => h(C.target.value), children: Object.entries(Ll).map(([C, L]) => /* @__PURE__ */ A.jsx("option", { value: C, children: L.name }, C)) }),
-      /* @__PURE__ */ A.jsx(qh, { zip: d, scenario: g, horizon: M }),
-      /* @__PURE__ */ A.jsx("p", { children: "Explore the sample scenario, then use your own aggregate figures in the decision brief below." }),
-      /* @__PURE__ */ A.jsxs("button", { className: "text-link", onClick: () => f({ zip: d, scenario: g, horizon: M, barrier: p }), children: [
+    !c && /* @__PURE__ */ x.jsxs("aside", { className: "response-panel", children: [
+      /* @__PURE__ */ x.jsx("h2", { children: v === "Barriers" ? "Understand the barriers" : v === "Forecast" ? "Look ahead" : "Compare the response" }),
+      /* @__PURE__ */ x.jsx("label", { className: "sr-only", htmlFor: "scenario", children: "Planning scenario" }),
+      /* @__PURE__ */ x.jsx("select", { id: "scenario", value: g, onChange: (C) => h(C.target.value), children: Object.entries(Ll).map(([C, L]) => /* @__PURE__ */ x.jsx("option", { value: C, children: L.name }, C)) }),
+      /* @__PURE__ */ x.jsx(qh, { zip: d, scenario: g, horizon: M }),
+      /* @__PURE__ */ x.jsx("p", { children: "Explore the sample scenario, then use your own aggregate figures in the decision brief below." }),
+      /* @__PURE__ */ x.jsxs("button", { className: "text-link", onClick: () => f({ zip: d, scenario: g, horizon: M, barrier: p }), children: [
         "Review scenario ",
-        /* @__PURE__ */ A.jsx(nh, {})
+        /* @__PURE__ */ x.jsx(nh, {})
       ] }),
-      v === "Forecast" && /* @__PURE__ */ A.jsxs("label", { className: "horizon", children: [
+      v === "Forecast" && /* @__PURE__ */ x.jsxs("label", { className: "horizon", children: [
         "Forecast horizon: ",
         M,
         " months",
-        /* @__PURE__ */ A.jsx("input", { type: "range", min: "3", max: "12", step: "3", value: M, onChange: (C) => H(+C.target.value) })
+        /* @__PURE__ */ x.jsx("input", { type: "range", min: "3", max: "12", step: "3", value: M, onChange: (C) => H(+C.target.value) })
       ] }),
-      v === "Barriers" && /* @__PURE__ */ A.jsxs("p", { className: "context-note", children: [
+      v === "Barriers" && /* @__PURE__ */ x.jsxs("p", { className: "context-note", children: [
         "Explore ",
         t0[p].toLowerCase(),
         " across neighboring areas. Select a ZIP area on the map or in the list to update the comparison."
       ] })
     ] }),
-    c && v === "Forecast" && /* @__PURE__ */ A.jsxs("div", { className: "compact-result", children: [
-      /* @__PURE__ */ A.jsx("strong", { children: "Explore a sample projection." }),
-      /* @__PURE__ */ A.jsx("span", { children: "See how assumptions change a sample comparison." }),
-      /* @__PURE__ */ A.jsxs("button", { className: "text-link", onClick: o, children: [
+    c && v === "Forecast" && /* @__PURE__ */ x.jsxs("div", { className: "compact-result", children: [
+      /* @__PURE__ */ x.jsx("strong", { children: "Explore a sample projection." }),
+      /* @__PURE__ */ x.jsx("span", { children: "See how assumptions change a sample comparison." }),
+      /* @__PURE__ */ x.jsxs("button", { className: "text-link", onClick: o, children: [
         "Open forecast ",
-        /* @__PURE__ */ A.jsx(nh, {})
+        /* @__PURE__ */ x.jsx(nh, {})
       ] })
     ] })
   ] });
@@ -13107,32 +13107,32 @@ function _g({ modal: u, close: c }) {
     return o.current.showModal(), () => m == null ? void 0 : m.focus();
   }, []);
   const v = () => d(!0);
-  return /* @__PURE__ */ A.jsxs("dialog", { "aria-label": "Scenario review", ref: o, onCancel: c, onClick: (m) => {
+  return /* @__PURE__ */ x.jsxs("dialog", { "aria-label": "Scenario review", ref: o, onCancel: c, onClick: (m) => {
     m.target === o.current && c();
   }, children: [
-    /* @__PURE__ */ A.jsx("button", { className: "close", onClick: c, "aria-label": "Close dialog", children: /* @__PURE__ */ A.jsx(pg, { size: 25 }) }),
-    /* @__PURE__ */ A.jsxs(A.Fragment, { children: [
-      /* @__PURE__ */ A.jsxs("p", { className: "eyebrow", children: [
+    /* @__PURE__ */ x.jsx("button", { className: "close", onClick: c, "aria-label": "Close dialog", children: /* @__PURE__ */ x.jsx(pg, { size: 25 }) }),
+    /* @__PURE__ */ x.jsxs(x.Fragment, { children: [
+      /* @__PURE__ */ x.jsxs("p", { className: "eyebrow", children: [
         "ILLUSTRATIVE SCENARIO · ZIP AREA ",
         y.zip
       ] }),
-      /* @__PURE__ */ A.jsx("h2", { children: Ll[y.scenario].name }),
-      /* @__PURE__ */ A.jsx("p", { children: Ll[y.scenario].detail }),
-      /* @__PURE__ */ A.jsx(qh, { zip: y.zip, scenario: y.scenario, horizon: y.horizon }),
-      /* @__PURE__ */ A.jsx("h3", { children: "Planning assumptions" }),
-      /* @__PURE__ */ A.jsxs("ul", { children: [
-        /* @__PURE__ */ A.jsx("li", { children: "Existing locations remain open." }),
-        /* @__PURE__ */ A.jsx("li", { children: "Demand and service capacity are synthetic demonstration inputs." }),
-        /* @__PURE__ */ A.jsx("li", { children: "Coverage circles illustrate reach; they are not road-network travel-time estimates." })
+      /* @__PURE__ */ x.jsx("h2", { children: Ll[y.scenario].name }),
+      /* @__PURE__ */ x.jsx("p", { children: Ll[y.scenario].detail }),
+      /* @__PURE__ */ x.jsx(qh, { zip: y.zip, scenario: y.scenario, horizon: y.horizon }),
+      /* @__PURE__ */ x.jsx("h3", { children: "Planning assumptions" }),
+      /* @__PURE__ */ x.jsxs("ul", { children: [
+        /* @__PURE__ */ x.jsx("li", { children: "Existing locations remain open." }),
+        /* @__PURE__ */ x.jsx("li", { children: "Demand and service capacity are synthetic demonstration inputs." }),
+        /* @__PURE__ */ x.jsx("li", { children: "Coverage circles illustrate reach; they are not road-network travel-time estimates." })
       ] }),
-      /* @__PURE__ */ A.jsx("p", { children: "Use this sample to explore the interface. Build a decision brief from your own aggregate evidence below. Production forecasts require local data, validation and human review." }),
-      /* @__PURE__ */ A.jsxs("button", { className: "primary", onClick: v, children: [
+      /* @__PURE__ */ x.jsx("p", { children: "Use this sample to explore the interface. Build a decision brief from your own aggregate evidence below. Production forecasts require local data, validation and human review." }),
+      /* @__PURE__ */ x.jsxs("button", { className: "primary", onClick: v, children: [
         "Export scenario ",
-        /* @__PURE__ */ A.jsx(yg, { size: 20 })
+        /* @__PURE__ */ x.jsx(yg, { size: 20 })
       ] }),
-      f && /* @__PURE__ */ A.jsxs("label", { className: "export-label", children: [
+      f && /* @__PURE__ */ x.jsxs("label", { className: "export-label", children: [
         "Scenario export — select and copy",
-        /* @__PURE__ */ A.jsx("textarea", { "aria-label": "Scenario export", readOnly: !0, rows: "9", value: JSON.stringify({ status: "Illustrative scenario; not a validated forecast", ...y, assumption: Ll[y.scenario].detail }, null, 2) })
+        /* @__PURE__ */ x.jsx("textarea", { "aria-label": "Scenario export", readOnly: !0, rows: "9", value: JSON.stringify({ status: "Illustrative scenario; not a validated forecast", ...y, assumption: Ll[y.scenario].detail }, null, 2) })
       ] })
     ] })
   ] });
@@ -13148,17 +13148,17 @@ function Og({ compact: u }) {
       if (!m.ok) throw Error("Geography unavailable");
       return m.json();
     }).then(o).catch(() => d(!0));
-  }, []), /* @__PURE__ */ A.jsxs(A.Fragment, { children: [
-    !u && /* @__PURE__ */ A.jsx("p", { className: "sample-context", children: "SAMPLE MAP · Synthetic metrics and scenarios. Your decision brief below uses only the figures you enter." }),
-    f ? /* @__PURE__ */ A.jsxs("p", { role: "alert", children: [
+  }, []), /* @__PURE__ */ x.jsxs(x.Fragment, { children: [
+    !u && /* @__PURE__ */ x.jsx("p", { className: "sample-context", children: "SAMPLE MAP · Synthetic metrics and scenarios. Your decision brief below uses only the figures you enter." }),
+    f ? /* @__PURE__ */ x.jsxs("p", { role: "alert", children: [
       "The interactive map could not load. ",
-      /* @__PURE__ */ A.jsx("a", { href: "/cb-cap/request-demo", children: "Discuss your planning needs with us." })
-    ] }) : /* @__PURE__ */ A.jsx(Ng, { data: c, compact: u, onExplore: () => {
+      /* @__PURE__ */ x.jsx("a", { href: "/cb-cap/request-demo", children: "Discuss your planning needs with us." })
+    ] }) : /* @__PURE__ */ x.jsx(Ng, { data: c, compact: u, onExplore: () => {
       location.href = "/cb-cap";
     }, onReview: (m) => v({ type: "scenario", details: m }) }),
-    !u && /* @__PURE__ */ A.jsx(yy, {}),
-    !u && /* @__PURE__ */ A.jsx(dy, { currency: "USD" }),
-    y && /* @__PURE__ */ A.jsx(_g, { modal: y, close: () => v(null) })
+    !u && /* @__PURE__ */ x.jsx(yy, {}),
+    !u && /* @__PURE__ */ x.jsx(dy, { currency: "USD" }),
+    y && /* @__PURE__ */ x.jsx(_g, { modal: y, close: () => v(null) })
   ] });
 }
-for (const u of document.querySelectorAll("[data-planning-root]")) zg.createRoot(u).render(/* @__PURE__ */ A.jsx(Og, { compact: u.hasAttribute("data-compact") }));
+for (const u of document.querySelectorAll("[data-planning-root]")) zg.createRoot(u).render(/* @__PURE__ */ x.jsx(Og, { compact: u.hasAttribute("data-compact") }));
