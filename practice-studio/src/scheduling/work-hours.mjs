@@ -1,3 +1,5 @@
+import { workplaceTimeParts } from "./workplace-time.mjs";
+import { isBusinessDay } from "./business-calendar.mjs";
 const DEFAULT_WORKDAYS = Object.freeze([1,2,3,4,5]);
 
 export function createWorkdayPolicy(overrides = {}) {
@@ -15,27 +17,16 @@ export function createWorkdayPolicy(overrides = {}) {
   });
 }
 
-export function localClockParts(value) {
-  if (typeof value === "string") {
-    const match = value.match(/T(\d{2}):(\d{2})(?::(\d{2}))?/);
-    if (match) {
-      return {
-        hour: Number(match[1]),
-        minute: Number(match[2]),
-        second: Number(match[3] ?? 0)
-      };
-    }
-  }
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) throw new Error("Invalid date");
-  return {hour:d.getHours(), minute:d.getMinutes(), second:d.getSeconds()};
+export function localClockParts(value, timezone="America/New_York") {
+  const {hour,minute,second}=workplaceTimeParts(value,timezone);
+  return {hour,minute,second};
 }
 
 export function isWithinWorkday(value, policy=createWorkdayPolicy()) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) throw new Error("Invalid date");
-  if (!policy.workdays.includes(d.getDay())) return false;
-  const {hour,minute} = localClockParts(value);
+  if (!isBusinessDay(d,policy)) return false;
+  const {hour,minute} = localClockParts(value,policy.timezone);
   const minutes = hour * 60 + minute;
   const [sh,sm] = policy.workday_start.split(":").map(Number);
   const [eh,em] = policy.workday_end.split(":").map(Number);

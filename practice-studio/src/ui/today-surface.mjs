@@ -1,6 +1,8 @@
+import { workplaceTimeParts } from "../scheduling/workplace-time.mjs";
 export function buildTodaySurface({
   employee,
   now,
+  timezone=employee?.timezone??"America/New_York",
   unreadMessages=[],
   meetings=[],
   activeWork=[],
@@ -10,8 +12,8 @@ export function buildTodaySurface({
   const upcoming=meetings.filter(m=>new Date(m.start_at)>=new Date(now)).sort((a,b)=>new Date(a.start_at)-new Date(b.start_at));
   return Object.freeze({
     surface:"today",
-    greeting:`Good ${daypart(now)}, ${employee.preferred_name??employee.registered_name}.`,
-    date_label:new Intl.DateTimeFormat("en-US",{weekday:"long",month:"long",day:"numeric"}).format(new Date(now)),
+    greeting:`Good ${daypart(now,timezone)}, ${employee.preferred_name??employee.registered_name}.`,
+    date_label:new Intl.DateTimeFormat("en-US",{weekday:"long",month:"long",day:"numeric",timeZone:timezone}).format(new Date(now)),
     briefing:{
       unread_messages:unreadMessages.length,
       next_meeting:upcoming[0]??null,
@@ -25,7 +27,7 @@ export function buildTodaySurface({
     ].sort((a,b)=>new Date(a.at??now)-new Date(b.at??now))
   });
 }
-function daypart(now){
-  const h=new Date(now).getHours();
+function daypart(now,timezone){
+  const h=workplaceTimeParts(now,timezone).hour;
   return h<12?"morning":h<17?"afternoon":"evening";
 }

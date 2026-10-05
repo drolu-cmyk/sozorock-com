@@ -1,3 +1,4 @@
+import { workplaceTimeParts } from "../scheduling/workplace-time.mjs";
 /**
  * Employee workplace view model.
  * The UI consumes this object and never calculates hidden assessment or world state itself.
@@ -5,6 +6,7 @@
 export function buildWorkplaceView({
   employee,
   now,
+  timezone=employee?.timezone??"America/New_York",
   work=[],
   people=[],
   messages=[],
@@ -28,7 +30,7 @@ export function buildWorkplaceView({
     now,
     navigation:["Today","Work","People","Messages","Meetings","Files","Systems","Support"],
     today:{
-      greeting:greetingFor(now, employee.preferred_name ?? employee.registered_name),
+      greeting:greetingFor(now, employee.preferred_name ?? employee.registered_name,timezone),
       unread_messages:messages.filter(m=>m.unread).length,
       upcoming_meetings:meetings.filter(m=>new Date(m.start_at)>=new Date(now)),
       active_work:work.filter(w=>["open","in_progress"].includes(w.status ?? "open"))
@@ -43,8 +45,8 @@ export function buildWorkplaceView({
   });
 }
 
-function greetingFor(now,name){
-  const hour=new Date(now).getHours();
+function greetingFor(now,name,timezone){
+  const hour=workplaceTimeParts(now,timezone).hour;
   const prefix=hour<12?"Good morning":hour<18?"Good afternoon":"Good evening";
   return `${prefix}, ${name}.`;
 }

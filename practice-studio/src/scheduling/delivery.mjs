@@ -3,38 +3,31 @@ import { isBusinessDay, nextBusinessDay, atLocalTime } from "./business-calendar
 export function classifyDelivery({event,policy}){
   const when=new Date(event.occurred_at ?? event.run_at);
   if(Number.isNaN(when.getTime())) throw new Error("Invalid event time");
-
-  const urgent=Boolean(event.urgent);
-  const [startH,startM]=policy.workday_start.split(":").map(Number);
-  const [endH,endM]=policy.workday_end.split(":").map(Number);
-
-  const start=new Date(when); start.setHours(startH,startM,0,0);
-  const end=new Date(when); end.setHours(endH,endM,0,0);
-
-  if(urgent) return {mode:"immediate",deliver_at:when.toISOString()};
-  if(isBusinessDay(when,{holidays:policy.holidays ?? []}) && when>=start && when<=end){
+  const start=atLocalTime(when,policy.workday_start,policy);
+  const end=atLocalTime(when,policy.workday_end,policy);
+  if(event.urgent || (isBusinessDay(when,policy) && when>=start && when<end)){
     return {mode:"immediate",deliver_at:when.toISOString()};
   }
-
-  let next=when;
-  if(!isBusinessDay(next,{holidays:policy.holidays ?? []}) || next>end){
-    next=nextBusinessDay(next,{holidays:policy.holidays ?? []});
-  }
-  next=atLocalTime(next,policy.workday_start);
-  return {mode:"queued_next_work_period",deliver_at:next.toISOString()};
+  const next=(!isBusinessDay(when,policy) || when>=end) ? nextBusinessDay(when,policy) : when;
+  return {mode:"queued_next_work_period",deliver_at:atLocalTime(next,policy.workday_start,policy).toISOString()};
 }
 
 export function delayWithinWorkday({from,minutes,policy}){
-  const start=new Date(from);
-  const target=new Date(start.getTime()+minutes*60000);
-  const [endH,endM]=policy.workday_end.split(":").map(Number);
-  const end=new Date(start); end.setHours(endH,endM,0,0);
-
-  if(target<=end) return target.toISOString();
-
-  const overflow=target.getTime()-end.getTime();
-  const next=nextBusinessDay(start,{holidays:policy.holidays ?? []});
-  const [startH,startM]=policy.workday_start.split(":").map(Number);
-  next.setHours(startH,startM,0,0);
-  return new Date(next.getTime()+overflow).toISOString();
+  if(!Number.isFinite(minutes) || minutes<0) throw new Error("Invalid delay");
+  let cursor=new Date(from), remaining=minutes;
+  if(Number.isNaN(cursor.getTime())) throw new Error("Invalid date");
+  if(policy.workday_start>=policy.workday_end) throw new Error("Invalid workday window");
+  while(true){
+    const start=atLocalTime(cursor,policy.workday_start,policy);
+    const end=atLocalTime(cursor,policy.workday_end,policy);
+    if(!isBusinessDay(cursor,policy) || cursor>=end){
+      cursor=atLocalTime(nextBusinessDay(cursor,policy),policy.workday_start,policy);
+      continue;
+    }
+    if(cursor<start) cursor=start;
+    const available=(end-cursor)/60000;
+    if(remaining<=available) return new Date(cursor.getTime()+remaining*60000).toISOString();
+    remaining-=available;
+    cursor=atLocalTime(nextBusinessDay(cursor,policy),policy.workday_start,policy);
+  }
 }

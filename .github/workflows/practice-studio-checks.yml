@@ -17,6 +17,11 @@ permissions:
 jobs:
   core:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        timezone: [UTC, America/New_York, Asia/Tokyo]
+    env:
+      TZ: ${{ matrix.timezone }}
     defaults:
       run:
         working-directory: practice-studio

@@ -1,22 +1,20 @@
-import { isBusinessDay } from "./business-calendar.mjs";
+import { isBusinessDay, atLocalTime, nextBusinessDay } from "./business-calendar.mjs";
 
 export function businessMinutesBetween(startAt,endAt,policy){
   const start=new Date(startAt), end=new Date(endAt);
+  if(Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) throw new Error("Invalid date");
   if(end<start) throw new Error("end before start");
   let cursor=new Date(start), total=0;
 
   while(cursor<end){
-    if(isBusinessDay(cursor,{holidays:policy.holidays ?? []})){
-      const [sh,sm]=policy.workday_start.split(":").map(Number);
-      const [eh,em]=policy.workday_end.split(":").map(Number);
-      const dayStart=new Date(cursor); dayStart.setHours(sh,sm,0,0);
-      const dayEnd=new Date(cursor); dayEnd.setHours(eh,em,0,0);
+    if(isBusinessDay(cursor,policy)){
+      const dayStart=atLocalTime(cursor,policy.workday_start,policy);
+      const dayEnd=atLocalTime(cursor,policy.workday_end,policy);
       const sliceStart=new Date(Math.max(cursor.getTime(),dayStart.getTime()));
       const sliceEnd=new Date(Math.min(end.getTime(),dayEnd.getTime()));
       if(sliceEnd>sliceStart) total+=(sliceEnd-sliceStart)/60000;
     }
-    cursor.setDate(cursor.getDate()+1);
-    cursor.setHours(0,0,0,0);
+    cursor=atLocalTime(nextBusinessDay(cursor,policy),"00:00",policy);
   }
   return Math.floor(total);
 }
