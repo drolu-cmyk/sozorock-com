@@ -6,6 +6,45 @@ from playwright.sync_api import sync_playwright, expect
 ROUTES=json.loads(Path('public/route-manifest.json').read_text())['routes']
 ROUTES=[route for route in ROUTES if not route.startswith('/school')]
 WIDTHS=[320,375,390,430,768,1024,1280,1440,1920]
+def check_decision_brief(page, currency, artifacts, width):
+    """Exercise the real client flow with synthetic aggregates; no submitted data."""
+    form = page.locator('.decision-brief form')
+    values = {'service':'Synthetic transport requests','area':'QA district','source':'Synthetic QA report, July 2026','sourceDate':'2026-07-31','demand':'150','capacity':'100','added':'30','cost':'600','months':'3','owner':'QA planning team','outcome':'Completed requests per month','target':'120 requests','reviewDate':'2026-12-31'}
+    before = page.evaluate('JSON.stringify([Object.entries(localStorage),Object.entries(sessionStorage)])')
+    sent = []
+    def record_request(request):
+        if request.method == 'POST': sent.append(request.url)
+    page.on('request',record_request)
+    for key,value in values.items(): form.locator(f'[name="{key}"]').fill(value)
+    if width in (390,1440): form.screenshot(path=str(artifacts / f'decision-form-{width}.png'))
+    page.get_by_role('button',name='Calculate decision brief',exact=True).click()
+    result = page.locator('.decision-result')
+    result.wait_for()
+    assert result.evaluate('el=>el===document.activeElement'), 'Decision result receives focus'
+    result.locator('summary').click()
+    brief = result.get_by_role('textbox',name='Decision brief',exact=True).input_value()
+    for text in ('Current monthly capacity gap: 50 requests','Planned monthly capacity gap: 20 requests',currency+' 1,800','QA planning team','2026-12-31','not a demand forecast'):
+        assert text in brief, text
+    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'), (width,'decision brief overflow')
+    if width in (390,1440):
+        result.screenshot(path=str(artifacts / f'decision-brief-{width}.png'))
+        with page.expect_download() as download_info:
+            page.get_by_role('button',name='Download decision brief',exact=True).click()
+        download = download_info.value
+        download.save_as(str(artifacts / f'decision-brief-{width}.txt'))
+        assert (artifacts / f'decision-brief-{width}.txt').read_text() == brief
+    form.locator('[name="added"]').fill('80')
+    assert page.locator('.decision-result').count() == 0, 'Changed inputs invalidate the old result'
+    page.get_by_role('button',name='Calculate decision brief',exact=True).click()
+    page.locator('.decision-result summary').click()
+    assert 'Planned monthly capacity gap: 0 requests' in page.get_by_role('textbox',name='Decision brief',exact=True).input_value()
+    page.get_by_role('button',name='Clear entries',exact=True).click()
+    assert all(form.locator(f'[name="{key}"]').input_value()=='' for key in values)
+    assert page.locator('.decision-result').count() == 0
+    assert before == page.evaluate('JSON.stringify([Object.entries(localStorage),Object.entries(sessionStorage)])'), 'Decision entries must not enter browser storage'
+    assert not sent, 'Decision calculation/export must not transmit entries'
+    page.remove_listener('request',record_request)
+
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--base-url',required=True);parser.add_argument('--output-dir',type=Path,required=True);args=parser.parse_args()
     base=args.base_url.rstrip('/');assert base=='https://www.sozorock.com' or base.startswith('http://127.0.0.1:')
@@ -26,6 +65,8 @@ def main():
                 assert page.locator('main').inner_text().strip()
                 for script in page.locator('script[type="application/ld+json"]').all_text_contents():json.loads(script)
                 assert page.evaluate("!performance.getEntriesByType('resource').some(r=>/school-|open-school|plus-jakarta/.test(r.name)&&r.initiatorType==='css')")
+                if width in (390,1440) and path in ('/','/cb-cap'):
+                    page.screenshot(path=str(out / f'business-{width}-{path[1:] or "home"}.png'),full_page=True)
                 if path=='/':
                     expect(page.locator('h1')).to_contain_text('Build the systems')
                     assert not page.locator('img[src*="evidence"]').count()
@@ -34,6 +75,17 @@ def main():
                         page.keyboard.press('Shift+Tab');expect(button).to_be_focused();page.keyboard.press('Tab');expect(page.locator('#corporate-nav summary').first).to_be_focused()
                         page.keyboard.press('Escape');expect(button).to_have_attribute('aria-expanded','false');expect(button).to_be_focused()
                 if path=='/cb-cap':
+                    # Preserve the rendered county state even if its contract fails.
+                    if width in (320,390,1440): page.locator('.county-evidence').screenshot(path=str(out / f'county-evidence-{width}.png'))
+                    check_decision_brief(page, 'USD', out, width)
+                    snapshot=page.request.get(base+'/assets/data/cbcap-counties-2025.json')
+                    assert snapshot.status==200 and len(snapshot.json())==3144, 'The published county snapshot must be served by the candidate'
+                    expect(page.get_by_label('State',exact=True)).to_be_visible()
+                    page.get_by_label('State',exact=True).select_option('New York')
+                    page.get_by_label('County',exact=True).select_option('36091')
+                    expect(page.locator('.county-reading')).to_contain_text('Saratoga County')
+                    expect(page.locator('.county-reading')).to_contain_text('5.5%')
+                    if width in (390,1440): page.locator('.county-evidence').screenshot(path=str(out / f'county-selected-{width}.png'))
                     expect(page.locator('#platform')).to_have_count(1)
                     expect(page.locator('#platform h2')).to_contain_text('One planning view')
                     expect(page.get_by_label('Map ZIP area',exact=True)).to_be_visible()
