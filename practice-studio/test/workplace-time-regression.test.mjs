@@ -31,6 +31,7 @@ test('routine delivery queues to local start and delay consumes only working hou
   assert.equal(classifyDelivery({event:{occurred_at:'2026-10-01T20:30:00Z'},policy}).mode,'immediate');
   assert.equal(classifyDelivery({event:{occurred_at:'2026-10-01T21:00:00Z'},policy}).deliver_at,'2026-10-02T13:00:00.000Z');
   assert.equal(classifyDelivery({event:{occurred_at:'2026-10-31T22:00:00Z'},policy}).deliver_at,'2026-11-02T14:00:00.000Z');
+  assert.equal(classifyDelivery({event:{occurred_at:'2026-03-07T07:30:00Z'},policy}).deliver_at,'2026-03-09T13:00:00.000Z');
   assert.equal(delayWithinWorkday({from:'2026-10-30T16:30:00-04:00',minutes:120,policy}),'2026-11-02T15:30:00.000Z');
   assert.equal(delayWithinWorkday({from:'2026-10-02T18:00:00-04:00',minutes:1020,policy}),'2026-10-07T14:00:00.000Z');
   assert.equal(isWithinWorkday('2026-10-02T03:00:00Z',policy),false);

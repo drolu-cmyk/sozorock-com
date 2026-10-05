@@ -1,10 +1,12 @@
+import { HARBORLINE } from "./harborline/company.mjs";
+
 export const ENTERPRISE_WORLD=Object.freeze({
   world_id:"enterprise-001",
-  name_status:"working-name-pending-clearance",
-  working_name:"Northstar Meridian Group",
+  name_status:"fictional-enterprise",
+  working_name:HARBORLINE.display_name,
   legal_form:"fictional-private-company",
-  employee_count:1150,
-  contractor_count:230,
+  employee_count:HARBORLINE.workforce.employees,
+  contractor_count:HARBORLINE.workforce.contractors,
   operating_regions:["United States","Canada"],
   headquarters:"Albany, New York",
   industry_model:"business services and technology",

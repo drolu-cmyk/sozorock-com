@@ -1,6 +1,8 @@
 import { requireFields } from "../domain/index.mjs";
 
 export const EVENT_TYPES = Object.freeze([
+  "contract.phase_changed",
+  "contract.exited",
   "workday.started",
   "workday.ended",
   "meeting.scheduled",

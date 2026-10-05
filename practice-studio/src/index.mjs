@@ -132,3 +132,5 @@ export * from "./capability/progression.mjs";
 export * from "./capability/feedback-response.mjs";
 export * from "./capability/portfolio.mjs";
 export * from "./capability/assessor-review.mjs";
+
+export * from "./employment/lifecycle.mjs";

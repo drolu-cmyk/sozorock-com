@@ -4,3 +4,5 @@ test("enterprise supports all required functions",()=>{const w=createHarborlineW
 test("world contains believable imperfections without guaranteed incidents",()=>{const w=createHarborlineWorld();assert.ok(w.imperfections.length>=5);assert.equal(w.imperfections.some(x=>x.fact.includes("guaranteed incident")),false);});
 test("fictional enterprise is not product identity",()=>{const w=createHarborlineWorld();assert.equal(w.company.fictional,true);assert.notEqual(w.company.display_name,"Practice Studio");});
 test("Atlas and Atlas Actions exist in shared enterprise",()=>{const w=createHarborlineWorld();assert.ok(w.technology.ai.some(x=>x.id==="atlas"));assert.ok(w.technology.ai.some(x=>x.id==="atlas-actions"));});
+import { ENTERPRISE_WORLD } from "../src/world/enterprise.mjs";
+test("legacy enterprise configuration uses the current Harborline identity",()=>{assert.equal(ENTERPRISE_WORLD.working_name,createHarborlineWorld().company.display_name);});
