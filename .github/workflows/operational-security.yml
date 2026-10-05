@@ -1,0 +1,32 @@
+name: Read-only operational security audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/operational-security.yml'
+      - 'scripts/audit_operational_security.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        with:
+          role-to-assume: arn:aws:iam::791860731989:role/sozorock-com-github-deploy
+          aws-region: us-east-1
+      - name: Inspect existing controls without changing accounts or mail
+        run: python scripts/audit_operational_security.py --target us --output "$RUNNER_TEMP/security-audit/result.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: us-operational-security-${{ github.run_id }}
+          path: ${{ runner.temp }}/security-audit/result.json
+          retention-days: 14
+          if-no-files-found: warn
