@@ -52,3 +52,7 @@ Do not push main before release approval. Preserve existing tests; add checks fo
 ## US application preparation
 
 The separate [application service runbook](us-applications.md) documents the initial disabled-state provisioning and acceptance steps. Intake was subsequently activated; renewal for website releases follows [the current release runbook](corporate-release.md). The admin shell is `public/admin.html`; its data requires Cognito access tokens and the Admins group.
+
+## Current security and product review
+
+See [5 October release evidence and operator boundaries](security-release-2026-10-05.md). Earlier mail-DNS and intake notes are historical; the new review distinguishes current observations from authenticated or permission-limited checks.

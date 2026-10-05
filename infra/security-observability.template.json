@@ -1,0 +1,670 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Opt-in security telemetry destinations and review alerts. Existing source logging is activated separately after preflight.",
+  "Parameters": {
+    "SourceBucketName": {
+      "Type": "String",
+      "AllowedPattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$"
+    },
+    "ApiId": {
+      "Type": "String",
+      "AllowedPattern": "^[a-z0-9]+$"
+    },
+    "AlertTopicArn": {
+      "Type": "String",
+      "Default": "",
+      "AllowedPattern": "^$|^arn:aws:sns:us-east-1:791860731989:[A-Za-z0-9_-]+$"
+    },
+    "ExpectedAdminCidrs": {
+      "Type": "String",
+      "Default": "",
+      "Description": "Reviewed staff egress CIDRs, comma separated. Empty disables location alerts; never blocks requests."
+    },
+    "EnableStorageMetrics": {
+      "Type": "String",
+      "AllowedValues": [
+        "true",
+        "false"
+      ],
+      "Default": "false"
+    },
+    "ApiRequestsPerFiveMinutes": {
+      "Type": "Number",
+      "Default": 1000,
+      "MinValue": 1
+    },
+    "AuthFailuresPerFiveMinutes": {
+      "Type": "Number",
+      "Default": 20,
+      "MinValue": 1
+    },
+    "ApiBytesPerFiveMinutes": {
+      "Type": "Number",
+      "Default": 100000000,
+      "MinValue": 1
+    },
+    "StorageGetsPerFiveMinutes": {
+      "Type": "Number",
+      "Default": 1000,
+      "MinValue": 1
+    },
+    "StorageBytesPerFiveMinutes": {
+      "Type": "Number",
+      "Default": 1000000000,
+      "MinValue": 1
+    }
+  },
+  "Rules": {
+    "MarketBoundary": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Equals": [
+              {
+                "Ref": "AWS::AccountId"
+              },
+              "791860731989"
+            ]
+          },
+          "AssertDescription": "Correct country account required"
+        },
+        {
+          "Assert": {
+            "Fn::Equals": [
+              {
+                "Ref": "AWS::Region"
+              },
+              "us-east-1"
+            ]
+          },
+          "AssertDescription": "Country region required"
+        }
+      ]
+    }
+  },
+  "Conditions": {
+    "Notify": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "AlertTopicArn"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "CheckAdminRanges": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ExpectedAdminCidrs"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "StorageMetrics": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableStorageMetrics"
+        },
+        "true"
+      ]
+    }
+  },
+  "Resources": {
+    "PrivateAccessLogs": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerEnforced"
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        },
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Id": "expire-access-logs",
+              "Status": "Enabled",
+              "ExpirationInDays": 30,
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1
+              }
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "DataClass",
+            "Value": "private-security-logs"
+          }
+        ]
+      },
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "PrivateAccessLogsPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "PrivateAccessLogs"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "SameAccountSourceLogsOnly",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "logging.s3.amazonaws.com"
+              },
+              "Action": "s3:PutObject",
+              "Resource": {
+                "Fn::Sub": "${PrivateAccessLogs.Arn}/s3-access/*"
+              },
+              "Condition": {
+                "ArnLike": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${SourceBucketName}"
+                  }
+                },
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                }
+              }
+            },
+            {
+              "Sid": "TLSOnly",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "s3:*",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "PrivateAccessLogs",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Sub": "${PrivateAccessLogs.Arn}/*"
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ApiAccessLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/sozorock/security/${AWS::StackName}/http-api"
+        },
+        "RetentionInDays": 30
+      },
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "InspectorLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${AWS::StackName}-ip-review"
+        },
+        "RetentionInDays": 30
+      },
+      "Condition": "CheckAdminRanges"
+    },
+    "InspectorRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "DerivedCountsOnly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "InspectorLogs",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "Condition": "CheckAdminRanges"
+    },
+    "Inspector": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-ip-review"
+        },
+        "Runtime": "python3.12",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "InspectorRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 10,
+        "MemorySize": 128,
+        "Environment": {
+          "Variables": {
+            "EXPECTED_ADMIN_CIDRS": {
+              "Ref": "ExpectedAdminCidrs"
+            },
+            "EXPECTED_ACCOUNT": {
+              "Ref": "AWS::AccountId"
+            },
+            "EXPECTED_LOG_GROUP": {
+              "Ref": "ApiAccessLogs"
+            }
+          }
+        },
+        "Code": {
+          "ZipFile": "import base64, gzip, ipaddress, json, os\n\ndef handler(event, context):\n    payload = json.loads(gzip.decompress(base64.b64decode(event['awslogs']['data'])))\n    if payload.get('owner') != os.environ['EXPECTED_ACCOUNT'] or payload.get('logGroup') != os.environ['EXPECTED_LOG_GROUP']:\n        raise ValueError('Unexpected log source')\n    if payload.get('messageType') != 'DATA_MESSAGE':\n        return\n    networks = [ipaddress.ip_network(value.strip()) for value in os.environ['EXPECTED_ADMIN_CIDRS'].split(',') if value.strip()]\n    if not networks:\n        return\n    unexpected = 0\n    for entry in payload.get('logEvents', []):\n        try:\n            record = json.loads(entry['message'])\n            if '/admin/' not in record.get('route', ''):\n                continue\n            address = ipaddress.ip_address(record['sourceIp'])\n            unexpected += int(not any(address in network for network in networks))\n        except (ValueError, TypeError, KeyError):\n            continue\n    # No addresses, URLs, user identifiers or raw records enter this derived log.\n    print(json.dumps({'unexpectedAdminSourceCount': unexpected}))\n"
+        }
+      },
+      "Condition": "CheckAdminRanges"
+    },
+    "InspectorInvoke": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "Inspector"
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": {
+          "Fn::Sub": "logs.${AWS::Region}.amazonaws.com"
+        },
+        "SourceAccount": {
+          "Ref": "AWS::AccountId"
+        },
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "ApiAccessLogs",
+            "Arn"
+          ]
+        }
+      },
+      "Condition": "CheckAdminRanges"
+    },
+    "AdminLogSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "ApiAccessLogs"
+        },
+        "FilterPattern": "{ $.route = \"* /admin/*\" }",
+        "DestinationArn": {
+          "Fn::GetAtt": [
+            "Inspector",
+            "Arn"
+          ]
+        }
+      },
+      "Condition": "CheckAdminRanges",
+      "DependsOn": "InspectorInvoke"
+    },
+    "RequestsFilter": {
+      "Type": "AWS::Logs::MetricFilter",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "ApiAccessLogs"
+        },
+        "FilterPattern": "{ $.requestId = \"*\" }",
+        "MetricTransformations": [
+          {
+            "MetricNamespace": {
+              "Fn::Sub": "SozoRock/Security/${AWS::StackName}"
+            },
+            "MetricName": "Requests",
+            "MetricValue": "1",
+            "DefaultValue": 0
+          }
+        ]
+      }
+    },
+    "RequestVolumeAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Review against the approved traffic baseline; this alert does not block visitors.",
+        "Namespace": {
+          "Fn::Sub": "SozoRock/Security/${AWS::StackName}"
+        },
+        "MetricName": "Requests",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": {
+          "Ref": "ApiRequestsPerFiveMinutes"
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "Notify",
+            [
+              {
+                "Ref": "AlertTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    "AuthFailuresFilter": {
+      "Type": "AWS::Logs::MetricFilter",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "ApiAccessLogs"
+        },
+        "FilterPattern": "{ ($.status = \"401\") || ($.status = \"403\") }",
+        "MetricTransformations": [
+          {
+            "MetricNamespace": {
+              "Fn::Sub": "SozoRock/Security/${AWS::StackName}"
+            },
+            "MetricName": "AuthFailures",
+            "MetricValue": "1",
+            "DefaultValue": 0
+          }
+        ]
+      }
+    },
+    "AuthFailuresAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Review against the approved traffic baseline; this alert does not block visitors.",
+        "Namespace": {
+          "Fn::Sub": "SozoRock/Security/${AWS::StackName}"
+        },
+        "MetricName": "AuthFailures",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": {
+          "Ref": "AuthFailuresPerFiveMinutes"
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "Notify",
+            [
+              {
+                "Ref": "AlertTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    "ResponseBytesFilter": {
+      "Type": "AWS::Logs::MetricFilter",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "ApiAccessLogs"
+        },
+        "FilterPattern": "{ $.responseLength = * }",
+        "MetricTransformations": [
+          {
+            "MetricNamespace": {
+              "Fn::Sub": "SozoRock/Security/${AWS::StackName}"
+            },
+            "MetricName": "ResponseBytes",
+            "MetricValue": "$.responseLength",
+            "DefaultValue": 0
+          }
+        ]
+      }
+    },
+    "ApiDownloadVolumeAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Review against the approved traffic baseline; this alert does not block visitors.",
+        "Namespace": {
+          "Fn::Sub": "SozoRock/Security/${AWS::StackName}"
+        },
+        "MetricName": "ResponseBytes",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": {
+          "Ref": "ApiBytesPerFiveMinutes"
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "Notify",
+            [
+              {
+                "Ref": "AlertTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    "UnexpectedAdminSourceFilter": {
+      "Type": "AWS::Logs::MetricFilter",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "InspectorLogs"
+        },
+        "FilterPattern": "{ $.unexpectedAdminSourceCount = * }",
+        "MetricTransformations": [
+          {
+            "MetricNamespace": {
+              "Fn::Sub": "SozoRock/Security/${AWS::StackName}"
+            },
+            "MetricName": "UnexpectedAdminSource",
+            "MetricValue": "$.unexpectedAdminSourceCount",
+            "DefaultValue": 0
+          }
+        ]
+      },
+      "Condition": "CheckAdminRanges"
+    },
+    "UnexpectedAdminSourceAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Review against the approved traffic baseline; this alert does not block visitors.",
+        "Namespace": {
+          "Fn::Sub": "SozoRock/Security/${AWS::StackName}"
+        },
+        "MetricName": "UnexpectedAdminSource",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "Notify",
+            [
+              {
+                "Ref": "AlertTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      },
+      "Condition": "CheckAdminRanges"
+    },
+    "StorageDownloadCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Review against the approved traffic baseline; this alert does not block visitors.",
+        "Namespace": "AWS/S3",
+        "MetricName": "GetRequests",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": {
+          "Ref": "StorageGetsPerFiveMinutes"
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "Notify",
+            [
+              {
+                "Ref": "AlertTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "Dimensions": [
+          {
+            "Name": "BucketName",
+            "Value": {
+              "Ref": "SourceBucketName"
+            }
+          },
+          {
+            "Name": "FilterId",
+            "Value": "SozoRockSecurity"
+          }
+        ]
+      },
+      "Condition": "StorageMetrics"
+    },
+    "StorageDownloadBytesAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Review against the approved traffic baseline; this alert does not block visitors.",
+        "Namespace": "AWS/S3",
+        "MetricName": "BytesDownloaded",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": {
+          "Ref": "StorageBytesPerFiveMinutes"
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "Notify",
+            [
+              {
+                "Ref": "AlertTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "Dimensions": [
+          {
+            "Name": "BucketName",
+            "Value": {
+              "Ref": "SourceBucketName"
+            }
+          },
+          {
+            "Name": "FilterId",
+            "Value": "SozoRockSecurity"
+          }
+        ]
+      },
+      "Condition": "StorageMetrics"
+    }
+  },
+  "Outputs": {
+    "PrivateAccessLogsBucket": {
+      "Value": {
+        "Ref": "PrivateAccessLogs"
+      }
+    },
+    "ApiAccessLogArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ApiAccessLogs",
+          "Arn"
+        ]
+      }
+    },
+    "ApiAccessLogFormat": {
+      "Value": "{\"requestId\":\"$context.requestId\",\"route\":\"$context.routeKey\",\"status\":\"$context.status\",\"latency\":\"$context.responseLatency\",\"responseLength\":\"$context.responseLength\",\"sourceIp\":\"$context.identity.sourceIp\"}"
+    }
+  }
+}
