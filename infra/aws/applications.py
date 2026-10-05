@@ -93,22 +93,44 @@ def persist_submission(item):
                  'ExpressionAttributeValues': {':now': {'N': str(item['createdAt'])}}}}])
 
 
-def rate_limit(event):
+def rate_limit(event, bucket='applications', limit=10):
     address = event.get('requestContext', {}).get('http', {}).get('sourceIp')
     if not address:  # Only IAM-invoked tests lack API Gateway's source IP.
         return True
     now = int(time.time())
-    key = 'rate#' + hashlib.sha256((address + ':' + str(now // 600)).encode()).hexdigest()
+    key = 'rate#' + hashlib.sha256((bucket + ':' + address + ':' + str(now // 600)).encode()).hexdigest()
     try:
         TABLE.update_item(Key={'id': key},
             UpdateExpression='SET expiresAt = :expires ADD attempts :one',
             ConditionExpression='attribute_not_exists(attempts) OR attempts < :limit',
-            ExpressionAttributeValues={':expires': now + 1200, ':one': 1, ':limit': 10})
+            ExpressionAttributeValues={':expires': now + 1200, ':one': 1, ':limit': limit})
         return True
     except ClientError as error:
         if error.response['Error']['Code'] != 'ConditionalCheckFailedException':
             raise
         return False
+
+
+def offer_terms(version='us-offer-legacy-v1'):
+    # This legacy version is deliberately fixed to the terms displayed before
+    # snapshots were introduced. Future prices must use a new version, never
+    # silently reprice a previously issued offer.
+    return {'duration': '12 weeks', 'weeklyCommitment': '3 to 6 hours/week', 'format': '100% virtual',
+        'fee': {'enrollment': 49, 'tuition': 250, 'total': 299, 'currency': 'USD'},
+        'terms': {'version': version,
+                  'cancellationRefund': 'No payment is collected when accepting this offer. Applicable tax, the final total and cancellation/refund terms will be shown before any payment commitment.',
+                  'equipment': 'Programme and session arrangements will be confirmed before enrollment. No start date is assigned by accepting this offer.'}}
+
+
+def saved_offer_terms(item):
+    terms = item.get('offerTerms')
+    if terms is None:
+        return offer_terms()
+    if (not isinstance(terms, dict) or not isinstance(terms.get('terms'), dict)
+            or not isinstance(terms['terms'].get('version'), str)
+            or not terms['terms']['version'] or not isinstance(terms.get('fee'), dict)):
+        raise ValueError('Saved offer terms are unavailable')
+    return terms
 
 
 def review(event, issue_offer=False):
@@ -137,6 +159,8 @@ def review(event, issue_offer=False):
         item.update(offerTokenHash=hashlib.sha256(token.encode()).hexdigest(),
                     offerExpiresAt=min(int(time.time()) + 14 * 86400, int(item['expiresAt'])),
                     offerIssuedAt=int(time.time()))
+        item['offerTerms'] = (saved_offer_terms(item) if item['status'] == 'offered'
+                              else offer_terms(version='us-offer-2026-10-05'))
         status = 'offered'
     elif status != item['status'] and status not in TRANSITIONS.get(item['status'], set()):
         return response(409, {'message': 'This status transition is not available. Payment and enrollment require a verified payment service.'})
@@ -160,7 +184,11 @@ def offer(event, decision=None):
             or not hmac.compare_digest(item.get('offerTokenHash', ''), hashlib.sha256(token.encode()).hexdigest())
             or item['status'] not in {'offered', 'offer_accepted', 'offer_declined'}):
         return response(404, {'message': 'Offer link is invalid or expired.'})
+    terms = saved_offer_terms(item)
     if decision:
+        if decision == 'offer_accepted' and (data.get('consent') is not True
+                or data.get('termsVersion') != terms['terms']['version']):
+            return response(400, {'message': 'Reload this offer, then review and acknowledge its terms before accepting.'})
         if item['status'] != 'offered':
             # A retry can read its completed outcome; cannot make a second decision.
             if item['status'] == decision:
@@ -169,14 +197,14 @@ def offer(event, decision=None):
         version = int(item.get('version', 0))
         record_event(item, decision, 'applicant:offer-token')
         item['offerRespondedAt'] = int(time.time())
+        item['offerTerms'] = terms
+        if decision == 'offer_accepted':
+            item.update(offerConsent=True, offerConsentVersion=terms['terms']['version'],
+                        offerConsentAt=item['offerRespondedAt'])
         replace_application(item, version)
         return response(200, {'status': decision, 'paymentAvailable': False})
-    return response(200, {'programme': item['programme'], 'status': item['status'],
-        'duration': '12 weeks', 'weeklyCommitment': '3 to 6 hours/week', 'format': '100% virtual',
-        'expiresAt': item['offerExpiresAt'], 'paymentAvailable': False,
-        'fee': {'enrollment': 49, 'tuition': 250, 'total': 299, 'currency': 'USD'},
-        'terms': {'cancellationRefund': 'No payment is collected when accepting this offer. Applicable tax, the final total and cancellation/refund terms will be shown before any payment commitment.',
-                  'equipment': 'Programme and session arrangements will be confirmed before enrollment. No start date is assigned by accepting this offer.'}})
+    return response(200, {**terms, 'programme': item['programme'], 'status': item['status'],
+        'expiresAt': item['offerExpiresAt'], 'paymentAvailable': False})
 
 
 def response(status, body):
@@ -191,8 +219,9 @@ def admin(event):
     if isinstance(groups, str):
         # HTTP API represents array claims as a bracketed, comma-separated string.
         groups = [part.strip().strip('"') for part in groups.strip('[]').split(',')]
-    return (claims.get('token_use') == 'access'
-            and claims.get('client_id') == os.environ.get('ADMIN_CLIENT_ID')
+    return (claims.get('token_use') == 'access' and bool(claims.get('sub'))
+            and bool(os.environ.get('ADMIN_CLIENT_ID'))
+            and claims.get('client_id') == os.environ['ADMIN_CLIENT_ID']
             and isinstance(groups, list) and 'Admins' in groups)
 
 
@@ -214,7 +243,8 @@ def listing(event, enquiries=False):
             ('organization', 'intent', 'message', 'context') if enquiries else
             ('programme', 'motivation', 'status', 'market', 'state', 'role', 'organization',
              'availability', 'consentVersion', 'consentAt', 'version', 'notes', 'history',
-             'offerIssuedAt', 'offerRespondedAt', 'offerExpiresAt'))
+             'offerIssuedAt', 'offerRespondedAt', 'offerExpiresAt', 'offerTerms',
+             'offerConsent', 'offerConsentVersion', 'offerConsentAt'))
         args['ProjectionExpression'] = ', '.join('#f' + str(i) for i in range(len(fields)))
         args['ExpressionAttributeNames'] = {'#f' + str(i): field for i, field in enumerate(fields)}
         if enquiries:
@@ -226,7 +256,7 @@ def listing(event, enquiries=False):
             if not isinstance(cursor, str) or len(cursor) > 200:
                 raise ValueError()
             decoded = base64.b64decode(cursor, altchars=b'-_', validate=True).decode()
-            cursor_pattern = UUID if enquiries else '(?:' + UUID + r'|(?:rate|duplicate)#[a-f0-9]{64})'
+            cursor_pattern = '(?:' + UUID + r'|rate#[a-f0-9]{64})' if enquiries else '(?:' + UUID + r'|(?:rate|duplicate)#[a-f0-9]{64})'
             if not re.fullmatch(cursor_pattern, decoded):
                 raise ValueError()
             args['ExclusiveStartKey'] = {'id': decoded}
@@ -322,6 +352,11 @@ def handler(event, context):
             return review(event)
         if event.get('routeKey') == 'POST /admin/applications/{id}/offer':
             return review(event, issue_offer=True)
+        if event.get('routeKey') in {'POST /offers/view', 'POST /offers/accept', 'POST /offers/decline'}:
+            if not rate_limit(event, bucket='offers', limit=60):
+                result = response(429, {'message': 'Too many requests. Please try again in 10 minutes.'})
+                result['headers']['Retry-After'] = '600'
+                return result
         if event.get('routeKey') == 'POST /offers/view':
             return offer(event)
         if event.get('routeKey') == 'POST /offers/accept':

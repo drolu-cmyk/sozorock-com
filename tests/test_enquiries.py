@@ -23,3 +23,27 @@ class EnquiryTests(unittest.TestCase):
         self.assertEqual(self.submit()['statusCode'],409)
     def test_context_and_field_limits(self):
         for data in [{'context':'admin'},{'organization':'x'*201},{'email':'invalid'},{'website':'bot'},{'message':'short'}]:self.assertEqual(self.submit(**data)['statusCode'],400)
+    def test_ip_guard_rejects_quota_before_receipt_and_fails_closed(self):
+        event={'body':json.dumps(self.data),'headers':{'x-forwarded-for':'198.51.100.1'},
+               'requestContext':{'http':{'sourceIp':'192.0.2.1'}}}
+        self.table.update_item.side_effect=ClientError('ConditionalCheckFailedException')
+        result=app.handler(event,None)
+        self.assertEqual(result['statusCode'],429)
+        self.assertEqual(result['headers']['Retry-After'],'600')
+        self.table.put_item.assert_not_called()
+        key=self.table.update_item.call_args.kwargs['Key']['id']
+        self.assertTrue(key.startswith('rate#'))
+        self.assertNotIn('192.0.2.1',key)
+        event['headers']['x-forwarded-for']='203.0.113.2'
+        app.handler(event,None)
+        self.assertEqual(self.table.update_item.call_args.kwargs['Key']['id'],key)
+        self.table.update_item.side_effect=ClientError('ProvisionedThroughputExceededException')
+        self.assertEqual(app.handler(event,None)['statusCode'],503)
+        self.table.put_item.assert_not_called()
+    def test_guard_permission_cannot_update_an_enquiry(self):
+        template=json.loads((Path(__file__).resolve().parents[1]/'infra/aws/school-platform.json').read_text())
+        grants=template['Resources']['HandlerRole']['Properties']['Policies'][0]['PolicyDocument']['Statement']
+        update=[s for s in grants if 'dynamodb:UpdateItem' in s['Action']]
+        self.assertEqual(len(update),1)
+        self.assertEqual(update[0]['Resource'],{'Fn::GetAtt':['Enquiries','Arn']})
+        self.assertEqual(update[0]['Condition'],{'ForAllValues:StringLike':{'dynamodb:LeadingKeys':['rate#*']}})

@@ -303,10 +303,13 @@ def offer_contract(browser, base):
     calls=[]
     def reply(route):
         assert route.request.method=='POST'
-        assert route.request.post_data_json=={'token':'synthetic-private-token'}
+        expected={'token':'synthetic-private-token'}
+        if route.request.url.endswith('/accept'):
+            expected.update(consent=True,termsVersion='us-offer-2026-10-05')
+        assert route.request.post_data_json==expected
         assert 'synthetic-private-token' not in route.request.url
-        calls.append(route.request.url)
-        data={'status':'offer_accepted','paymentAvailable':False} if route.request.url.endswith('/accept') else {'programme':'ai-governance','status':'offered','fee':{'currency':'USD','enrollment':49,'tuition':250,'total':299},'terms':{'equipment':'Computer and reliable internet. Session arrangements to be confirmed.','cancellationRefund':'No payment is collected. Terms provided before payment.'}}
+        calls.append(route.request.post_data_json)
+        data={'status':'offer_accepted','paymentAvailable':False} if route.request.url.endswith('/accept') else {'programme':'ai-governance','status':'offered','fee':{'currency':'USD','enrollment':49,'tuition':250,'total':299},'terms':{'version':'us-offer-2026-10-05','equipment':'Computer and reliable internet. Session arrangements to be confirmed.','cancellationRefund':'No payment is collected. Terms provided before payment.'}}
         route.fulfill(content_type='application/json',body=json.dumps(data))
     context.route(endpoint+'/**',reply)
     try:
@@ -318,6 +321,8 @@ def offer_contract(browser, base):
         page.get_by_role('checkbox').check()
         page.get_by_role('button',name='Accept offer',exact=True).click()
         expect(page.locator('[data-offer-root] [role=status]')).to_contain_text('Your offer acceptance has been recorded')
+        assert calls[-1]['consent'] is True
+        assert calls[-1]['termsVersion']=='us-offer-2026-10-05'
         assert len(calls)==2
         assert page.get_by_role('button',name='Pay',exact=True).count()==0
     finally:

@@ -20,9 +20,9 @@
   try{
    const response=await fetch(endpoint+'/enquiries',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
    const data=await response.json();
-   if(!response.ok||data.id!==receipt){if(response.status===400)attempted=null;throw new Error('Receipt could not be confirmed. Keep these details and retry. Reference: '+receipt+'.');}
+   if(![200,201].includes(response.status)||data.id!==receipt){if(response.status===400)attempted=null;throw new Error('Receipt could not be confirmed. Keep these details and retry. Reference: '+receipt+'.');}
    status.textContent='Your enquiry was received. Reference: '+data.id+'. Keep this reference for follow-up.';form.reset();receipt=crypto.randomUUID();attempted=null;
-  }catch(error){status.textContent=error.name==='AbortError'?'The connection timed out before receipt was confirmed. Retry with the same details. Reference: '+receipt+'.':error.message;}
+  }catch(error){status.textContent=error.name==='AbortError'?'The connection timed out before receipt was confirmed. Retry with the same details. Reference: '+receipt+'.':['TypeError','SyntaxError'].includes(error.name)?'Receipt could not be confirmed. Keep these details and retry. Reference: '+receipt+'.':error.message;}
   finally{clearTimeout(timer);busy=false;button.disabled=false;status.focus();}
  });
 })();

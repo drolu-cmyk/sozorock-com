@@ -16,7 +16,7 @@
   const encode=bytes=>btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
   const random=()=>encode(crypto.getRandomValues(new Uint8Array(32)));
   const say=message=>{status.textContent=message;};
-  const clear=()=>{activeRequest?.abort();activeRequest=null;busy=false;clearTimeout(sessionTimer);sessionStorage.removeItem(tokenKey);sessionStorage.removeItem(pkceKey);items.clear();rows.replaceChildren();count.textContent='';cursor=null;content.hidden=true;logout.hidden=true;login.hidden=false;};
+  const clear=()=>{activeRequest?.abort();activeRequest=null;busy=false;clearTimeout(sessionTimer);sessionStorage.removeItem(tokenKey);sessionStorage.removeItem(pkceKey);items.clear();rows.replaceChildren();status.textContent='';count.textContent='';cursor=null;content.hidden=true;logout.hidden=true;login.hidden=false;};
   const token=()=>{try{const saved=JSON.parse(sessionStorage.getItem(tokenKey));return saved&&saved.expiresAt>Date.now()?saved.accessToken:null;}catch{return null;}};
   function expireSession(){
     clearTimeout(sessionTimer);
@@ -55,7 +55,7 @@
     try{const response=await fetch(cfg.apiEndpoint+'/admin/applications/'+encodeURIComponent(item.id)+'/'+action,{method:'POST',headers:{Authorization:'Bearer '+access,'content-type':'application/json'},cache:'no-store',body:JSON.stringify(payload),signal:controller.signal});
       if(activeRequest!==controller||token()!==access)return;
       if(response.status===401||response.status===403){clear();say('Your session expired or this account is not authorized.');return;}
-      const data=await response.json();if(!response.ok)throw new Error(response.status===409?'This application changed or the transition is not permitted. Refresh before reviewing it again.':response.status===503?'This operation is not configured. No offer was issued.':'The change could not be confirmed. Refresh before retrying.');
+      const data=await response.json();if(activeRequest!==controller||token()!==access)return;if(!response.ok)throw new Error(response.status===409?'This application changed or the transition is not permitted. Refresh before reviewing it again.':response.status===503?'This operation is not configured. No offer was issued.':'The change could not be confirmed. Refresh before retrying.');
       items.set(item.id,{...item,status:data.status,version:data.version});render();say('Saved. Refresh to load the complete audit history.');
       if(data.offerUrl){const url=new URL(data.offerUrl);if(url.origin===location.origin&&url.pathname==='/school/offer'){const p=document.createElement('p'),link=document.createElement('a');link.href=url.href;link.textContent='Open newly issued offer';link.rel='noreferrer';p.append(link,document.createTextNode(' — this private one-time link is for the applicant.'));status.append(p);}}
     }catch(error){if(activeRequest===controller)say(error.name==='AbortError'?'Saving timed out. Refresh before retrying.':error.message);}finally{clearTimeout(timer);if(activeRequest===controller){activeRequest=null;busy=false;button.disabled=false;}}
@@ -63,10 +63,10 @@
   for(const control of [search,program,filterStatus])control.addEventListener('input',render);
   document.querySelector('#admin-export').addEventListener('click',()=>{
     if(!token()){clear();say('Sign in again before exporting.');return;}
-    const fields=['id','name','email','state','programme','role','organization','status','createdAt'];
+    const fields=view.value==='enquiries'?['id','name','email','organization','intent','message','createdAt']:['id','name','email','state','programme','role','organization','status','createdAt'];
     // Neutralize spreadsheet formula injection, including leading whitespace/control characters.
     const cell=value=>'"'+String(value??'').replace(/^[\s\u0000-\u001f]*([=+@-])/u,"'$1").replaceAll('"','""')+'"';
-    const csv=[fields,...filtered().map(item=>fields.map(key=>item[key]))].map(row=>row.map(cell).join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='school-applications.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);say('Exported '+filtered().length+' loaded records.');
+    const csv=[fields,...filtered().map(item=>fields.map(key=>item[key]))].map(row=>row.map(cell).join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=view.value==='enquiries'?'business-and-school-enquiries.csv':'school-applications.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);say('Exported '+filtered().length+' loaded records.');
   });
   async function load(reset=false){
     if(busy)return;const access=token();if(!access){clear();say('Sign in to view records.');return;}
@@ -104,7 +104,8 @@
         const saved=JSON.parse(sessionStorage.getItem(pkceKey));sessionStorage.removeItem(pkceKey);
         if(!saved||saved.state!==state||typeof saved.verifier!=='string'||!Number.isFinite(saved.createdAt)||saved.createdAt>Date.now()||Date.now()-saved.createdAt>600000)throw new Error();
         const body=new URLSearchParams({grant_type:'authorization_code',client_id:cfg.adminClientId,code,redirect_uri:callback,code_verifier:saved.verifier});
-        const response=await fetch(cfg.adminLoginOrigin+'/oauth2/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body});const data=await response.json();
+        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);let response,data;
+        try{response=await fetch(cfg.adminLoginOrigin+'/oauth2/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body,signal:controller.signal});data=await response.json();}finally{clearTimeout(timer);}
         if(!response.ok||typeof data.access_token!=='string'||!Number.isFinite(data.expires_in)||data.expires_in<=0)throw new Error();
         sessionStorage.setItem(tokenKey,JSON.stringify({accessToken:data.access_token,expiresAt:Date.now()+data.expires_in*1000}));
       }catch{clear();say('The sign-in response could not be verified. Please start sign-in again.');return;}

@@ -47,7 +47,7 @@ class ApplicationsTests(unittest.TestCase):
         return app.handler({'routeKey': 'GET /admin/applications', 'queryStringParameters': query,
             'requestContext': {'authorizer': {'jwt': {'claims': claims or {}}}}}, None)
     def claims(self, **extra):
-        return dict({'token_use': 'access', 'client_id': 'client', 'cognito:groups': '[Admins]'}, **extra)
+        return dict({'token_use': 'access', 'client_id': 'client', 'sub': 'synthetic-admin', 'cognito:groups': '[Admins]'}, **extra)
     def test_acknowledges_only_write_and_retains_for_90_days(self):
         result = self.submit()
         self.assertEqual(result['statusCode'], 200)
@@ -85,7 +85,7 @@ class ApplicationsTests(unittest.TestCase):
             self.assertEqual(app.handler({'routeKey': 'POST /applications', 'body': body}, None)['statusCode'], status)
         self.table.put_item.assert_not_called()
     def test_admin_must_have_access_token_client_and_exact_group(self):
-        for claims in ({}, self.claims(token_use='id'), self.claims(client_id='other'),
+        for claims in ({}, self.claims(token_use='id'), self.claims(client_id='other'), self.claims(sub=''),
                        self.claims(**{'cognito:groups': '[NotAdmins]'})):
             self.assertEqual(self.listing(claims)['statusCode'], 403)
         self.table.scan.assert_not_called()
@@ -127,6 +127,15 @@ class ApplicationsTests(unittest.TestCase):
     def test_enquiries_fail_closed_without_table(self):
         with patch.object(app, 'ENQUIRIES', None):
             self.assertEqual(self.enquiry_listing(self.claims())['statusCode'], 503)
+    def test_enquiry_guard_page_retains_cursor_without_exposing_guards(self):
+        table = Mock()
+        key = 'rate#' + 'a' * 64
+        table.scan.return_value = {'Items': [], 'LastEvaluatedKey': {'id': key}}
+        with patch.object(app, 'ENQUIRIES', table):
+            first = json.loads(self.enquiry_listing(self.claims())['body'])
+            second = self.enquiry_listing(self.claims(), {'cursor': first['nextCursor']})
+            self.assertEqual(second['statusCode'], 200)
+            self.assertEqual(table.scan.call_args.kwargs['ExclusiveStartKey'], {'id': key})
     def test_enquiries_allowlist_filters_expiry_context_and_preserves_empty_cursor(self):
         import time
         table = Mock()
