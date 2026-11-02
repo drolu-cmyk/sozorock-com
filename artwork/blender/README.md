@@ -8,7 +8,7 @@ Medium: 2.5D camera projection. This is a new Blender project built from this ma
 - open-school-mobile.blend: portrait projection with its own approved mobile artwork.
 - build_open_school.py: deterministic scene creation and rendering script.
 
-Blender 4.0/Eevee produces 96 frames at 24 fps, a four-second loop. Frame 97 matches frame 1. FFmpeg transcodes the local WebP into PNG for Blender texture compatibility, preserving its decoded pixels; H.264/yuv420p/faststart encodes the browser video. No remote asset request is required to reproduce the scene. The workflow runs on the artwork/open-school-blender branch, has no AWS credentials and commits only generated media. Production promotion is separate.
+Blender 4.0/Eevee produces 96 frames at 24 fps, a four-second loop. Frame 97 matches frame 1. FFmpeg transcodes the local WebP into PNG for Blender texture compatibility, preserving its decoded pixels; H.264/yuv420p/faststart encodes the browser video. No remote asset request is required to reproduce the scene.
 
 ## Browser behaviour
 
