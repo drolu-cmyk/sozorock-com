@@ -1,8 +1,10 @@
+import {operationalContacts} from './operational-contacts.mjs';
 import {schoolFacts} from './site.mjs';
 export function SiteFooter({applyHref='/school/apply'}){return <footer className="site-footer"><div className="container">
   <div className="footer-grid"><div className="footer-brand"><a className="wordmark" href="/school"><span>SozoRockSchool</span><span className="wordmark-country">United States</span></a><p>AI and cybersecurity Nano-Credentials.<br />100% virtual. Human-assessed.</p><a href="/">{schoolFacts.relationship}</a></div>
   <div className="footer-column"><strong>School</strong><a href="/school#programs">Programs</a><a href="/school/how-you-learn">How you learn</a><a href="/school/about">About</a></div>
   <div className="footer-column"><strong>Participate</strong><a data-selected-apply href={applyHref}>Apply</a><a href="/school/for-organizations">For employers</a><a href="/school/contact">Contact</a><a href="/school/media">Media</a></div>
   <div className="footer-column"><strong>Policies &amp; standards</strong><a href="/school/credentials">Credentials &amp; verification</a><a href="/school/admissions">Enrollment &amp; fees</a><a href="/school/privacy">Privacy</a><a href="/school/terms">Terms</a><a href="/accessibility">Accessibility</a></div></div>
+  <nav className="footer-contacts" aria-label="School email contacts">{operationalContacts.map(([label,alias])=><a key={alias} href={`mailto:${alias}@sozorock.com`}><span>{label}</span><span>{alias}@sozorock.com</span></a>)}</nav>
   <p className="footer-legal">© {new Date().getFullYear()} SozoRock Tech Inc. All rights reserved. SozoRockSchool United States is operated by SozoRock Tech Inc., New York. Focused professional development. No degree, diploma, academic credit, professional license or third-party certification. No job guarantee.</p>
   <div className="footer-bottom"><span>U.S. virtual participation</span><span>{schoolFacts.fee}</span></div></div></footer>;}

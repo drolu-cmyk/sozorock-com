@@ -54,6 +54,13 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(self.call('POST /admin/applications/{id}/status', data)[0], 409)
         self.assertEqual(self.item['history'][0]['actor'], 'synthetic-admin')
 
+    def test_legacy_version_fallback_cannot_overwrite_a_later_review(self):
+        app.replace_application(copy.deepcopy(self.item), 0)
+        self.assertIn('attribute_not_exists(version)', self.table.put_item.call_args.kwargs['ConditionExpression'])
+        app.replace_application(copy.deepcopy(self.item), 1)
+        self.assertNotIn('attribute_not_exists(version)', self.table.put_item.call_args.kwargs['ConditionExpression'])
+        self.assertEqual(self.item['version'], 2)
+
     def test_no_manual_paid_enrolled_or_offered_shortcuts(self):
         for status in ('paid', 'enrolled', 'payment_pending', 'offered', 'offer_accepted', 'unknown'):
             self.assertEqual(self.call('POST /admin/applications/{id}/status',
