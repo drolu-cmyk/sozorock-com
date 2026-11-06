@@ -99,8 +99,22 @@ def main():
                     'pendingEmailSubscriptions': sum(s['Protocol'] == 'email' and not s['SubscriptionArn'].startswith('arn:') for s in subscriptions),
                     'deliveryTestPerformed': False}
 
+        def staff_group():
+            result = aws(region, 'cognito-idp', 'list-users-in-group', '--user-pool-id', outputs['AdminUserPoolId'], '--group-name', 'Admins')
+            users = result.get('Users', [])
+            enrolled = 0
+            confirmed = 0
+            for member in users:
+                details = aws(region, 'cognito-idp', 'admin-get-user', '--user-pool-id', outputs['AdminUserPoolId'], '--username', member['Username'])
+                enrolled += bool(details.get('Enabled') and 'SOFTWARE_TOKEN_MFA' in details.get('UserMFASettingList', []))
+                confirmed += bool(details.get('Enabled') and details.get('UserStatus') == 'CONFIRMED')
+            return {'members': len(users), 'enabledConfirmedMembers': confirmed,
+                    'enabledSoftwareMfaMembers': enrolled, 'complete': not bool(result.get('NextToken'))}
+
         check('staffRecoveryConfiguration', identity)
+        check('staffGroupEnrollment', staff_group)
         check('notificationSubscriptions', notifications)
+        check('publicRateGuardActivation', lambda: {'enabled': outputs.get('PublicRateGuardsEnabled') == 'true'})
         check('guardRowExpiry', lambda: {'ttl': aws(region, 'dynamodb', 'describe-time-to-live', '--table-name', 'sozorock-ca-engagement-submissions')['TimeToLiveDescription']})
     else:
         def acceptance():

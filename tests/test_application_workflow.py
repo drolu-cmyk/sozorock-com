@@ -74,12 +74,16 @@ class WorkflowTests(unittest.TestCase):
 
     def test_accept_is_single_decision_retry_safe_and_does_not_enroll(self):
         token = self.offer_token()
-        self.assertEqual(self.call('POST /offers/accept', {'token': token})[0], 200)
+        accept = {'token': token, 'consent': True, 'termsVersion': self.item['offerTerms']['terms']['version']}
+        self.assertEqual(self.call('POST /offers/accept', accept)[0], 200)
         saved_version = self.item['version']
-        self.assertEqual(self.call('POST /offers/accept', {'token': token})[0], 200)
+        self.assertEqual(self.call('POST /offers/accept', accept)[0], 200)
         self.assertEqual(self.item['version'], saved_version)
         self.assertEqual(self.call('POST /offers/decline', {'token': token})[0], 409)
         self.assertEqual(self.item['status'], 'offer_accepted')
+        self.assertTrue(self.item['offerConsent'])
+        self.assertEqual(self.item['offerConsentVersion'], accept['termsVersion'])
+        self.assertEqual(self.item['offerConsentAt'], self.item['offerRespondedAt'])
 
     def test_expired_or_withdrawn_offer_denied(self):
         token = self.offer_token()
@@ -96,7 +100,8 @@ class WorkflowTests(unittest.TestCase):
         new = value['offerUrl'].split('#token=')[1]
         self.assertNotEqual(old, new)
         self.assertEqual(self.call('POST /offers/view', {'token': old})[0], 404)
-        self.assertEqual(self.call('POST /offers/accept', {'token': new})[0], 200)
+        self.assertEqual(self.call('POST /offers/accept', {'token': new, 'consent': True,
+                              'termsVersion': self.item['offerTerms']['terms']['version']})[0], 200)
         self.assertEqual(self.call('POST /admin/applications/{id}/offer', {'expectedVersion': self.item['version']})[0], 409)
 
     def test_ip_quota_returns_429_without_application_write(self):
@@ -114,6 +119,53 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(writes[0]['Put']['Item']['id']['S'], self.item['id'])
         self.assertTrue(writes[1]['Put']['Item']['id']['S'].startswith('duplicate#'))
         self.assertEqual(writes[0]['Put']['TableName'], writes[1]['Put']['TableName'])
+
+    def test_offer_quota_blocks_storage_lookup_and_ignores_forwarded_header(self):
+        event = self.event('POST /offers/view', {'token': 'invalid'})
+        event['requestContext']['http'] = {'sourceIp': '192.0.2.3'}
+        event['headers'] = {'x-forwarded-for': '198.51.100.1'}
+        self.table.update_item.side_effect = ClientError('ConditionalCheckFailedException')
+        result = app.handler(event, None)
+        self.assertEqual(result['statusCode'], 429)
+        self.assertEqual(result['headers']['Retry-After'], '600')
+        self.table.get_item.assert_not_called()
+        key = self.table.update_item.call_args.kwargs['Key']['id']
+        event['headers']['x-forwarded-for'] = '203.0.113.2'
+        app.handler(event, None)
+        self.assertEqual(self.table.update_item.call_args.kwargs['Key']['id'], key)
+
+    def test_accept_requires_explicit_consent_to_the_displayed_version(self):
+        token = self.offer_token()
+        version = self.item['offerTerms']['terms']['version']
+        for data in ({'token': token}, {'token': token, 'consent': 'true', 'termsVersion': version},
+                     {'token': token, 'consent': True, 'termsVersion': 'other'}):
+            self.assertEqual(self.call('POST /offers/accept', data)[0], 400)
+        self.assertEqual(self.item['status'], 'offered')
+        self.assertNotIn('offerConsentAt', self.item)
+
+    def test_saved_offer_is_preserved_on_view_and_link_rotation(self):
+        token = self.offer_token()
+        self.item['offerTerms']['fee'].update(enrollment=10, tuition=200, total=210)
+        self.item['offerTerms']['terms']['version'] = 'synthetic-saved-version'
+        saved = copy.deepcopy(self.item['offerTerms'])
+        code, view = self.call('POST /offers/view', {'token': token})
+        self.assertEqual(code, 200)
+        self.assertEqual(view['fee'], saved['fee'])
+        code, _ = self.call('POST /admin/applications/{id}/offer', {'expectedVersion': self.item['version']})
+        self.assertEqual(code, 200)
+        self.assertEqual(self.item['offerTerms'], saved)
+
+    def test_legacy_offer_keeps_original_terms_and_freezes_them_on_accept(self):
+        token = self.offer_token()
+        del self.item['offerTerms']
+        code, view = self.call('POST /offers/view', {'token': token})
+        self.assertEqual(code, 200)
+        self.assertEqual(view['fee']['total'], 299)
+        self.assertEqual(view['terms']['version'], 'us-offer-legacy-v1')
+        self.assertEqual(self.call('POST /offers/accept', {'token': token, 'consent': True,
+            'termsVersion': view['terms']['version']})[0], 200)
+        self.assertEqual(self.item['offerTerms']['fee'], view['fee'])
+        self.assertEqual(self.item['offerConsentVersion'], 'us-offer-legacy-v1')
 
 
 if __name__ == '__main__':

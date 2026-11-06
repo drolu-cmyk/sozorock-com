@@ -15,6 +15,24 @@ ORIGIN = 'https://www.sozorock.com'
 INTENTS = {'general', 'organization', 'media', 'privacy', 'accessibility'}
 
 
+def rate_limit(event):
+    address = event.get('requestContext', {}).get('http', {}).get('sourceIp')
+    if not address:
+        return True  # Direct IAM-invoked acceptance tests have no client address.
+    now = int(time.time())
+    key = 'rate#' + hashlib.sha256((address + ':' + str(now // 600)).encode()).hexdigest()
+    try:
+        TABLE.update_item(Key={'id': key},
+            UpdateExpression='SET expiresAt = :expires ADD attempts :one',
+            ConditionExpression='attribute_not_exists(attempts) OR attempts < :limit',
+            ExpressionAttributeValues={':expires': now + 1200, ':one': 1, ':limit': 20})
+        return True
+    except ClientError as error:
+        if error.response['Error']['Code'] != 'ConditionalCheckFailedException':
+            raise
+        return False
+
+
 def response(status, body):
     return {
         'statusCode': status,
@@ -72,6 +90,10 @@ def handler(event, context):
         'digest': digest, 'createdAt': now, 'expiresAt': now + 30 * 86400,
     }
     try:
+        if not rate_limit(event):
+            result = response(429, {'message': 'Too many enquiries. Please try again in 10 minutes.'})
+            result['headers']['Retry-After'] = '600'
+            return result
         try:
             TABLE.put_item(Item=item, ConditionExpression='attribute_not_exists(id)')
         except ClientError as error:
