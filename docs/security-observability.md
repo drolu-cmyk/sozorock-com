@@ -36,10 +36,6 @@ python scripts/configure-security-observability.py \
 
 Required operator capabilities include read-only STS, distribution/cache/origin-request policies, S3 location/logging, API stage and SNS subscription checks; scoped CloudFormation creation/update; S3 log destination/policy/lifecycle management; CloudWatch log groups, filters, alarms and API log delivery permissions; API stage update; optional source bucket metrics/logging updates; and, only with reviewed staff CIDRs, Lambda creation plus its scoped log-only execution role and subscription permission. API log delivery can require `logs:CreateLogDelivery`, `GetLogDelivery`, `UpdateLogDelivery`, `DeleteLogDelivery`, `ListLogDeliveries`, `PutResourcePolicy`, `DescribeResourcePolicies`, `DescribeLogGroups`. Missing permissions are an operator gate, not a reason to attach broad administrator policy.
 
-## Canada per-client guard activation
-
-`EnablePublicRateGuards` defaults to `false`. Existing API stage throttles still operate. When enabled, only ephemeral guard rows receive `guardExpiresAt`; applicant records receive no new expiry attribute. Before activation, an operator must permit `dynamodb:DescribeTimeToLive` and `dynamodb:UpdateTimeToLive` **only** on `arn:aws:dynamodb:ca-central-1:891377012881:table/sozorock-ca-engagement-submissions`, and verify TTL uses `guardExpiresAt`. Update the engagement stack with `EnablePublicRateGuards=true`, preserving every other current parameter via `UsePreviousValue`. Check the `PublicRateGuardsEnabled` output and Lambda environment, then verify quota behavior using synthetic requests without applicant data. Do not claim this application rate limit is active while the output remains false. Never apply TTL to applicant records without the separate retention decision.
-
 ## Primary references
 
 - [HTTP API logging and delivery permissions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-logging.html)
